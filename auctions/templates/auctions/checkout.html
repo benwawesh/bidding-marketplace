@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Checkout - BidMarket{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
+            <p class="text-gray-600 mt-1">Complete your order</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Shipping Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Shipping Information</h2>
+                    
+                    <form id="checkoutForm" class="space-y-4">
+                        <!-- Full Name -->
+                        <div>
+                            <label for="shipping_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Full Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="shipping_name"
+                                name="shipping_name"
+                                value="{{ default_name }}"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="John Doe"
+                            >
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label for="shipping_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number (M-Pesa) *
+                            </label>
+                            <input
+                                type="tel"
+                                id="shipping_phone"
+                                name="shipping_phone"
+                                value="{{ default_phone }}"
+                                required
+                                pattern="^254[0-9]{9}$"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="254712345678"
+                            >
+                            <p class="mt-1 text-xs text-gray-500">Format: 254XXXXXXXXX (for M-Pesa payment)</p>
+                        </div>
+
+                        <!-- Address -->
+                        <div>
+                            <label for="shipping_address" class="block text-sm font-medium text-gray-700 mb-2">
+                                Delivery Address *
+                            </label>
+                            <textarea
+                                id="shipping_address"
+                                name="shipping_address"
+                                rows="3"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="House/Apartment number, Street name, Landmark"
+                            ></textarea>
+                        </div>
+
+                        <!-- City -->
+                        <div>
+                            <label for="shipping_city" class="block text-sm font-medium text-gray-700 mb-2">
+                                City/Town *
+                            </label>
+                            <input
+                                type="text"
+                                id="shipping_city"
+                                name="shipping_city"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Nairobi"
+                            >
+                        </div>
+
+                        <!-- Customer Notes -->
+                        <div>
+                            <label for="customer_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                Order Notes (Optional)
+                            </label>
+                            <textarea
+                                id="customer_notes"
+                                name="customer_notes"
+                                rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Any special instructions for delivery?"
+                            ></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+                    
+                    {% if cart %}
+                    <!-- Items -->
+                    <div class="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                        {% for item in cart.items.all %}
+                        <div class="flex gap-3 pb-3 border-b">
+                            <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                                {% if item.product.main_image %}
+                                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 line-clamp-2">{{ item.product.title }}</h4>
+                                <p class="text-xs text-gray-500 mt-1">Qty: {{ item.quantity }}</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">KSh {{ item.total_price|floatformat:0|intcomma }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-gray-700">
+                            <span>Subtotal ({{ cart.total_items }} items)</span>
+                            <span>KSh {{ cart.subtotal|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>Shipping</span>
+                            <span class="text-green-600 font-semibold">FREE</span>
+                        </div>
+                        <div class="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
+                            <span>Total</span>
+                            <span class="text-indigo-600">KSh {{ cart.subtotal|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm text-blue-800">
+                                <strong>M-Pesa Payment</strong>
+                                <p class="mt-1">You will receive an STK push on your phone to complete payment</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Place Order Button -->
+                    <button
+                        onclick="placeOrder()"
+                        id="placeOrderBtn"
+                        class="w-full bg-indigo-600 text-white font-bold py-4 rounded-lg hover:bg-indigo-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                        Place Order
+                    </button>
+
+                    <p class="text-xs text-gray-500 text-center mt-4">
+                        By placing your order, you agree to our terms and conditions
+                    </p>
+
+                    {% else %}
+                    <p class="text-center text-gray-500">Your cart is empty</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function placeOrder() {
+    const form = document.getElementById('checkoutForm');
+    const btn = document.getElementById('placeOrderBtn');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Disable button
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    
+    try {
+        // Create order
+        const formData = new FormData(form);
+        const orderData = {
+            shipping_name: formData.get('shipping_name'),
+            shipping_phone: formData.get('shipping_phone'),
+            shipping_address: formData.get('shipping_address'),
+            shipping_city: formData.get('shipping_city'),
+            customer_notes: formData.get('customer_notes') || ''
+        };
+        
+        const response = await fetch('/api/orders/create_from_cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify(orderData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Order created successfully - redirect to payment
+            alert('Order created successfully! Redirecting to payment...');
+            
+            // TODO: Initiate M-Pesa payment
+            // For now, redirect to order confirmation
+            window.location.href = `/orders/${data.order.id}/confirmation/`;
+        } else {
+            alert('Error: ' + (data.message || JSON.stringify(data)));
+            btn.disabled = false;
+            btn.textContent = 'Place Order';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to place order. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
+    }
+}
+</script>
+{% endblock %}

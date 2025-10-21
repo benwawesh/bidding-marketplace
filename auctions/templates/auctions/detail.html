@@ -1,0 +1,825 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ auction.title }} - BidMarket{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Breadcrumb -->
+        <nav class="mb-4 text-sm">
+            <ol class="flex items-center space-x-2 text-gray-600">
+                <li><a href="{% url 'home' %}" class="hover:text-orange-500">Home</a></li>
+                <li><span class="mx-2">/</span></li>
+                <li><a href="{% url 'browse' %}" class="hover:text-orange-500">Browse</a></li>
+                <li><span class="mx-2">/</span></li>
+                <li class="text-gray-900 font-medium">{{ auction.title|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column - Product Images & Info -->
+            <div class="lg:col-span-2 space-y-4">
+
+                <!-- Main Product Card -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- Product Image -->
+                        <div class="bg-gray-100 rounded-lg aspect-square overflow-hidden relative">
+                            {% if auction.main_image %}
+                                <img src="{{ auction.main_image.url }}" alt="{{ auction.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                                    <svg class="w-32 h-32 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+
+                            <!-- Product Type Badge -->
+                            <div class="absolute top-4 left-4">
+                                {% if auction.product_type == 'buy_now' %}
+                                    <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-lg">BUY NOW</span>
+                                {% elif auction.product_type == 'auction' %}
+                                    <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-lg">AUCTION</span>
+                                {% elif auction.product_type == 'both' %}
+                                    <span class="bg-gradient-to-r from-blue-600 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-lg">BOTH OPTIONS</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Product Info -->
+                        <div>
+                            <!-- Status Badge -->
+                            <div class="mb-3">
+                                {% if auction.product_type == 'buy_now' %}
+                                    {% if auction.stock_quantity > 0 %}
+                                        <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            IN STOCK
+                                        </span>
+                                    {% else %}
+                                        <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            OUT OF STOCK
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    {% if auction.status == 'active' %}
+                                        <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            LIVE AUCTION
+                                        </span>
+                                    {% elif auction.status == 'draft' %}
+                                        <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            COMING SOON
+                                        </span>
+                                    {% elif auction.status == 'closed' %}
+                                        <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            CLOSED
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ auction.title }}</h1>
+
+                            <!-- Category -->
+                            <div class="mb-4">
+                                <a href="{% url 'category' auction.category.id %}" class="text-sm text-orange-500 hover:text-orange-600 font-medium">
+                                    {{ auction.category.name }}
+                                </a>
+                            </div>
+
+                            <!-- Pricing based on product type -->
+                            {% if auction.product_type == 'buy_now' %}
+                                <!-- Buy Now Price -->
+                                <div class="mb-6">
+                                    <div class="text-sm text-gray-600 mb-1">Price</div>
+                                    <div class="text-4xl font-bold text-gray-900">
+                                        KSh {{ auction.buy_now_price|floatformat:0|intcomma }}
+                                    </div>
+                                </div>
+
+                                <!-- Stock Info -->
+                                {% if auction.stock_quantity %}
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-sm text-blue-800 mb-1">Available Stock</div>
+                                            <div class="text-2xl font-bold text-blue-600">
+                                                {{ auction.stock_quantity }} units
+                                            </div>
+                                        </div>
+                                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-xs text-blue-700 mt-2">{{ auction.units_sold|default:0 }} units sold</div>
+                                </div>
+                                {% endif %}
+
+                            {% elif auction.product_type == 'auction' %}
+                                <!-- Auction Pricing -->
+                                <div class="mb-6">
+                                    <div class="text-sm text-gray-600 mb-1">Starting Bid</div>
+                                    <div class="text-4xl font-bold text-gray-900">
+                                        KSh {{ auction.base_price|floatformat:0|intcomma }}
+                                    </div>
+                                </div>
+
+                                <!-- Participation Fee -->
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                                    <div class="text-sm text-orange-800 mb-1">Entry Fee to Bid</div>
+                                    <div class="text-2xl font-bold text-orange-600">
+                                        KSh {{ auction.participation_fee|floatformat:0|intcomma }}
+                                    </div>
+                                    <div class="text-xs text-orange-700 mt-1">Pay once per round to participate</div>
+                                </div>
+
+                            {% elif auction.product_type == 'both' %}
+                                <!-- Both Options Pricing -->
+                                <div class="mb-6">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <div class="text-xs text-blue-700 mb-1">Buy Now</div>
+                                            <div class="text-2xl font-bold text-blue-600">
+                                                KSh {{ auction.buy_now_price|floatformat:0|intcomma }}
+                                            </div>
+                                        </div>
+                                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                            <div class="text-xs text-red-700 mb-1">Bid From</div>
+                                            <div class="text-2xl font-bold text-red-600">
+                                                KSh {{ auction.base_price|floatformat:0|intcomma }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Entry Fee for Bidding -->
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                                    <div class="text-sm text-orange-800 mb-1">Entry Fee for Bidding</div>
+                                    <div class="text-xl font-bold text-orange-600">
+                                        KSh {{ auction.participation_fee|floatformat:0|intcomma }}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Stats -->
+                            {% if auction.product_type != 'buy_now' %}
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="text-center bg-gray-50 rounded-lg p-3">
+                                    <div class="text-2xl font-bold text-gray-900">{{ auction.get_participant_count }}</div>
+                                    <div class="text-xs text-gray-600">Participants</div>
+                                </div>
+                                <div class="text-center bg-gray-50 rounded-lg p-3">
+                                    <div class="text-2xl font-bold text-gray-900">{{ auction.bids.count }}</div>
+                                    <div class="text-xs text-gray-600">Total Bids</div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Time Remaining (for auction types) -->
+                            {% if auction.product_type != 'buy_now' and auction.status == 'active' %}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm text-blue-800 mb-1">Time Remaining</div>
+                                        <div class="text-xl font-bold text-blue-600">
+                                            {{ auction.end_time|timeuntil }}
+                                        </div>
+                                    </div>
+                                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mt-6 pt-6 border-t">
+                        <h2 class="text-lg font-bold text-gray-900 mb-3">Product Description</h2>
+                        <div class="text-gray-700 whitespace-pre-line">{{ auction.description }}</div>
+                    </div>
+
+                    <!-- Seller Info -->
+                    <div class="mt-6 pt-6 border-t">
+                        <h2 class="text-lg font-bold text-gray-900 mb-3">Seller Information</h2>
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {{ auction.created_by.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">{{ auction.created_by.username }}</div>
+                                <div class="text-sm text-gray-600">Verified Seller</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column - Purchase/Bidding Actions -->
+            <div class="space-y-4">
+
+                <!-- BUY NOW PRODUCT -->
+                {% if auction.product_type == 'buy_now' %}
+                    <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Purchase Options</h2>
+
+                        {% if auction.stock_quantity > 0 %}
+                            {% if user.is_authenticated %}
+                                <form id="addToCartForm" class="space-y-4">
+                                    <div>
+                                        <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Quantity
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="quantity"
+                                            min="1"
+                                            max="{{ auction.stock_quantity }}"
+                                            value="1"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                        <p class="mt-1 text-xs text-gray-500">{{ auction.stock_quantity }} available</p>
+                                    </div>
+
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm text-gray-700">Price</span>
+                                            <span class="text-lg font-bold text-gray-900">KSh {{ auction.buy_now_price|floatformat:0|intcomma }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center pt-2 border-t border-blue-300">
+                                            <span class="text-sm font-semibold text-gray-900">Total</span>
+                                            <span id="totalPrice" class="text-2xl font-bold text-blue-600">KSh {{ auction.buy_now_price|floatformat:0|intcomma }}</span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        Add to Cart
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onclick="buyNow()"
+                                        class="w-full bg-orange-500 text-white font-bold py-4 rounded-lg hover:bg-orange-600 transition"
+                                    >
+                                        Buy Now
+                                    </button>
+                                </form>
+
+                                <div id="cartMessage" class="hidden mt-4 p-4 rounded-lg"></div>
+                            {% else %}
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                    <p class="text-blue-800 mb-3">Sign in to purchase</p>
+                                    <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                                        Sign In
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                                <svg class="mx-auto w-12 h-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                <p class="text-red-800 font-semibold">Out of Stock</p>
+                                <p class="text-sm text-red-600 mt-1">This product is currently unavailable</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                <!-- AUCTION ONLY PRODUCT -->
+                {% elif auction.product_type == 'auction' %}
+                    {% if auction.status == 'active' %}
+                    <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Place Your Bid</h2>
+
+                        {% if user.is_authenticated %}
+                            {% if user.user_type == 'buyer' %}
+                                <!-- Step 1: Pay Participation Fee -->
+                                <div id="participationStep" class="mb-6">
+                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                                        <div class="flex items-start gap-3">
+                                            <div class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
+                                            <div>
+                                                <div class="font-semibold text-gray-900 mb-1">Pay Entry Fee</div>
+                                                <div class="text-sm text-gray-700">KSh {{ auction.participation_fee|floatformat:0|intcomma }} to unlock bidding</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onclick="payParticipationFee()"
+                                        class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition"
+                                    >
+                                        Pay KSh {{ auction.participation_fee|floatformat:0|intcomma }} to Bid
+                                    </button>
+                                </div>
+
+                                <!-- Step 2: Submit Bid -->
+                                <div id="biddingStep" class="hidden">
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                        <div class="flex items-start gap-3">
+                                            <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
+                                            <div>
+                                                <div class="font-semibold text-gray-900 mb-1">Enter Your Bid</div>
+                                                <div class="text-sm text-gray-700">Pledge amount (minimum: KSh {{ auction.base_price|floatformat:0|intcomma }})</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form id="bidForm" class="space-y-4">
+                                        <div>
+                                            <label for="pledge_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                                                Your Pledge Amount (KSh) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                id="pledge_amount"
+                                                min="{{ auction.base_price }}"
+                                                step="100"
+                                                required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-semibold focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                placeholder="{{ auction.base_price }}"
+                                            >
+                                            <p class="mt-1 text-xs text-gray-500">You'll only pay if you win</p>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition"
+                                        >
+                                            Submit Bid
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div id="bidMessage" class="hidden mt-4 p-4 rounded-lg"></div>
+                            {% else %}
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                                    <p class="text-yellow-800 text-sm">Only buyers can place bids. You're logged in as a seller.</p>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                <p class="text-blue-800 mb-3">Sign in to place a bid</p>
+                                <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                                    Sign In
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% elif auction.status == 'closed' %}
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Auction Closed</h2>
+                        {% if auction.winner %}
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div class="text-sm text-green-800 mb-2">Winner</div>
+                                <div class="font-bold text-green-900 text-lg">{{ auction.winner.username }}</div>
+                                <div class="text-green-700 mt-1">Winning Bid: KSh {{ auction.winning_amount|floatformat:0|intcomma }}</div>
+                            </div>
+                        {% else %}
+                            <p class="text-gray-600">No bids were placed.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                <!-- BOTH OPTIONS PRODUCT -->
+                {% elif auction.product_type == 'both' %}
+                    <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Choose Your Option</h2>
+
+                        {% if user.is_authenticated %}
+                            <!-- Tabs -->
+                            <div class="flex gap-2 mb-6" x-data="{ tab: 'buy' }">
+                                <button
+                                    @click="tab = 'buy'"
+                                    :class="tab === 'buy' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                    class="flex-1 py-3 rounded-lg font-semibold transition"
+                                >
+                                    Buy Now
+                                </button>
+                                <button
+                                    @click="tab = 'bid'"
+                                    :class="tab === 'bid' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                    class="flex-1 py-3 rounded-lg font-semibold transition"
+                                >
+                                    Bid to Win
+                                </button>
+
+                                <!-- Buy Now Content -->
+                                <div x-show="tab === 'buy'" class="mt-4" style="display: none;">
+                                    {% if auction.stock_quantity > 0 %}
+                                        <form id="addToCartFormBoth" class="space-y-4">
+                                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                                <div class="text-sm text-blue-800 mb-1">Buy Now Price</div>
+                                                <div class="text-3xl font-bold text-blue-600">
+                                                    KSh {{ auction.buy_now_price|floatformat:0|intcomma }}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="{{ auction.stock_quantity }}"
+                                                    value="1"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                                >
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition"
+                                            >
+                                                Add to Cart
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                                            <p class="text-red-800 font-semibold">Out of Stock</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Bid Content -->
+                                <div x-show="tab === 'bid'" class="mt-4" style="display: none;">
+                                    {% if auction.status == 'active' %}
+                                        {% if user.user_type == 'buyer' %}
+                                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                                <div class="text-sm text-red-800 mb-1">Entry Fee</div>
+                                                <div class="text-2xl font-bold text-red-600">
+                                                    KSh {{ auction.participation_fee|floatformat:0|intcomma }}
+                                                </div>
+                                            </div>
+
+                                            <div id="participationStepBoth">
+                                                <button
+                                                    onclick="payParticipationFee()"
+                                                    class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition mb-4"
+                                                >
+                                                    Pay Entry Fee
+                                                </button>
+                                            </div>
+
+                                            <div id="biddingStepBoth" class="hidden">
+                                                <form id="bidFormBoth" class="space-y-4">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                            Your Pledge (KSh)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            id="pledge_amount_both"
+                                                            min="{{ auction.base_price }}"
+                                                            step="100"
+                                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                                        >
+                                                    </div>
+                                                    <button
+                                                        type="submit"
+                                                        class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition"
+                                                    >
+                                                        Submit Bid
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% else %}
+                                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                                                <p class="text-yellow-800 text-sm">Only buyers can place bids.</p>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                                            <p class="text-gray-600">Auction not active</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                <p class="text-blue-800 mb-3">Sign in to purchase or bid</p>
+                                <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                                    Sign In
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Leaderboard (for auction types) -->
+                {% if auction.product_type != 'buy_now' %}
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Leaderboard</h2>
+                    <div id="leaderboard" class="space-y-3">
+                        <div class="text-center py-8 text-gray-500 text-sm">Loading bids...</div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+const auctionId = '{{ auction.id }}';
+const productType = '{{ auction.product_type }}';
+const buyNowPrice = {{ auction.buy_now_price|default:0 }};
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Update total price for buy now products
+if (productType === 'buy_now' || productType === 'both') {
+    const quantityInput = document.getElementById('quantity');
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const quantity = parseInt(this.value) || 1;
+            const total = buyNowPrice * quantity;
+            document.getElementById('totalPrice').textContent = 'KSh ' + total.toLocaleString();
+        });
+    }
+}
+
+// Add to Cart
+const addToCartForms = document.querySelectorAll('#addToCartForm, #addToCartFormBoth');
+addToCartForms.forEach(form => {
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const quantityInput = form.querySelector('input[type="number"]');
+        const quantity = parseInt(quantityInput?.value) || 1;
+        const messageDiv = document.getElementById('cartMessage');
+
+        try {
+            const response = await fetch('/api/cart/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    product_id: auctionId,
+                    quantity: quantity
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (messageDiv) {
+                    messageDiv.className = 'mt-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800';
+                    messageDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span>✅ ${quantity} item(s) added to cart!</span>
+                            <a href="/cart/" class="text-green-700 underline font-semibold">View Cart</a>
+                        </div>
+                    `;
+                    messageDiv.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        messageDiv.classList.add('hidden');
+                    }, 5000);
+                }
+            } else {
+                if (messageDiv) {
+                    messageDiv.className = 'mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                    messageDiv.textContent = '❌ ' + (data.error || 'Failed to add to cart');
+                    messageDiv.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            if (messageDiv) {
+                messageDiv.className = 'mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800';
+                messageDiv.textContent = '❌ Failed to add to cart. Please try again.';
+                messageDiv.classList.remove('hidden');
+            }
+        }
+    });
+});
+
+// Buy Now function
+async function buyNow() {
+    const quantityInput = document.getElementById('quantity');
+    const quantity = parseInt(quantityInput?.value) || 1;
+
+    try {
+        // Add to cart first
+        const response = await fetch('/api/cart/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                product_id: auctionId,
+                quantity: quantity
+            })
+        });
+
+        if (response.ok) {
+            // Redirect to cart
+            window.location.href = '/cart/';
+        } else {
+            const data = await response.json();
+            alert('Error: ' + (data.error || 'Failed to add to cart'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to process request');
+    }
+}
+
+// Auction-related functions
+{% if auction.product_type != 'buy_now' %}
+
+async function checkPaymentStatus() {
+    try {
+        const response = await fetch(`/api/payments/status/${auctionId}/`, {
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const participationStep = document.getElementById('participationStep') || document.getElementById('participationStepBoth');
+            const biddingStep = document.getElementById('biddingStep') || document.getElementById('biddingStepBoth');
+
+            if (data.has_paid && participationStep && biddingStep) {
+                participationStep.classList.add('hidden');
+                biddingStep.classList.remove('hidden');
+            }
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    }
+}
+
+async function loadLeaderboard() {
+    try {
+        const response = await fetch(`/api/auctions/${auctionId}/leaderboard/`, {
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const bids = await response.json();
+            const leaderboardDiv = document.getElementById('leaderboard');
+
+            if (!leaderboardDiv) return;
+
+            if (bids.length === 0) {
+                leaderboardDiv.innerHTML = '<div class="text-center py-8 text-gray-500 text-sm">No bids yet. Be the first!</div>';
+                return;
+            }
+
+            leaderboardDiv.innerHTML = bids.map((bid, index) => `
+                <div class="flex items-center justify-between p-3 rounded-lg ${index === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-400' : 'bg-gray-300'} text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-900">${bid.user.username}</div>
+                            <div class="text-xs text-gray-500">${new Date(bid.submitted_at).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold ${index === 0 ? 'text-yellow-600' : 'text-gray-900'}">
+                        KSh ${Number(bid.pledge_amount).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+    }
+}
+
+async function payParticipationFee() {
+    const participationStep = document.getElementById('participationStep') || document.getElementById('participationStepBoth');
+    if (!participationStep) return;
+
+    participationStep.innerHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="flex items-center gap-3">
+                <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div>
+                    <div class="font-semibold text-blue-800">Processing Payment...</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/payments/mock/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify({ auction_id: auctionId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            participationStep.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <div class="font-semibold text-green-800">✅ Payment Successful!</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                participationStep.classList.add('hidden');
+                const biddingStep = document.getElementById('biddingStep') || document.getElementById('biddingStepBoth');
+                biddingStep?.classList.remove('hidden');
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Submit bid forms
+const bidForms = document.querySelectorAll('#bidForm, #bidFormBoth');
+bidForms.forEach(form => {
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pledgeInput = form.querySelector('[id^="pledge_amount"]');
+        const pledgeAmount = pledgeInput?.value;
+        const messageDiv = document.getElementById('bidMessage');
+
+        try {
+            const response = await fetch('/api/bids/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    auction: auctionId,
+                    pledge_amount: pledgeAmount
+                })
+            });
+
+            if (response.ok && messageDiv) {
+                messageDiv.className = 'mt-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800';
+                messageDiv.textContent = '✅ Bid submitted successfully!';
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => loadLeaderboard(), 1000);
+                form.reset();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+{% if user.is_authenticated and user.user_type == 'buyer' %}
+checkPaymentStatus();
+{% endif %}
+
+loadLeaderboard();
+setInterval(loadLeaderboard, 10000);
+
+{% endif %}
+</script>
+{% endblock %}

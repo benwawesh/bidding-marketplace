@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}My Profile - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Profile Info -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900">{{ user.username }}</h2>
+                        <p class="text-gray-600 text-sm">{{ user.email }}</p>
+                        <p class="text-gray-600 text-sm">{{ user.phone_number }}</p>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Member Since</span>
+                                <span class="font-semibold">{{ user.date_joined|date:"M Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Total Bids</span>
+                                <span class="font-semibold">{{ user.bids.count }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Auctions Won</span>
+                                <span class="font-semibold text-green-600">{{ user.auctions_won }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <a href="#" class="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Bids -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">My Recent Bids</h2>
+                    
+                    {% if my_bids %}
+                        <div class="space-y-4">
+                            {% for bid in my_bids %}
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <a href="{% url 'auction_detail' bid.auction.id %}" class="font-semibold text-gray-900 hover:text-orange-500">
+                                            {{ bid.auction.title }}
+                                        </a>
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            Bid: <span class="font-semibold text-gray-900">KSh {{ bid.pledge_amount|floatformat:0|intcomma }}</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            {{ bid.submitted_at|date:"M d, Y H:i" }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if bid.auction.status == 'active' %}
+                                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                Active
+                                            </span>
+                                        {% elif bid.auction.status == 'closed' %}
+                                            {% if bid.auction.winner == user %}
+                                                <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                    🏆 Won!
+                                                </span>
+                                            {% else %}
+                                                <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                    Closed
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">No bids yet</h3>
+                            <p class="text-gray-600 mb-4">Start bidding on amazing products!</p>
+                            <a href="{% url 'browse' %}" class="inline-block bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+                                Browse Auctions
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

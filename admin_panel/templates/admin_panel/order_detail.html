@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Order #{{ order.order_number }} - BidMarket Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {% if error %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p class="text-red-800">{{ error }}</p>
+            <a href="{% url 'admin_panel:order_list' %}" class="text-red-600 hover:text-red-800 underline">← Back to Orders</a>
+        </div>
+        {% else %}
+
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <a href="{% url 'admin_panel:order_list' %}" class="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-block">
+                        ← Back to Orders
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Order #{{ order.order_number }}</h1>
+                    <p class="text-gray-600 mt-1">Placed on {{ order.created_at|date:"F d, Y \a\t H:i" }}</p>
+                </div>
+                <div class="text-right">
+                    {% if order.status == 'pending' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Payment</span>
+                    {% elif order.status == 'paid' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                    {% elif order.status == 'processing' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-blue-100 text-blue-800">Processing</span>
+                    {% elif order.status == 'shipped' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-purple-100 text-purple-800">Shipped</span>
+                    {% elif order.status == 'delivered' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-green-100 text-green-800">Delivered</span>
+                    {% elif order.status == 'cancelled' %}
+                        <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Order Items -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Order Items</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            {% for item in seller_items %}
+                            <div class="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div class="w-20 h-20 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                                    {% if item.product.main_image %}
+                                        <img src="{{ item.product.main_image.url }}" alt="{{ item.product_title }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-1">{{ item.product_title }}</h3>
+                                    <p class="text-sm text-gray-600 mb-1">Quantity: {{ item.quantity }}</p>
+                                    <p class="text-sm text-gray-600">Unit Price: KSh {{ item.product_price|floatformat:0|intcomma }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-gray-900">KSh {{ item.total_price|floatformat:0|intcomma }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-gray-700">
+                                    <span>Subtotal</span>
+                                    <span>KSh {{ order.subtotal|floatformat:0|intcomma }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-700">
+                                    <span>Shipping</span>
+                                    <span class="text-green-600 font-semibold">FREE</span>
+                                </div>
+                                <div class="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
+                                    <span>Total</span>
+                                    <span class="text-indigo-600">KSh {{ order.total_amount|floatformat:0|intcomma }}</span>
+                                </div>
+                                {% if seller_total != order.total_amount %}
+                                <div class="flex justify-between text-sm text-gray-600 pt-2">
+                                    <span>Your Revenue from this order:</span>
+                                    <span class="font-semibold text-green-600">KSh {{ seller_total|floatformat:0|intcomma }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Payment Information</h2>
+                    </div>
+                    <div class="p-6">
+                        <dl class="space-y-3">
+                            <div class="flex justify-between">
+                                <dt class="text-gray-600">Payment Status:</dt>
+                                <dd class="font-semibold">
+                                    {% if order.payment_status == 'pending' %}
+                                        <span class="text-yellow-600">Pending</span>
+                                    {% elif order.payment_status == 'completed' %}
+                                        <span class="text-green-600">Completed</span>
+                                    {% elif order.payment_status == 'failed' %}
+                                        <span class="text-red-600">Failed</span>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            {% if order.paid_at %}
+                            <div class="flex justify-between">
+                                <dt class="text-gray-600">Paid At:</dt>
+                                <dd class="font-medium text-gray-900">{{ order.paid_at|date:"F d, Y H:i" }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if order.mpesa_transaction_id %}
+                            <div class="flex justify-between">
+                                <dt class="text-gray-600">Transaction ID:</dt>
+                                <dd class="font-mono text-sm text-gray-900">{{ order.mpesa_transaction_id }}</dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Customer Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Customer</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div>
+                                <div class="text-sm text-gray-600">Name</div>
+                                <div class="font-medium text-gray-900">{{ order.shipping_name }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Phone</div>
+                                <div class="font-medium text-gray-900">{{ order.shipping_phone }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Username</div>
+                                <div class="font-medium text-gray-900">{{ order.user.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Shipping Address</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-1 text-gray-700">
+                            <div>{{ order.shipping_name }}</div>
+                            <div>{{ order.shipping_address }}</div>
+                            <div>{{ order.shipping_city }}</div>
+                            <div>{{ order.shipping_phone }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Status -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Update Status</h2>
+                    </div>
+                    <div class="p-6">
+                        <form method="POST" action="{% url 'admin_panel:update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+                                    <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="paid" {% if order.status == 'paid' %}selected{% endif %}>Paid</option>
+                                        <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                        <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                        <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                                    Update Status
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

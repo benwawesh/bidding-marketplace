@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BidMarket - Pay to Bid Marketplace{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg" x-data="{ mobileMenuOpen: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'home' %}" class="text-2xl font-bold text-indigo-600">
+                            BidMarket
+                        </a>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{% url 'home' %}" class="border-transparent text-gray-900 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Home
+                        </a>
+                        <a href="{% url 'browse' %}" class="border-transparent text-gray-900 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Browse Auctions
+                        </a>
+
+                        {% if user.is_authenticated and user.user_type == 'seller' %}
+                        <a href="{% url 'admin_panel:dashboard' %}" class="border-transparent text-gray-900 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right side navigation -->
+                <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <!-- Cart Icon -->
+                        <a href="{% url 'cart' %}" class="relative text-gray-700 hover:text-indigo-600 p-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <!-- Cart Count Badge -->
+                            <span
+                                id="cartCount"
+                                class="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden"
+                            >
+                                0
+                            </span>
+                        </a>
+
+                        <!-- User dropdown -->
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open" class="flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600">
+                                <span>{{ user.username }}</span>
+                                <svg class="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown menu -->
+                            <div x-show="open" @click.away="open = false" x-transition class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+                                {% if user.user_type == 'seller' %}
+                                <a href="{% url 'admin_panel:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                                <a href="{% url 'admin_panel:auction_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Auctions</a>
+                                <a href="{% url 'admin_panel:revenue_report' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Revenue</a>
+                                <div class="border-t border-gray-100"></div>
+                                {% endif %}
+                                <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    📊 Dashboard
+                                </a>
+                                <a href="{% url 'order_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    📦 My Orders
+                                </a>
+                                <a href="{% url 'cart' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    🛒 My Cart
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <div class="border-t border-gray-100"></div>
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium">
+                            Login
+                        </a>
+                        <a href="{% url 'signup' %}" class="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md text-sm font-medium">
+                            Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="flex items-center sm:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div x-show="mobileMenuOpen" class="sm:hidden">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="{% url 'home' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Home</a>
+                <a href="{% url 'browse' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Browse</a>
+
+                {% if user.is_authenticated %}
+                    <!-- Cart Link for Mobile -->
+                    <a href="{% url 'cart' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                        🛒 Cart <span id="cartCountMobile" class="hidden">(<span>0</span>)</span>
+                    </a>
+
+                    <!-- Order History Link for Mobile -->
+                    <a href="{% url 'order_history' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                        📦 My Orders
+                    </a>
+
+                    {% if user.user_type == 'seller' %}
+                    <a href="{% url 'admin_panel:dashboard' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Dashboard</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="border-transparent text-red-600 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Login</a>
+                    <a href="{% url 'signup' %}" class="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">BidMarket</h3>
+                    <p class="text-gray-400">Kenya's premier pay-to-bid auction marketplace.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="{% url 'browse' %}" class="text-gray-400 hover:text-white">Browse Auctions</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4">For Sellers</h4>
+                    <ul class="space-y-2">
+                        {% if user.is_authenticated and user.user_type == 'seller' %}
+                        <li><a href="{% url 'admin_panel:dashboard' %}" class="text-gray-400 hover:text-white">Dashboard</a></li>
+                        <li><a href="{% url 'admin_panel:auction_create' %}" class="text-gray-400 hover:text-white">Create Auction</a></li>
+                        {% else %}
+                        <li><a href="{% url 'signup' %}" class="text-gray-400 hover:text-white">Become a Seller</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-gray-700 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 BidMarket. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Count Update Script -->
+    {% if user.is_authenticated %}
+    <script>
+    async function updateCartCount() {
+        try {
+            const response = await fetch('/api/cart/', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const cart = await response.json();
+                const cartCountElement = document.getElementById('cartCount');
+                const cartCountMobileElement = document.getElementById('cartCountMobile');
+
+                if (cart.total_items > 0) {
+                    // Desktop badge
+                    if (cartCountElement) {
+                        cartCountElement.textContent = cart.total_items;
+                        cartCountElement.classList.remove('hidden');
+                    }
+
+                    // Mobile count
+                    if (cartCountMobileElement) {
+                        cartCountMobileElement.querySelector('span').textContent = cart.total_items;
+                        cartCountMobileElement.classList.remove('hidden');
+                    }
+                } else {
+                    // Hide badges when cart is empty
+                    if (cartCountElement) {
+                        cartCountElement.classList.add('hidden');
+                    }
+                    if (cartCountMobileElement) {
+                        cartCountMobileElement.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading cart count:', error);
+        }
+    }
+
+    // Update cart count on page load
+    if (document.getElementById('cartCount')) {
+        updateCartCount();
+
+        // Optionally update every 30 seconds
+        // setInterval(updateCartCount, 30000);
+    }
+    </script>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

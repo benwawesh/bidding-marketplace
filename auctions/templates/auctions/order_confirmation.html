@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Order Confirmation - BidMarket{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {% if order %}
+        <!-- Success Message -->
+        <div class="bg-white rounded-lg shadow-sm p-8 text-center mb-6">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h1>
+            <p class="text-gray-600 mb-6">Thank you for your order. We'll process it shortly.</p>
+            
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 inline-block">
+                <div class="text-sm text-indigo-800 mb-1">Order Number</div>
+                <div class="text-2xl font-bold text-indigo-600">{{ order.order_number }}</div>
+            </div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Order Details</h2>
+            
+            <!-- Status -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Status</div>
+                    <div class="flex items-center gap-2">
+                        {% if order.status == 'pending' %}
+                            <span class="bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full">Pending Payment</span>
+                        {% elif order.status == 'paid' %}
+                            <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">Paid</span>
+                        {% elif order.status == 'processing' %}
+                            <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">Processing</span>
+                        {% elif order.status == 'shipped' %}
+                            <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full">Shipped</span>
+                        {% elif order.status == 'delivered' %}
+                            <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">Delivered</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-600 mb-1">Order Date</div>
+                    <div class="font-semibold text-gray-900">{{ order.created_at|date:"M d, Y" }}</div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Items Ordered</h3>
+                <div class="space-y-3">
+                    {% for item in order.items.all %}
+                    <div class="flex gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-20 h-20 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                            {% if item.product.main_image %}
+                                <img src="{{ item.product.main_image.url }}" alt="{{ item.product_title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 mb-1">{{ item.product_title }}</h4>
+                            <p class="text-sm text-gray-600">Quantity: {{ item.quantity }}</p>
+                            <p class="text-sm text-gray-600">Price: KSh {{ item.product_price|floatformat:0|intcomma }}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-gray-900">KSh {{ item.total_price|floatformat:0|intcomma }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="space-y-2 pt-4 border-t">
+                <div class="flex justify-between text-gray-700">
+                    <span>Subtotal</span>
+                    <span>KSh {{ order.subtotal|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="flex justify-between text-gray-700">
+                    <span>Shipping</span>
+                    <span class="text-green-600 font-semibold">FREE</span>
+                </div>
+                <div class="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
+                    <span>Total</span>
+                    <span class="text-indigo-600">KSh {{ order.total_amount|floatformat:0|intcomma }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Shipping Information</h2>
+            <div class="space-y-2 text-gray-700">
+                <div><strong>Name:</strong> {{ order.shipping_name }}</div>
+                <div><strong>Phone:</strong> {{ order.shipping_phone }}</div>
+                <div><strong>Address:</strong> {{ order.shipping_address }}</div>
+                <div><strong>City:</strong> {{ order.shipping_city }}</div>
+            </div>
+        </div>
+
+        <!-- Payment Status -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Payment Information</h2>
+            
+            {% if order.payment_status == 'pending' %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-yellow-900 mb-1">Payment Pending</h3>
+                        <p class="text-sm text-yellow-800 mb-3">Please complete the M-Pesa payment to confirm your order.</p>
+                        <button
+                            onclick="initiatePayment()"
+                            class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+                        >
+                            Pay Now via M-Pesa
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% elif order.payment_status == 'completed' %}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-green-900 mb-1">Payment Confirmed</h3>
+                        <p class="text-sm text-green-800">Your payment has been received successfully.</p>
+                        {% if order.paid_at %}
+                        <p class="text-xs text-green-700 mt-1">Paid on {{ order.paid_at|date:"M d, Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4">
+            <a href="{% url 'order_history' %}" class="flex-1 bg-indigo-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                View All Orders
+            </a>
+            <a href="{% url 'home' %}" class="flex-1 bg-gray-200 text-gray-700 text-center px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                Continue Shopping
+            </a>
+        </div>
+
+        {% else %}
+        <!-- Order Not Found -->
+        <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+            <svg class="mx-auto w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Order Not Found</h3>
+            <p class="text-gray-600 mb-4">We couldn't find this order.</p>
+            <a href="{% url 'home' %}" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                Go Home
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% if order %}
+<script>
+const orderId = '{{ order.id }}';
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function initiatePayment() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Processing Payment...';
+
+    try {
+        const response = await fetch('/api/payments/mock-order/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                order_id: orderId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('✅ Payment Successful!\n\nTransaction ID: ' + data.transaction_id);
+            window.location.reload();
+        } else {
+            alert('❌ Payment Failed\n\n' + data.error);
+            btn.disabled = false;
+            btn.textContent = 'Pay Now via M-Pesa';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Payment Failed\n\nPlease try again.');
+        btn.disabled = false;
+        btn.textContent = 'Pay Now via M-Pesa';
+    }
+}
+</script>
+{% endif %}
+{% endblock %}

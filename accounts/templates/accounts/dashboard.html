@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}My Dashboard - BidMarket{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Dashboard</h1>
+            <p class="text-gray-600 mt-2">Welcome back, {{ user.username }}!</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-medium text-gray-600">Total Bids</div>
+                    <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.total_bids }}</div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-medium text-gray-600">Auctions Won</div>
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.auctions_won }}</div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-medium text-gray-600">Participated</div>
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.auctions_participated }}</div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-medium text-gray-600">Total Spent</div>
+                    <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-gray-900">KSh {{ stats.total_spent|floatformat:0|intcomma }}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+
+               <!-- Active Bids -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Active Bids</h2>
+                    {% if active_bids %}
+                    <div class="space-y-3">
+                        {% for bid in active_bids %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <a href="{% url 'auction_detail' bid.auction.id %}" class="text-lg font-semibold text-gray-900 hover:text-orange-600">
+                                    {{ bid.auction.title }}
+                                </a>
+                                <div class="flex gap-2">
+                                    <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">
+                                        ACTIVE
+                                    </span>
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">
+                                        Round {{ bid.round.round_number }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm mb-2">
+                                <div>
+                                    <span class="text-gray-600">Your Bid:</span>
+                                    <span class="font-semibold text-gray-900">KSh {{ bid.pledge_amount|floatformat:0|intcomma }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Base Price:</span>
+                                    <span class="font-semibold text-gray-900">KSh {{ bid.round.base_price|floatformat:0|intcomma }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Entry Fee Paid:</span>
+                                    <span class="font-semibold text-green-600">✓ KSh {{ bid.round.participation_fee|floatformat:0|intcomma }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Check if there's a newer round -->
+                            {% with current_round=bid.auction.get_current_round %}
+                            {% if current_round and current_round.round_number > bid.round.round_number %}
+                            <div class="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-yellow-800">
+                                            ⚠️ New Round {{ current_round.round_number }} Available!
+                                        </p>
+                                        <p class="text-sm text-yellow-700 mt-1">
+                                            New base price: KSh {{ current_round.base_price|floatformat:0|intcomma }} •
+                                            Entry fee: KSh {{ current_round.participation_fee|floatformat:0|intcomma }}
+                                        </p>
+                                        <p class="text-xs text-yellow-600 mt-1">Your previous bid is no longer valid. Pay to rejoin this round.</p>
+                                    </div>
+                                </div>
+                                <a href="{% url 'auction_detail' bid.auction.id %}" class="mt-2 inline-block text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">
+                                    Pay & Rejoin Round {{ current_round.round_number }} →
+                                </a>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+
+                            <div class="mt-2 text-xs text-gray-500">
+                                Bid submitted {{ bid.submitted_at|timesince }} ago
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="mx-auto w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>No active bids</p>
+                        <a href="{% url 'browse' %}" class="text-orange-600 hover:text-orange-700 text-sm mt-2 inline-block">
+                            Browse Auctions →
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bid History -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Bid History</h2>
+                    {% if all_bids %}
+                    <div class="space-y-3">
+                        {% for bid in all_bids %}
+                        <div class="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                            <div>
+                                <a href="{% url 'auction_detail' bid.auction.id %}" class="font-medium text-gray-900 hover:text-orange-600">
+                                    {{ bid.auction.title|truncatewords:8 }}
+                                </a>
+                                <div class="text-sm text-gray-500">{{ bid.submitted_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-gray-900">KSh {{ bid.pledge_amount|floatformat:0|intcomma }}</div>
+                                <div class="text-xs">
+                                    {% if bid.auction.status == 'active' %}
+                                        <span class="text-green-600">Active</span>
+                                    {% elif bid.auction.status == 'closed' %}
+                                        {% if bid.auction.winner == user %}
+                                            <span class="text-green-600 font-semibold">WON</span>
+                                        {% else %}
+                                            <span class="text-gray-600">Closed</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center py-8 text-gray-500">No bid history yet</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+
+                <!-- Won Auctions -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Won Auctions</h2>
+                    {% if won_auctions %}
+                    <div class="space-y-3">
+                        {% for auction in won_auctions %}
+                        <div class="border border-green-200 bg-green-50 rounded-lg p-4">
+                            <a href="{% url 'auction_detail' auction.id %}" class="font-semibold text-gray-900 hover:text-orange-600">
+                                {{ auction.title }}
+                            </a>
+                            <div class="text-sm text-gray-700 mt-2">
+                                Won for: <span class="font-bold text-green-700">KSh {{ auction.winning_amount|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="mx-auto w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                        </svg>
+                        <p>No wins yet</p>
+                        <p class="text-xs mt-1">Keep bidding!</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recent Payments -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Payments</h2>
+                    {% if payments %}
+                    <div class="space-y-2">
+                        {% for payment in payments %}
+                        <div class="flex justify-between items-center py-2 text-sm">
+                            <div>
+                                <div class="font-medium text-gray-900">{{ payment.get_payment_type_display }}</div>
+                                <div class="text-xs text-gray-500">{{ payment.created_at|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-gray-900">KSh {{ payment.amount|floatformat:0|intcomma }}</div>
+                                <div class="text-xs">
+                                    {% if payment.status == 'completed' %}
+                                        <span class="text-green-600">✓</span>
+                                    {% else %}
+                                        <span class="text-yellow-600">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center py-8 text-gray-500 text-sm">No payments yet</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

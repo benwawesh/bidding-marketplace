@@ -1,0 +1,748 @@
+{% extends "base.html" %}
+
+{% block title %}Create Product - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'admin_panel:dashboard' %}" class="text-indigo-600 hover:text-indigo-700 font-medium mb-4 inline-block">
+                ← Back to Dashboard
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Create New Product</h1>
+            <p class="text-gray-600 mt-2">Add a product for sale or auction</p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <form id="createAuctionForm" class="space-y-6">
+
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Title *
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="e.g., iPhone 15 Pro Max - 256GB"
+                    >
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description *
+                    </label>
+                    <textarea
+                        id="description"
+                        rows="4"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Describe your product in detail..."
+                    ></textarea>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                        Category *
+                    </label>
+                    <select
+                        id="category"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                        <option value="">Select a category</option>
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">
+                        No categories? <a href="#" onclick="event.preventDefault(); showCategoryModal();" class="text-indigo-600 hover:text-indigo-700">Create one first</a>
+                    </p>
+                </div>
+
+                <!-- Product Type -->
+                <div>
+                    <label for="product_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Type *
+                    </label>
+                    <select
+                        id="product_type"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        onchange="togglePriceFields()"
+                    >
+                        <option value="buy_now">Buy Now - Fixed Price Only</option>
+                        <option value="auction" selected>Auction - Bidding Only</option>
+                        <option value="both">Both - Buy Now or Bid</option>
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">Choose how users can purchase this product</p>
+                </div>
+
+                <!-- Buy Now Price -->
+                <div id="buyNowPriceField" style="display: none;">
+                    <label for="buy_now_price" class="block text-sm font-medium text-gray-700 mb-2">
+                        Buy Now Price (KSh) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        id="buy_now_price"
+                        step="1"
+                        min="1"
+                        placeholder="e.g., 120000"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                    <p class="mt-1 text-sm text-gray-500">Fixed price for instant purchase</p>
+                </div>
+
+                <!-- Stock Quantity -->
+                <div id="stockQuantityField" style="display: none;">
+                    <label for="stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                        Stock Quantity *
+                    </label>
+                    <input
+                        type="number"
+                        id="stock_quantity"
+                        value="1"
+                        min="1"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                    <p class="mt-1 text-sm text-gray-500">Number of units available</p>
+                </div>
+
+                <!-- Pricing Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Base Price -->
+                    <div>
+                        <label for="base_price" id="basePriceLabel" class="block text-sm font-medium text-gray-700 mb-2">
+                            Base Price (KSh) *
+                        </label>
+                        <input
+                            type="number"
+                            id="base_price"
+                            step="1"
+                            min="1"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="50000"
+                        >
+                        <p class="mt-1 text-sm text-gray-500" id="basePriceHelp">Minimum pledge amount</p>
+                    </div>
+
+                    <!-- Participation Fee -->
+                    <div id="participationFeeField">
+                        <label for="participation_fee" class="block text-sm font-medium text-gray-700 mb-2">
+                            Entry Fee (KSh) *
+                        </label>
+                        <input
+                            type="number"
+                            id="participation_fee"
+                            step="1"
+                            min="1"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Fee to participate in bidding</p>
+                    </div>
+                </div>
+
+                <!-- Timing Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Start Time -->
+                    <div>
+                        <label for="start_time" class="block text-sm font-medium text-gray-700 mb-2">
+                            Start Time *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="start_time"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                    </div>
+
+                    <!-- End Time -->
+                    <div>
+                        <label for="end_time" class="block text-sm font-medium text-gray-700 mb-2">
+                            End Time *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="end_time"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <!-- Image Upload -->
+                <div>
+                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Image *
+                    </label>
+                    <input
+                        type="file"
+                        id="main_image"
+                        accept="image/*"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- ========== FLASH SALES & HOMEPAGE CURATION (NEW) ========== -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">📣 Promotions & Homepage</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- Flash Sale Toggle -->
+                        <div class="col-span-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="is_flash_sale"
+                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                    onchange="toggleFlashSaleFields()"
+                                >
+                                <span class="ml-2 text-sm font-medium text-gray-700">
+                                    ⚡ Mark as Flash Sale (shows in flash sales section with countdown)
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Discount Percentage -->
+                        <div id="discountField" style="display: none;">
+                            <label for="discount_percentage" class="block text-sm font-medium text-gray-700 mb-2">
+                                Discount Percentage
+                            </label>
+                            <input
+                                type="number"
+                                id="discount_percentage"
+                                min="0"
+                                max="99"
+                                value="0"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="e.g., 60"
+                            >
+                            <p class="mt-1 text-sm text-gray-500">Display percentage (0-99%) - purely visual</p>
+                        </div>
+
+                        <!-- Flash Sale End Time -->
+                        <div id="flashEndField" style="display: none;">
+                            <label for="flash_sale_ends_at" class="block text-sm font-medium text-gray-700 mb-2">
+                                Flash Sale Ends At
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="flash_sale_ends_at"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            >
+                            <p class="mt-1 text-sm text-gray-500">When countdown timer expires</p>
+                        </div>
+
+                        <!-- Featured Toggle -->
+                        <div class="col-span-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="is_featured"
+                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                >
+                                <span class="ml-2 text-sm font-medium text-gray-700">
+                                    ⭐ Feature in Hero Carousel (shows in homepage slider)
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div>
+                            <label for="display_order" class="block text-sm font-medium text-gray-700 mb-2">
+                                Display Order
+                            </label>
+                            <input
+                                type="number"
+                                id="display_order"
+                                min="0"
+                                value="0"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="0"
+                            >
+                            <p class="mt-1 text-sm text-gray-500">Lower numbers appear first (0 = highest priority)</p>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- ========== END FLASH SALES SECTION ========== -->
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                </div>
+
+                <!-- Success Message -->
+                <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
+                    >
+                        Create Product
+                    </button>
+                    <button
+                        type="button"
+                        id="activateBtn"
+                        class="hidden bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+                    >
+                        Activate Product
+                    </button>
+
+                        href="{% url 'admin_panel:dashboard' %}"
+                        class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
+                    >
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div id="categoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Create Category</h3>
+            <form id="createCategoryForm" class="space-y-4">
+                <div>
+                    <label for="cat_name" class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                    <input
+                        type="text"
+                        id="cat_name"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Electronics"
+                    >
+                </div>
+                <div>
+                    <label for="cat_slug" class="block text-sm font-medium text-gray-700 mb-2">Slug *</label>
+                    <input
+                        type="text"
+                        id="cat_slug"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                        placeholder="electronics"
+                    >
+                </div>
+                <div>
+                    <label for="cat_description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                        id="cat_description"
+                        rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    ></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+                    >
+                        Create
+                    </button>
+                    <button
+                        type="button"
+                        onclick="hideCategoryModal()"
+                        class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // Toggle price fields based on product type
+    window.togglePriceFields = function() {
+        const productType = document.getElementById('product_type').value;
+        const buyNowPriceField = document.getElementById('buyNowPriceField');
+        const stockQuantityField = document.getElementById('stockQuantityField');
+        const buyNowPriceInput = document.getElementById('buy_now_price');
+        const participationFeeField = document.getElementById('participationFeeField');
+        const participationFeeInput = document.getElementById('participation_fee');
+        const basePriceLabel = document.getElementById('basePriceLabel');
+        const basePriceHelp = document.getElementById('basePriceHelp');
+        const basePriceInput = document.getElementById('base_price');
+
+        // Get the parent container of base_price (the entire div)
+        const basePriceParentDiv = basePriceInput.closest('div');
+
+        // Get timing fields - need to find the parent grid container
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+        const timingGrid = startTimeInput.closest('.grid');
+
+        if (productType === 'buy_now') {
+            // Buy Now only - show buy now price & stock, hide everything else
+            buyNowPriceField.style.display = 'block';
+            stockQuantityField.style.display = 'block';
+            buyNowPriceInput.required = true;
+
+            // HIDE base price completely
+            basePriceParentDiv.style.display = 'none';
+            basePriceInput.required = false;
+
+            // HIDE participation fee
+            participationFeeField.style.display = 'none';
+            participationFeeInput.required = false;
+
+            // HIDE timing fields
+            timingGrid.style.display = 'none';
+            startTimeInput.required = false;
+            endTimeInput.required = false;
+
+        } else if (productType === 'auction') {
+            // Auction only - hide buy now, show auction fields
+            buyNowPriceField.style.display = 'none';
+            stockQuantityField.style.display = 'none';
+            buyNowPriceInput.required = false;
+
+            // SHOW base price
+            basePriceParentDiv.style.display = 'block';
+            basePriceInput.required = true;
+            basePriceLabel.textContent = 'Base Price (KSh) *';
+            basePriceHelp.textContent = 'Minimum pledge amount';
+
+            // SHOW participation fee
+            participationFeeField.style.display = 'block';
+            participationFeeInput.required = true;
+
+            // SHOW timing fields
+            timingGrid.style.display = 'grid';
+            startTimeInput.required = true;
+            endTimeInput.required = true;
+
+        } else if (productType === 'both') {
+            // Both - show all fields
+            buyNowPriceField.style.display = 'block';
+            stockQuantityField.style.display = 'block';
+            buyNowPriceInput.required = true;
+
+            // SHOW base price
+            basePriceParentDiv.style.display = 'block';
+            basePriceInput.required = true;
+            basePriceLabel.textContent = 'Starting Bid Price (KSh) *';
+            basePriceHelp.textContent = 'Minimum pledge amount for bidding';
+
+            // SHOW participation fee
+            participationFeeField.style.display = 'block';
+            participationFeeInput.required = true;
+
+            // SHOW timing fields
+            timingGrid.style.display = 'grid';
+            startTimeInput.required = true;
+            endTimeInput.required = true;
+        }
+    };
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Load categories
+    async function loadCategories() {
+        try {
+            const response = await fetch('/api/categories/', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to load categories:', response.status);
+                return;
+            }
+
+            const data = await response.json();
+            const select = document.getElementById('category');
+
+            if (!select) {
+                console.error('Category select element not found');
+                return;
+            }
+
+            select.innerHTML = '<option value="">Select a category</option>';
+
+            const categories = data.results || data;
+            console.log('Categories loaded:', categories);
+
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    // Create category
+    document.getElementById('createCategoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            name: document.getElementById('cat_name').value,
+            slug: document.getElementById('cat_slug').value,
+            description: document.getElementById('cat_description').value,
+            is_active: true
+        };
+
+        try {
+            const response = await fetch('/api/categories/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const newCategory = await response.json();
+                console.log('Category created:', newCategory);
+                hideCategoryModal();
+                await loadCategories();
+                document.getElementById('category').value = newCategory.id;
+                alert('Category created successfully!');
+            } else {
+                const error = await response.json();
+                console.error('API Error:', error);
+                alert('Error: ' + JSON.stringify(error));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to create category: ' + error.message);
+        }
+    });
+
+    // Create product
+    document.getElementById('createAuctionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating...';
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('category', document.getElementById('category').value);
+
+        const productType = document.getElementById('product_type').value;
+        formData.append('product_type', productType);
+
+        // Handle pricing based on product type
+        if (productType === 'buy_now') {
+            // For buy_now, use buy_now_price as base_price too
+            const buyNowPrice = document.getElementById('buy_now_price').value;
+            formData.append('base_price', buyNowPrice);
+            formData.append('buy_now_price', buyNowPrice);
+            formData.append('participation_fee', '0');
+            formData.append('stock_quantity', document.getElementById('stock_quantity').value);
+        } else if (productType === 'auction') {
+            // For auction, only base_price and participation_fee
+            formData.append('base_price', document.getElementById('base_price').value);
+            formData.append('participation_fee', document.getElementById('participation_fee').value);
+        } else if (productType === 'both') {
+            // For both, include all prices
+            formData.append('base_price', document.getElementById('base_price').value);
+            formData.append('buy_now_price', document.getElementById('buy_now_price').value);
+            formData.append('participation_fee', document.getElementById('participation_fee').value);
+            formData.append('stock_quantity', document.getElementById('stock_quantity').value);
+        }
+
+        // Handle dates based on product type
+        if (productType === 'buy_now') {
+            // For buy now, use current date as start and far future as end
+            const now = new Date();
+            const farFuture = new Date();
+            farFuture.setFullYear(farFuture.getFullYear() + 10);
+            formData.append('start_time', now.toISOString());
+            formData.append('end_time', farFuture.toISOString());
+        } else {
+            // For auction/both, use the actual datetime inputs
+            formData.append('start_time', new Date(document.getElementById('start_time').value).toISOString());
+            formData.append('end_time', new Date(document.getElementById('end_time').value).toISOString());
+        }
+
+        const imageInput = document.getElementById('main_image');
+        if (imageInput.files.length > 0) {
+            formData.append('main_image', imageInput.files[0]);
+        }
+
+        // Add flash sale and homepage curation fields
+        formData.append('is_flash_sale', document.getElementById('is_flash_sale').checked);
+        formData.append('discount_percentage', document.getElementById('discount_percentage').value || 0);
+        formData.append('is_featured', document.getElementById('is_featured').checked);
+        formData.append('display_order', document.getElementById('display_order').value || 0);
+
+        // Add flash sale end time if set
+        const flashEndTime = document.getElementById('flash_sale_ends_at').value;
+        if (flashEndTime) {
+            formData.append('flash_sale_ends_at', new Date(flashEndTime).toISOString());
+        }
+
+        try {
+            const response = await fetch('/api/auctions/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: formData
+            });
+
+             if (response.ok) {
+                        const auction = await response.json();
+                        console.log('Full API Response:', auction);
+                        console.log('All keys in response:', Object.keys(auction));
+
+                        const auctionId = auction.id || auction.pk || auction.uuid;
+                        console.log('Extracted auction ID:', auctionId);
+
+                if (!auctionId) {
+                    console.error('No product ID found in response:', auction);
+                    errorDiv.textContent = 'Error: Could not get product ID from response';
+                    errorDiv.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Product';
+                    return;
+                }
+
+                successDiv.textContent = 'Product created successfully! Click "Activate" to make it live.';
+                successDiv.classList.remove('hidden');
+
+                const activateBtn = document.getElementById('activateBtn');
+                activateBtn.classList.remove('hidden');
+                activateBtn.onclick = () => activateAuction(auctionId);
+
+                submitBtn.textContent = 'Created ✓';
+            } else {
+                const error = await response.json();
+                errorDiv.textContent = 'Error: ' + JSON.stringify(error);
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Product';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorDiv.textContent = 'Failed to create product. Please try again.';
+            errorDiv.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Product';
+        }
+    });
+
+    // Activate product
+    async function activateAuction(auctionId) {
+        const activateBtn = document.getElementById('activateBtn');
+        activateBtn.disabled = true;
+        activateBtn.textContent = 'Activating...';
+
+        try {
+            const response = await fetch('/api/auctions/' + auctionId + '/activate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                alert('Product activated successfully!');
+                window.location.href = "{% url 'admin_panel:dashboard' %}";
+            } else {
+                alert('Failed to activate product');
+                activateBtn.disabled = false;
+                activateBtn.textContent = 'Activate Product';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to activate product');
+            activateBtn.disabled = false;
+            activateBtn.textContent = 'Activate Product';
+        }
+    }
+
+    // Modal functions
+    window.showCategoryModal = function() {
+        document.getElementById('categoryModal').classList.remove('hidden');
+    };
+
+    window.hideCategoryModal = function() {
+        document.getElementById('categoryModal').classList.add('hidden');
+        document.getElementById('createCategoryForm').reset();
+    };
+
+    // Auto-generate slug from name
+    document.getElementById('cat_name').addEventListener('input', (e) => {
+        const slug = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        document.getElementById('cat_slug').value = slug;
+    });
+
+    // Toggle flash sale fields
+    window.toggleFlashSaleFields = function() {
+        const isFlashSale = document.getElementById('is_flash_sale').checked;
+        const discountField = document.getElementById('discountField');
+        const flashEndField = document.getElementById('flashEndField');
+
+        if (isFlashSale) {
+            discountField.style.display = 'block';
+            flashEndField.style.display = 'block';
+        } else {
+            discountField.style.display = 'none';
+            flashEndField.style.display = 'none';
+        }
+    };
+
+    // Initialize
+    loadCategories();
+    togglePriceFields(); // Set initial state
+
+    // Initialize
+    loadCategories();
+    togglePriceFields(); // Set initial state
+})();
+</script>
+{% endblock %}

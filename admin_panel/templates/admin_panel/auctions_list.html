@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}My Auctions - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-3xl font-bold text-gray-900">My Auctions</h1>
+                    <p class="mt-1 text-sm text-gray-500">Manage all your auctions</p>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <a href="{% url 'admin_panel:auction_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Auction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Filter Tabs -->
+        <div class="mb-6">
+            <nav class="flex space-x-4">
+                <a href="?status=all" class="{% if status_filter == 'all' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} px-3 py-2 font-medium text-sm rounded-md">
+                    All
+                </a>
+                <a href="?status=active" class="{% if status_filter == 'active' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} px-3 py-2 font-medium text-sm rounded-md">
+                    Active
+                </a>
+                <a href="?status=draft" class="{% if status_filter == 'draft' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} px-3 py-2 font-medium text-sm rounded-md">
+                    Draft
+                </a>
+                <a href="?status=closed" class="{% if status_filter == 'closed' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} px-3 py-2 font-medium text-sm rounded-md">
+                    Closed
+                </a>
+            </nav>
+        </div>
+
+        <!-- Auctions List -->
+        {% if auctions %}
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+                {% for auction in auctions %}
+                <li>
+                    <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center">
+                                    <h3 class="text-lg font-medium text-indigo-600 truncate">
+                                        <a href="{% url 'admin_panel:auction_detail' auction.id %}">
+                                            {{ auction.title }}
+                                        </a>
+                                    </h3>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if auction.status == 'active' %}bg-green-100 text-green-800
+                                        {% elif auction.status == 'draft' %}bg-gray-100 text-gray-800
+                                        {% elif auction.status == 'closed' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ auction.get_status_display }}
+                                    </span>
+
+                                    <!-- Flash Sale Badge -->
+                                    {% if auction.is_flash_sale %}
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        ⚡ Flash Sale
+                                        {% if auction.discount_percentage > 0 %}
+                                            ({{ auction.discount_percentage }}% OFF)
+                                        {% endif %}
+                                    </span>
+                                    {% endif %}
+
+                                    <!-- Featured Badge -->
+                                    {% if auction.is_featured %}
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        ⭐ Featured
+                                    </span>
+                                    {% endif %}
+
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <span class="mr-4">
+                                        <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                        </svg>
+                                        {{ auction.category.name }}
+                                    </span>
+                                    <span class="mr-4">
+                                        <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        KES {{ auction.base_price|floatformat:0 }}
+                                    </span>
+                                    <span>
+                                        <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        {{ auction.get_participant_count }} participants
+                                    </span>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-500">
+                                    Created {{ auction.created_at|timesince }} ago • 
+                                    {% if auction.is_active %}
+                                        Ends {{ auction.end_time|timeuntil }}
+                                    {% else %}
+                                        Ended {{ auction.end_time|timesince }} ago
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="ml-5 flex-shrink-0">
+                                <a href="{% url 'admin_panel:auction_detail' auction.id %}" class="text-indigo-600 hover:text-indigo-900 font-medium">
+                                    View Details →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="bg-white shadow rounded-lg p-12 text-center">
+            <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No auctions found</h3>
+            <p class="mt-2 text-gray-500">Get started by creating your first auction.</p>
+            <a href="{% url 'admin_panel:auction_create' %}" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Auction
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

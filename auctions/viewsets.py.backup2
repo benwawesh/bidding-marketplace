@@ -1,0 +1,696 @@
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+from django.utils import timezone
+from django.db.models import Count, Sum, Q
+from decimal import Decimal
+from django.shortcuts import get_object_or_404
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem
+from .serializers import (
+    CategorySerializer,
+    AuctionListSerializer,
+    AuctionDetailSerializer,
+    AuctionCreateSerializer,
+    RoundSerializer,
+    ParticipationSerializer,
+    BidSerializer,
+    PaymentSerializer,
+    CartSerializer,
+    CartItemSerializer,
+    AddToCartSerializer,
+    OrderSerializer,
+    CreateOrderSerializer
+)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing categories
+    LIST: GET /api/auctions/categories/
+    RETRIEVE: GET /api/auctions/categories/{id}/
+    CREATE: POST /api/auctions/categories/ (admin only)
+    """
+    queryset = Category.objects.filter(is_active=True)
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'id'
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+
+
+class AuctionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing auctions
+    LIST: GET /api/auctions/
+    RETRIEVE: GET /api/auctions/{uuid}/
+    CREATE: POST /api/auctions/ (sellers only)
+    UPDATE: PATCH /api/auctions/{uuid}/ (seller only)
+    DELETE: DELETE /api/auctions/{uuid}/ (seller only)
+    """
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'id'
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'category', 'created_by']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at', 'start_time', 'end_time', 'base_price']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        """Filter auctions based on query parameters"""
+        queryset = Auction.objects.select_related('category', 'created_by', 'winner')
+
+        # Filter by active status
+        if self.request.query_params.get('active') == 'true':
+            now = timezone.now()
+            queryset = queryset.filter(
+                status='active',
+                start_time__lte=now,
+                end_time__gte=now
+            )
+
+        # Filter by ending soon (next 24 hours)
+        if self.request.query_params.get('ending_soon') == 'true':
+            now = timezone.now()
+            tomorrow = now + timezone.timedelta(days=1)
+            queryset = queryset.filter(
+                status='active',
+                end_time__lte=tomorrow,
+                end_time__gte=now
+            )
+
+        return queryset
+
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'list':
+            return AuctionListSerializer
+        elif self.action == 'create':
+            return AuctionCreateSerializer
+        else:
+            return AuctionDetailSerializer
+
+    def perform_create(self, serializer):
+        """Set the creator when creating auction"""
+        # Allow superusers and sellers to create products
+        if not (self.request.user.user_type == 'seller' or self.request.user.is_superuser):
+            raise PermissionError("Only sellers and admins can create products")
+        serializer.save(created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        """Only allow seller to update their own auctions"""
+        if serializer.instance.created_by != self.request.user:
+            raise PermissionError("You can only update your own auctions")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """Only allow seller to delete their own auctions"""
+        if instance.created_by != self.request.user:
+            raise PermissionError("You can only delete your own auctions")
+
+        # Don't actually delete, just mark as cancelled
+        instance.status = 'cancelled'
+        instance.save()
+
+    @action(detail=True, methods=['get'])
+    def rounds(self, request, id=None):
+        """
+        GET /api/auctions/{uuid}/rounds/
+        Get all rounds for an auction
+        """
+        auction = self.get_object()
+        rounds = auction.rounds.all()
+        serializer = RoundSerializer(rounds, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def create_round(self, request, id=None):
+        """
+        POST /api/auctions/{uuid}/create_round/
+        Create a new round (seller only, invalidates old bids)
+        Body: {base_price, participation_fee, start_time, end_time}
+        """
+        auction = self.get_object()
+
+        # Check if user is the seller
+        if auction.created_by != request.user:
+            return Response(
+                {"error": "Only the auction creator can create rounds"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get last round number
+        last_round = auction.rounds.order_by('-round_number').first()
+        next_round_number = (last_round.round_number + 1) if last_round else 1
+
+        # Deactivate all previous rounds
+        auction.rounds.update(is_active=False)
+
+        # Invalidate all previous bids
+        Bid.objects.filter(auction=auction).update(is_valid=False)
+
+        # Create new round
+        round_data = request.data.copy()
+        round_data['auction'] = auction.id
+        round_data['round_number'] = next_round_number
+        round_data['is_active'] = True
+
+        serializer = RoundSerializer(data=round_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'])
+    def bids(self, request, id=None):
+        """
+        GET /api/auctions/{uuid}/bids/
+        Get all valid bids for an auction
+        """
+        auction = self.get_object()
+        bids = auction.bids.filter(is_valid=True).select_related('user', 'round')
+        serializer = BidSerializer(bids, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def leaderboard(self, request, id=None):
+        """
+        GET /api/auctions/{uuid}/leaderboard/
+        Get top bids in current round
+        """
+        auction = self.get_object()
+        current_round = auction.get_current_round()
+
+        if not current_round:
+            return Response({"error": "No active round"}, status=status.HTTP_400_BAD_REQUEST)
+
+        top_bids = current_round.bids.filter(is_valid=True).select_related('user').order_by('-pledge_amount')[:10]
+        serializer = BidSerializer(top_bids, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def activate(self, request, id=None):
+        """
+        POST /api/auctions/{uuid}/activate/
+        Activate auction (seller only)
+        """
+        auction = self.get_object()
+
+        if auction.created_by != request.user:
+            return Response(
+                {"error": "Only the auction creator can activate"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if auction.status != 'draft':
+            return Response(
+                {"error": "Can only activate draft auctions"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        auction.status = 'active'
+        auction.save()
+
+        serializer = self.get_serializer(auction)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def close(self, request, id=None):
+        """
+        POST /api/auctions/{uuid}/close/
+        Close auction and determine winner (seller only)
+        """
+        auction = self.get_object()
+
+        if auction.created_by != request.user:
+            return Response(
+                {"error": "Only the auction creator can close"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if auction.status != 'active':
+            return Response(
+                {"error": "Can only close active auctions"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find highest bid
+        highest_bid = auction.get_highest_bid()
+
+        if highest_bid:
+            auction.winner = highest_bid.user
+            auction.winning_amount = highest_bid.pledge_amount
+
+        auction.status = 'closed'
+        auction.save()
+
+        serializer = self.get_serializer(auction)
+        return Response(serializer.data)
+
+
+class BidViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing bids (pledge amounts)
+    LIST: GET /api/bids/
+    CREATE: POST /api/bids/
+    """
+    serializer_class = BidSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        """Users can only see their own bids or public leaderboard"""
+        if self.request.user.is_authenticated:
+            return Bid.objects.filter(user=self.request.user).select_related('auction', 'round')
+        return Bid.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new bid with payment verification
+        """
+        auction_id = request.data.get('auction')
+        pledge_amount = request.data.get('pledge_amount')
+
+        if not auction_id or not pledge_amount:
+            return Response(
+                {'error': 'auction and pledge_amount are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Get auction
+            auction = Auction.objects.get(id=auction_id)
+
+            # Check if auction is active
+            if auction.status != 'active':
+                return Response(
+                    {'error': 'Auction is not active'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get current round
+            current_round = auction.get_current_round()
+            if not current_round:
+                return Response(
+                    {'error': 'No active round for this auction'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # CRITICAL: Check if user has paid participation fee
+            participation = Participation.objects.filter(
+                user=request.user,
+                auction=auction,
+                round=current_round,
+                payment_status='completed'
+            ).first()
+
+            if not participation:
+                return Response(
+                    {'error': 'You must pay the participation fee before bidding'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Convert pledge_amount to Decimal
+            try:
+                pledge_amount_decimal = Decimal(str(pledge_amount))
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'Invalid pledge amount'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate pledge amount
+            if pledge_amount_decimal < current_round.base_price:
+                return Response(
+                    {'error': f'Pledge amount must be at least KES {current_round.base_price}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if user already has a valid bid in this round
+            existing_bid = Bid.objects.filter(
+                user=request.user,
+                auction=auction,
+                round=current_round,
+                is_valid=True
+            ).first()
+
+            if existing_bid:
+                # Update existing bid
+                existing_bid.pledge_amount = pledge_amount_decimal
+                existing_bid.save()
+
+                # ===== BROADCAST TO WEBSOCKET =====
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'auction_{auction.id}',
+                    {
+                        'type': 'new_bid',
+                        'data': {
+                            'user': request.user.username,
+                            'amount': str(pledge_amount_decimal),
+                            'timestamp': existing_bid.submitted_at.isoformat()
+                        }
+                    }
+                )
+                # ===== END BROADCAST =====
+
+                serializer = self.get_serializer(existing_bid)
+                return Response(serializer.data)
+
+            # Create new bid
+            bid = Bid.objects.create(
+                user=request.user,
+                auction=auction,
+                round=current_round,
+                pledge_amount=pledge_amount_decimal,
+                is_valid=True
+            )
+
+            # ===== BROADCAST TO WEBSOCKET =====
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'auction_{auction.id}',
+                {
+                    'type': 'new_bid',
+                    'data': {
+                        'user': request.user.username,
+                        'amount': str(pledge_amount_decimal),
+                        'timestamp': bid.submitted_at.isoformat()
+                    }
+                }
+            )
+            # ===== END BROADCAST =====
+
+            serializer = self.get_serializer(bid)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Auction.DoesNotExist:
+            return Response(
+                {'error': 'Auction not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['get'])
+    def my_bids(self, request):
+        """
+        GET /api/bids/my_bids/
+        Get current user's bids
+        """
+        bids = self.get_queryset().order_by('-submitted_at')
+        serializer = self.get_serializer(bids, many=True)
+        return Response(serializer.data)
+
+class ParticipationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing participations (payment to join round)
+    LIST: GET /api/participations/
+    CREATE: POST /api/participations/
+    """
+    serializer_class = ParticipationSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        """Users can only see their own participations"""
+        if self.request.user.is_authenticated:
+            return Participation.objects.filter(user=self.request.user).select_related('auction', 'round')
+        return Participation.objects.none()
+
+    def perform_create(self, serializer):
+        """Create participation record (to be completed by payment)"""
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def my_participations(self, request):
+        """
+        GET /api/participations/my_participations/
+        Get current user's participations
+        """
+        participations = self.get_queryset().order_by('-created_at')
+        serializer = self.get_serializer(participations, many=True)
+        return Response(serializer.data)
+
+
+class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing payment history
+    LIST: GET /api/payments/
+    RETRIEVE: GET /api/payments/{uuid}/
+    """
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        """Users can only see their own payments"""
+        if self.request.user.is_authenticated:
+            return Payment.objects.filter(user=self.request.user).select_related('auction')
+        return Payment.objects.none()
+
+    @action(detail=False, methods=['get'])
+    def my_payments(self, request):
+        """
+        GET /api/payments/my_payments/
+        Get current user's payment history
+        """
+        payments = self.get_queryset().order_by('-created_at')
+        serializer = self.get_serializer(payments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """
+        GET /api/payments/summary/
+        Get payment summary for current user
+        """
+        user_payments = self.get_queryset()
+
+        summary = {
+            'total_spent': user_payments.filter(
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+
+            'participation_fees': user_payments.filter(
+                payment_type='participation',
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+
+            'final_pledges': user_payments.filter(
+                payment_type='final_pledge',
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+
+            'pending_payments': user_payments.filter(
+                status='pending'
+            ).count(),
+        }
+
+        return Response(summary)
+
+
+class CartViewSet(viewsets.ViewSet):
+    """
+    ViewSet for cart operations
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_or_create_cart(self):
+        """Get or create cart for current user"""
+        cart, created = Cart.objects.get_or_create(user=self.request.user)
+        return cart
+
+    def list(self, request):
+        """
+        GET /api/cart/
+        Get current user's cart
+        """
+        cart = self.get_or_create_cart()
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def add(self, request):
+        """
+        POST /api/cart/add/
+        Add item to cart
+        Body: {"product_id": "uuid", "quantity": 1}
+        """
+        serializer = AddToCartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        product_id = serializer.validated_data['product_id']
+        quantity = serializer.validated_data['quantity']
+
+        cart = self.get_or_create_cart()
+        product = get_object_or_404(Auction, id=product_id)
+
+        # Check if item already in cart
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+
+        if not created:
+            # Update quantity if item already exists
+            cart_item.quantity += quantity
+
+            # Check stock
+            if product.stock_quantity and cart_item.quantity > product.stock_quantity:
+                return Response(
+                    {'error': f'Only {product.stock_quantity} units available'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            cart_item.save()
+
+        # Return updated cart
+        cart_serializer = CartSerializer(cart)
+        return Response({
+            'message': 'Item added to cart',
+            'cart': cart_serializer.data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'])
+    def clear(self, request):
+        """
+        DELETE /api/cart/clear/
+        Clear all items from cart
+        """
+        cart = self.get_or_create_cart()
+        cart.clear()
+
+        serializer = CartSerializer(cart)
+        return Response({
+            'message': 'Cart cleared',
+            'cart': serializer.data
+        })
+
+    @action(detail=True, methods=['patch'])
+    def update_quantity(self, request, pk=None):
+        """
+        PATCH /api/cart/items/{item_id}/update_quantity/
+        Update item quantity
+        Body: {"quantity": 2}
+        """
+        cart = self.get_or_create_cart()
+        cart_item = get_object_or_404(CartItem, id=pk, cart=cart)
+
+        quantity = request.data.get('quantity')
+        if not quantity or int(quantity) < 1:
+            return Response(
+                {'error': 'Quantity must be at least 1'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        quantity = int(quantity)
+
+        # Check stock
+        if cart_item.product.stock_quantity and quantity > cart_item.product.stock_quantity:
+            return Response(
+                {'error': f'Only {cart_item.product.stock_quantity} units available'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        serializer = CartItemSerializer(cart_item)
+        return Response({
+            'message': 'Quantity updated',
+            'item': serializer.data
+        })
+
+    @action(detail=True, methods=['delete'])
+    def remove_item(self, request, pk=None):
+        """
+        DELETE /api/cart/items/{item_id}/remove_item/
+        Remove item from cart
+        """
+        cart = self.get_or_create_cart()
+        cart_item = get_object_or_404(CartItem, id=pk, cart=cart)
+        cart_item.delete()
+
+        cart_serializer = CartSerializer(cart)
+        return Response({
+            'message': 'Item removed from cart',
+            'cart': cart_serializer.data
+        })
+
+
+class OrderViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for order operations
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        """Get orders for current user"""
+        return Order.objects.filter(user=self.request.user).prefetch_related('items')
+
+    @action(detail=False, methods=['post'])
+    def create_from_cart(self, request):
+        """
+        POST /api/orders/create_from_cart/
+        Create order from current cart
+        Body: {
+            "shipping_name": "John Doe",
+            "shipping_phone": "0712345678",
+            "shipping_address": "123 Main St",
+            "shipping_city": "Nairobi",
+            "customer_notes": "Leave at gate"
+        }
+        """
+        serializer = CreateOrderSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+
+        # Return created order
+        order_serializer = OrderSerializer(order)
+        return Response({
+            'message': 'Order created successfully',
+            'order': order_serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'])
+    def payment_status(self, request, pk=None):
+        """
+        GET /api/orders/{order_id}/payment_status/
+        Check payment status for an order
+        """
+        order = self.get_object()
+
+        return Response({
+            'order_id': str(order.id),
+            'order_number': order.order_number,
+            'payment_status': order.payment_status,
+            'status': order.status,
+            'total_amount': float(order.total_amount),
+            'paid_at': order.paid_at
+        })
+
+    @action(detail=False, methods=['get'])
+    def my_orders(self, request):
+        """
+        GET /api/orders/my_orders/
+        Get all orders for current user
+        """
+        orders = self.get_queryset()
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)

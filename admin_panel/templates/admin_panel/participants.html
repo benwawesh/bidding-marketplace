@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Participants - {{ auction.title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'admin_panel:auction_detail' auction.id %}" class="text-indigo-600 hover:text-indigo-700 font-medium mb-4 inline-block">
+                ← Back to Auction
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Participants</h1>
+            <p class="text-gray-600 mt-2">{{ auction.title }}</p>
+        </div>
+
+        <!-- Summary -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-4 gap-6">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Total Rounds</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ total_rounds }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Total Participants</div>
+                    <div class="text-3xl font-bold text-gray-900">{{ total_participants }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Current Round</div>
+                    <div class="text-3xl font-bold text-indigo-600">
+                        {% if auction.get_current_round %}
+                            Round {{ auction.get_current_round.round_number }}
+                        {% else %}
+                            No Active Round
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">Total Revenue</div>
+                    <div class="text-3xl font-bold text-green-600">KSh {{ auction.get_total_revenue|floatformat:0|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if rounds_data %}
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-t-lg shadow-sm" x-data="{ activeRound: {{ first_round }} }">
+
+            <!-- Tab Buttons -->
+            <div class="border-b border-gray-200 px-6">
+                <nav class="flex space-x-4 overflow-x-auto" aria-label="Rounds">
+                    {% for round_num, data in rounds_data.items %}
+                    <button
+                        @click="activeRound = {{ round_num }}"
+                        :class="activeRound === {{ round_num }} ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm transition-colors"
+                    >
+                        Round {{ round_num }}
+                        {% if data.round.is_active %}
+                        <span class="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                            Active
+                        </span>
+                        {% endif %}
+                        <span class="ml-2 text-gray-400">({{ data.participations|length }})</span>
+                    </button>
+                    {% endfor %}
+                </nav>
+            </div>
+
+            <!-- Tab Panels -->
+            {% for round_num, data in rounds_data.items %}
+            <div x-show="activeRound === {{ round_num }}" class="p-6">
+
+                <!-- Round Info -->
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Round {{ round_num }}</h2>
+                        <p class="text-gray-600 mt-1">
+                            Base Price: <span class="font-semibold">KSh {{ data.round.base_price|floatformat:0|intcomma }}</span> •
+                            Entry Fee: <span class="font-semibold">KSh {{ data.round.participation_fee|floatformat:0|intcomma }}</span>
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            {% if data.round.start_time %}
+                                Started: {{ data.round.start_time|date:"M d, Y H:i" }}
+                            {% endif %}
+                            {% if data.round.end_time %}
+                                • Ends: {{ data.round.end_time|date:"M d, Y H:i" }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if data.round.is_active %}
+                    <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">
+                        ✓ Active Round
+                    </span>
+                    {% else %}
+                    <span class="bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-semibold">
+                        Closed
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Participants Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fee Paid</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bid Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid At</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for participation in data.participations %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ forloop.counter }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">{{ participation.user.username }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ participation.user.email }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if participation.payment_status == 'completed' %}
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                                            ✓ Paid
+                                        </span>
+                                    {% elif participation.payment_status == 'pending' %}
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                                            Pending
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                                            Failed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    KSh {{ participation.fee_paid|floatformat:0|intcomma }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if participation.bid_amount %}
+                                        <span class="text-lg font-bold text-green-600">
+                                            KSh {{ participation.bid_amount|floatformat:0|intcomma }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-400 text-sm">No bid yet</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {% if participation.paid_at %}
+                                        {{ participation.paid_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center">
+                                    <div class="text-gray-400">
+                                        <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        <p class="mt-4 text-lg font-medium text-gray-500">No participants in this round yet</p>
+                                        <p class="mt-1 text-sm text-gray-400">Participants will appear here once they pay the entry fee</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Round Summary -->
+                {% if data.participations %}
+                <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-sm text-gray-600">Participants</div>
+                            <div class="text-2xl font-bold text-gray-900">{{ data.participations|length }}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">With Bids</div>
+                            <div class="text-2xl font-bold text-green-600">
+                                {% with bids_count=0 %}
+                                    {% for p in data.participations %}
+                                        {% if p.bid_amount %}
+                                            {% with bids_count=bids_count|add:1 %}{% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ data.participations|length }}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">Revenue This Round</div>
+                            <div class="text-2xl font-bold text-indigo-600">
+                                KSh {% widthratio data.participations|length 1 data.round.participation_fee|floatformat:0|intcomma %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p class="text-gray-500">No rounds created yet</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

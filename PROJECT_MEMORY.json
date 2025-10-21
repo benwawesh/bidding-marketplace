@@ -1,0 +1,291 @@
+{
+  "project_info": {
+    "name": "BidMarket - Hybrid Auction & E-commerce Platform",
+    "version": "1.0-react-router-complete",
+    "last_updated": "2025-10-13",
+    "description": "Full-stack marketplace with Buy Now and Auction functionality",
+    "status": "Homepage + Routing Complete, Cart/Auth Pending"
+  },
+
+  "tech_stack": {
+    "backend": {
+      "framework": "Django 5.2.7",
+      "language": "Python 3.12.3",
+      "database": "SQLite (development)",
+      "api": "Django REST Framework + SimpleJWT",
+      "server": "http://127.0.0.1:8000"
+    },
+    "frontend": {
+      "framework": "React 18",
+      "bundler": "Vite 7.1.9",
+      "styling": "Tailwind CSS 3.4.1",
+      "routing": "React Router DOM 6",
+      "state": "@tanstack/react-query v5",
+      "http": "axios",
+      "server": "http://localhost:5173"
+    }
+  },
+
+  "project_structure": {
+    "root": "/home/ben/bidding-marketplace/",
+    "backend": "/home/ben/bidding-marketplace/",
+    "frontend": "/home/ben/bidding-marketplace/frontend/",
+    "venv": "/home/ben/bidding-marketplace/venv/",
+    "settings": "config/settings.py"
+  },
+
+  "backend_apps": [
+    "accounts (User management)",
+    "auctions (Products, Auctions, Bids)",
+    "payments (Transactions, Cart)",
+    "admin_panel (Admin features)"
+  ],
+
+  "api_endpoints": {
+    "auctions": {
+      "list": "GET /api/auctions/",
+      "detail": "GET /api/auctions/{id}/",
+      "create": "POST /api/auctions/",
+      "update": "PUT /api/auctions/{id}/",
+      "delete": "DELETE /api/auctions/{id}/"
+    },
+    "categories": {
+      "list": "GET /api/categories/",
+      "detail": "GET /api/categories/{id}/"
+    },
+    "cart": {
+      "get": "GET /api/cart/",
+      "add": "POST /api/cart/add/ {product_id, quantity}",
+      "update": "PUT /api/cart/{id}/ {quantity}",
+      "remove": "DELETE /api/cart/{id}/",
+      "clear": "DELETE /api/cart/clear/"
+    },
+    "auth": {
+      "register": "POST /api/accounts/register/",
+      "login": "POST /api/accounts/login/",
+      "token": "POST /api/token/",
+      "refresh": "POST /api/token/refresh/"
+    }
+  },
+
+  "product_types": {
+    "buy_now": "Instant purchase at fixed price",
+    "auction": "Bidding system with participation fee",
+    "both": "Customer chooses buy now or auction"
+  },
+
+  "frontend_structure": {
+    "pages": {
+      "HomePage.jsx": "Main landing page with carousels",
+      "ProductDetailPage.jsx": "Single product view with full details",
+      "BrowsePage.jsx": "All products with filters and sorting",
+      "CategoryPage.jsx": "Products filtered by category",
+      "CartPage.jsx": "Shopping cart (mock data, needs API)",
+      "NotFoundPage.jsx": "404 error page"
+    },
+    "components": {
+      "layout": {
+        "LeftSidebar.jsx": "Categories, filters, how-it-works (hidden < LG)",
+        "RightSidebar.jsx": "Stats, WhatsApp, help (hidden < XL)"
+      },
+      "carousels": {
+        "HeroCarousel.jsx": "Auto-sliding hero (4s interval)",
+        "FeaturedCarousel.jsx": "Large single auction display",
+        "HorizontalCarousel.jsx": "Horizontal scroll with arrows (280px cards)"
+      },
+      "cards": {
+        "BuyNowCard.jsx": "Buy now products with add-to-cart",
+        "AuctionCard.jsx": "Auction products with bid info",
+        "BothCard.jsx": "Dual pricing (buy + auction)"
+      }
+    },
+    "api": {
+      "axios.js": "Axios instance with base URL",
+      "endpoints.js": "API functions (auctionsAPI, categoriesAPI, cartAPI)"
+    },
+    "utils": {
+      "helpers.js": "formatCurrency(), getTimeRemaining(), isAuctionActive()"
+    }
+  },
+
+  "routing": {
+    "/": "HomePage",
+    "/product/:id": "ProductDetailPage",
+    "/browse": "BrowsePage (all products with filters)",
+    "/category/:slug": "CategoryPage (filtered by category)",
+    "/cart": "CartPage (mock data)",
+    "*": "NotFoundPage (404)"
+  },
+
+  "cors_configuration": {
+    "allowed_origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+    "middleware_position": "3rd position in MIDDLEWARE",
+    "headers_allowed": ["Content-Type", "Authorization"]
+  },
+
+  "tailwind_config": {
+    "version": "3.4.1 (NOT v4 - different PostCSS setup)",
+    "content": ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+    "custom_animations": [
+      "shimmer", "skeleton", "fadeInUp", "pulse-dot", 
+      "low-stock-pulse", "price-pulse", "product-card", 
+      "product-image", "quick-add-btn"
+    ]
+  },
+
+  "responsive_breakpoints": {
+    "mobile": "< 768px: 2 products per row, no sidebars",
+    "tablet": "768-1024px: 3 products, left sidebar only",
+    "laptop": "1024-1536px: 4 products, left sidebar",
+    "desktop": "> 1536px: 5 products, both sidebars"
+  },
+
+  "completed_features": [
+    "✅ Django backend with REST API",
+    "✅ React frontend with Vite",
+    "✅ CORS configuration",
+    "✅ Tailwind CSS 3.4.1 with custom animations",
+    "✅ React Query for data fetching",
+    "✅ React Router DOM for navigation",
+    "✅ HomePage with 3-column layout",
+    "✅ Hero carousel (auto-sliding every 4s)",
+    "✅ Featured auction carousel",
+    "✅ Horizontal carousels (Buy Now, Both Options)",
+    "✅ Product cards (BuyNow, Auction, Both)",
+    "✅ LeftSidebar with categories & filters",
+    "✅ RightSidebar with stats & help",
+    "✅ Product Detail Page",
+    "✅ Browse Page with filters",
+    "✅ Category Page",
+    "✅ Cart Page (UI only, mock data)",
+    "✅ 404 Page",
+    "✅ All components linked with React Router",
+    "✅ Currency formatting (KSh)",
+    "✅ Time remaining calculations",
+    "✅ Responsive design (mobile to desktop)"
+  ],
+
+  "current_issues": [
+    "⚠️ Cart functionality uses alerts, not real API calls",
+    "⚠️ No authentication implemented (JWT tokens configured but not used)",
+    "⚠️ No real-time countdown timers on auctions",
+    "⚠️ No bidding modal/functionality",
+    "⚠️ Search bar is non-functional",
+    "⚠️ Filters in sidebar are non-functional",
+    "⚠️ No image upload/management in frontend",
+    "⚠️ No seller dashboard",
+    "⚠️ No checkout/payment flow"
+  ],
+
+  "known_bugs": [
+    "🐛 Hero carousel shows all active products (not just is_featured=true)",
+    "🐛 Category links use .toLowerCase() but may not match Django slugs",
+    "🐛 No error handling for failed API calls",
+    "🐛 Cart page shows mock data instead of real cart from API"
+  ],
+
+  "next_priority_features": [
+    "1. Real Cart API Integration (connect CartPage to Django API)",
+    "2. Authentication Flow (Login/Signup pages, JWT token storage)",
+    "3. Protected Routes (require auth for cart, profile, seller)",
+    "4. Real-time Countdown Timers (update every second)",
+    "5. Bidding Modal & Functionality",
+    "6. Search Implementation (connect search bar to API)",
+    "7. Filter Functionality (category, price, type filters)",
+    "8. Image Upload for Sellers",
+    "9. Seller Dashboard",
+    "10. Checkout & Payment Integration"
+  ],
+
+  "important_commands": {
+    "start_backend": "cd ~/bidding-marketplace && source venv/bin/activate && python manage.py runserver",
+    "start_frontend": "cd ~/bidding-marketplace/frontend && npm run dev",
+    "test_api": "curl http://127.0.0.1:8000/api/auctions/ | jq",
+    "check_products": "curl http://127.0.0.1:8000/api/auctions/ | jq '.[] | {title, product_type, status}'",
+    "django_shell": "cd ~/bidding-marketplace && source venv/bin/activate && python manage.py shell",
+    "frontend_rebuild": "cd ~/bidding-marketplace/frontend && rm -rf node_modules package-lock.json && npm install"
+  },
+
+  "sample_data": {
+    "products": [
+      {"id": "fa3e1178-0e70-4509-90b9-c3eeea107cd4", "title": "fridge", "type": "buy_now", "price": 10000},
+      {"id": "01183e21-f176-462d-856e-8bb5f038476b", "title": "tv best", "type": "auction", "base_price": 70000},
+      {"title": "washing machine", "type": "buy_now", "price": 30000},
+      {"title": "iphone", "type": "auction"},
+      {"title": "iPhone 15 Pro Max - 256GB", "type": "auction"}
+    ],
+    "note": "13 total products in database, mix of buy_now and auction types, 0 'both' type products"
+  },
+
+  "configuration_notes": {
+    "tailwind": "MUST use 3.4.1, NOT v4 (different config format)",
+    "cors": "Already configured in Django settings, update for production",
+    "api_base_url": "Hardcoded in axios.js, should use env variables for production",
+    "media_files": "Django serves from /media/, ensure MEDIA_ROOT configured",
+    "react_query_stale_time": "5 minutes, auto-refetch disabled",
+    "hero_filter": "Currently shows all active (removed is_featured filter for testing)",
+    "card_width": "Fixed at 280px in HorizontalCarousel to prevent squeezing"
+  },
+
+  "troubleshooting": {
+    "cors_errors": [
+      "1. Check CORS_ALLOWED_ORIGINS in Django settings",
+      "2. Restart Django server",
+      "3. Verify corsheaders.middleware.CorsMiddleware is 3rd in MIDDLEWARE"
+    ],
+    "page_not_loading": [
+      "1. Check both servers running (Django 8000, React 5173)",
+      "2. Check browser console (F12) for errors",
+      "3. Hard refresh (Ctrl+Shift+R)",
+      "4. Check terminal for compilation errors"
+    ],
+    "routing_404s": [
+      "1. Verify React Router installed: npm list react-router-dom",
+      "2. Check App.jsx has BrowserRouter wrapper",
+      "3. Verify all page imports in App.jsx"
+    ],
+    "cards_squeezed": [
+      "1. Check HorizontalCarousel has fixed width: 280px",
+      "2. Verify .product-card CSS has min-width",
+      "3. Check flex-shrink-0 on card wrappers"
+    ]
+  },
+
+  "environment_info": {
+    "os": "Ubuntu/Linux",
+    "user": "ben",
+    "node_version": "Check with: node --version",
+    "python_version": "3.12.3",
+    "vscode_font_size": "Adjustable via Ctrl+, search 'font size'"
+  },
+
+  "useful_links": {
+    "django_rest": "https://www.django-rest-framework.org/",
+    "react_query": "https://tanstack.com/query/latest/docs/react/overview",
+    "react_router": "https://reactrouter.com/en/main",
+    "tailwind": "https://tailwindcss.com/docs",
+    "vite": "https://vitejs.dev/",
+    "axios": "https://axios-http.com/docs/intro"
+  },
+
+  "quick_reference": {
+    "add_product_to_db": "python manage.py shell → from auctions.models import Auction → Auction.objects.create(...)",
+    "mark_featured": "Auction.objects.filter(title__in=['product1', 'product2']).update(is_featured=True)",
+    "check_routes": "Visit http://localhost:5173 and test all links",
+    "view_api_data": "Open http://127.0.0.1:8000/api/auctions/ in browser",
+    "clear_react_cache": "Delete node_modules, package-lock.json, then npm install"
+  },
+
+  "session_summary": {
+    "started": "Building React homepage",
+    "progress": [
+      "Created all page components (Home, Browse, Detail, Category, Cart, 404)",
+      "Implemented React Router with 6 routes",
+      "Updated all cards to use Link instead of anchor tags",
+      "Fixed HorizontalCarousel card sizing (280px fixed width)",
+      "Connected all components with proper routing",
+      "Tested navigation between pages"
+    ],
+    "current_state": "Full routing working, ready for Cart API integration or Authentication"
+  }
+}

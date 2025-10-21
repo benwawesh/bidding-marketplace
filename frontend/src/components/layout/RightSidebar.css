@@ -1,0 +1,54 @@
+/* Flash Offers Container */
+.offers-flash-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Individual Flash Slide */
+.offer-flash-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  animation: flashSlide 12s infinite;
+  border-radius: 0.5rem;
+}
+
+/* Flash Animation - Each slide appears for 2 seconds */
+@keyframes flashSlide {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  2% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  17% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Stagger the animation for each slide */
+.offer-flash-slide:nth-child(1) { animation-delay: 0s; }
+.offer-flash-slide:nth-child(2) { animation-delay: 2s; }
+.offer-flash-slide:nth-child(3) { animation-delay: 4s; }
+.offer-flash-slide:nth-child(4) { animation-delay: 6s; }
+.offer-flash-slide:nth-child(5) { animation-delay: 8s; }
+.offer-flash-slide:nth-child(6) { animation-delay: 10s; }

@@ -1,0 +1,132 @@
+import json
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
+from django.contrib.auth import get_user_model
+from .models import Auction, Bid, Round
+from .serializers import BidSerializer
+
+User = get_user_model()
+
+
+class AuctionConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket consumer for real-time auction updates
+    Handles: leaderboard updates, new bids, user position changes
+    """
+
+    async def connect(self):
+        """Called when WebSocket connection is established"""
+        self.auction_id = self.scope['url_route']['kwargs']['auction_id']
+        self.room_group_name = f'auction_{self.auction_id}'
+
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+        # Send initial leaderboard data
+        leaderboard_data = await self.get_leaderboard()
+        await self.send(text_data=json.dumps({
+            'type': 'leaderboard_update',
+            'data': leaderboard_data
+        }))
+
+    async def disconnect(self, close_code):
+        """Called when WebSocket connection is closed"""
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        """Called when we receive a message from WebSocket"""
+        data = json.loads(text_data)
+        message_type = data.get('type')
+
+        if message_type == 'request_leaderboard':
+            # Client requesting leaderboard update
+            leaderboard_data = await self.get_leaderboard()
+            await self.send(text_data=json.dumps({
+                'type': 'leaderboard_update',
+                'data': leaderboard_data
+            }))
+
+    async def leaderboard_update(self, event):
+        """Send leaderboard update to WebSocket"""
+        await self.send(text_data=json.dumps({
+            'type': 'leaderboard_update',
+            'data': event['data']
+        }))
+
+    async def new_bid(self, event):
+        """Send new bid notification to WebSocket"""
+        await self.send(text_data=json.dumps({
+            'type': 'new_bid',
+            'data': event['data']
+        }))
+
+    @database_sync_to_async
+    def get_leaderboard(self):
+        """Fetch current leaderboard data"""
+        try:
+            auction = Auction.objects.get(id=self.auction_id)
+            current_round = auction.get_current_round()
+
+            if not current_round:
+                return {
+                    'top_bids': [],
+                    'total_participants': 0,
+                    'highest_amount': 0
+                }
+
+            # Get all valid bids, ordered by amount and time
+            all_bids = current_round.bids.filter(
+                is_valid=True
+            ).select_related('user').order_by(
+                '-pledge_amount',
+                'submitted_at'  # Earlier bids rank higher in ties
+            )
+
+            # Get top bids
+            top_bids = all_bids[:50]  # Get top 50 for rotation logic
+            serialized_bids = []
+
+            for bid in top_bids:
+                serialized_bids.append({
+                    'id': str(bid.id),
+                    'user': {
+                        'id': str(bid.user.id),
+                        'username': bid.user.username,
+                        'first_name': bid.user.first_name,
+                    },
+                    'pledge_amount': str(bid.pledge_amount),
+                    'submitted_at': bid.submitted_at.isoformat(),
+                })
+
+            highest_bid = top_bids.first()
+            highest_amount = highest_bid.pledge_amount if highest_bid else 0
+
+            # Count tied at top
+            tied_at_top = all_bids.filter(
+                pledge_amount=highest_amount
+            ).count() if highest_amount > 0 else 0
+
+            return {
+                'top_bids': serialized_bids,
+                'total_participants': all_bids.count(),
+                'highest_amount': str(highest_amount),
+                'tied_at_top_count': tied_at_top,
+                'round_number': current_round.round_number,
+                'round_base_price': str(current_round.base_price),
+            }
+
+        except Auction.DoesNotExist:
+            return {
+                'error': 'Auction not found',
+                'top_bids': [],
+                'total_participants': 0
+            }

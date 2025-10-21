@@ -1,0 +1,724 @@
+import uuid
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from django.core.validators import MinValueValidator,  MaxValueValidator
+from decimal import Decimal
+
+
+class Category(models.Model):
+    """Product categories for organizing auctions"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class Auction(models.Model):
+    """Main auction model - represents an item being auctioned"""
+
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('closed', 'Closed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='auctions')
+
+    # Pricing
+    base_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    min_pledge = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        null=True,
+        blank=True,
+        help_text="Minimum pledge (admin sets this)"
+    )
+    max_pledge = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        null=True,
+        blank=True,
+        help_text="Maximum pledge (admin sets this)"
+    )
+    participation_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],  # Changed from 0.01 to allow 0 for Buy Now
+        help_text="Fee users pay to participate in bidding (0 for Buy Now products)"
+    )
+    # ========== ADD THESE NEW FIELDS HERE ==========
+
+    # Product Type - Hybrid Model Support
+    PRODUCT_TYPE_CHOICES = [
+        ('buy_now', 'Buy Now - Fixed Price Only'),
+        ('auction', 'Auction - Bidding Only'),
+        ('both', 'Both - Buy Now or Bid'),
+    ]
+    product_type = models.CharField(
+        max_length=20,
+        choices=PRODUCT_TYPE_CHOICES,
+        default='auction',
+        help_text='How users can purchase this item'
+    )
+
+    # Buy Now Price (for fixed-price sales)
+    buy_now_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text='Fixed price for Buy Now option (leave empty for auction-only items)'
+    )
+
+    # Market/Retail Price (for display - shows original price crossed out)
+    market_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text='Original retail/market price (shown crossed out - like Jumia)'
+    )
+
+
+    # Stock quantity (for Buy Now items)
+    stock_quantity = models.PositiveIntegerField(
+        default=1,
+        help_text='Available quantity (for Buy Now items)'
+    )
+
+    # Sales tracking
+    units_sold = models.PositiveIntegerField(
+        default=0,
+        help_text='Number of units sold via Buy Now'
+    )
+
+    # ========== END OF NEW FIELDS ==========
+
+    # ========== FLASH SALES & HOMEPAGE CURATION ==========
+    # Flash Sales Support
+    is_flash_sale = models.BooleanField(
+        default=False,
+        help_text='Mark as flash sale for homepage flash section'
+    )
+
+    discount_percentage = models.PositiveIntegerField(
+        default=0,
+        validators=[MaxValueValidator(99)],
+        help_text='Discount percentage for display (0-99%, purely visual)'
+    )
+
+    flash_sale_ends_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When flash sale ends (for countdown timer)'
+    )
+
+    # Homepage Curation
+    is_featured = models.BooleanField(
+        default=False,
+        help_text='Show in hero carousel slider'
+    )
+
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order for display (lower numbers appear first)'
+    )
+    # ========== END OF NEW FIELDS ==========
+
+    # Images
+    main_image = models.ImageField(upload_to='auctions/', blank=True, null=True)
+
+    # Timing
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    # Status and ownership
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_auctions'
+    )
+
+    # Winner info (set when auction closes)
+    winner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='won_auctions'
+    )
+    winning_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['created_by', '-created_at']),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_active(self):
+        """Check if auction is currently active"""
+        now = timezone.now()
+        return (
+                self.status == 'active' and
+                self.start_time <= now <= self.end_time
+        )
+
+    @property
+    def time_remaining(self):
+        """Get time remaining in seconds"""
+        if not self.is_active:
+            return 0
+        return max(0, (self.end_time - timezone.now()).total_seconds())
+
+    def get_participant_count(self):
+        """Get total unique participants across all rounds"""
+        return self.participations.values('user').distinct().count()
+
+    def get_highest_bid(self):
+        """Get the highest valid bid"""
+        return self.bids.filter(is_valid=True).order_by('-pledge_amount').first()
+
+    def get_total_revenue(self):
+        """Calculate total revenue from participation fees"""
+        return self.payments.filter(
+            payment_type='participation',
+            status='completed'
+        ).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+
+    def get_current_round(self):
+        """Get the active round if any"""
+        return self.rounds.filter(is_active=True).first()
+
+
+class Round(models.Model):
+    """
+    Multi-round system - admin can create new rounds with higher base prices
+    Each new round invalidates old bids and requires new participation fees
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='rounds')
+    round_number = models.PositiveIntegerField()
+
+    # Pricing for this specific round
+    base_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    min_pledge = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        null=True,
+        blank=True,
+        help_text="Minimum pledge (admin sets this)"
+    )
+    max_pledge = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        null=True,
+        blank=True,
+        help_text="Maximum pledge (admin sets this)"
+    )
+    participation_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+
+    # Timing
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['auction', '-round_number']
+        unique_together = ['auction', 'round_number']
+
+    def __str__(self):
+        return f"{self.auction.title} - Round {self.round_number}"
+
+    @property
+    def is_open(self):
+        """Check if round is currently accepting bids"""
+        now = timezone.now()
+        return self.is_active and self.start_time <= now <= self.end_time
+
+
+class Participation(models.Model):
+    """
+    Tracks users who paid the participation fee to join a bidding round
+    Users must have valid participation to submit bids
+    """
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='participations'
+    )
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='participations')
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='participations')
+
+    # Payment info
+    fee_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'auction', 'round']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.auction.title} (Round {self.round.round_number})"
+
+
+class Bid(models.Model):
+    """
+    Stores pledge amounts (NOT actual payments)
+    Users commit to pay this amount IF they win
+    Payment happens on delivery, not at bid time
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='bids'
+    )
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='bids')
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='bids')
+
+    # The pledge amount (commitment to pay if win)
+    pledge_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+
+    # Validity
+    is_valid = models.BooleanField(
+        default=True,
+        help_text="Becomes False if new round invalidates this bid"
+    )
+
+    # Metadata
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        indexes = [
+            models.Index(fields=['auction', '-pledge_amount']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} pledged KES {self.pledge_amount} on {self.auction.title}"
+
+    def save(self, *args, **kwargs):
+        """Validate that pledge is at least base price"""
+        if self.pledge_amount < self.round.base_price:
+            raise ValueError(f"Pledge amount must be at least KES {self.round.base_price}")
+        super().save(*args, **kwargs)
+
+
+class Payment(models.Model):
+    """
+    Tracks ALL financial transactions in the system
+    Two types: PARTICIPATION fees (paid upfront) and FINAL_PLEDGE (paid on delivery)
+    """
+    PAYMENT_TYPE_CHOICES = [
+        ('participation', 'Participation Fee'),
+        ('final_pledge', 'Final Pledge Payment'),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ('mpesa', 'M-Pesa'),
+        ('stripe', 'Stripe'),
+        ('paypal', 'PayPal'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='payments')
+
+    # Payment details
+    payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Transaction tracking
+    transaction_id = models.CharField(max_length=200, blank=True)
+    proof = models.TextField(blank=True, help_text="Payment receipt/proof")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.payment_type} - KES {self.amount}"
+
+
+class Cart(models.Model):
+    """Shopping cart for buy_now products"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='cart'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Cart'
+        verbose_name_plural = 'Carts'
+
+    def __str__(self):
+        return f"Cart for {self.user.username}"
+
+    @property
+    def total_items(self):
+        """Total number of items in cart"""
+        return sum(item.quantity for item in self.items.all())
+
+    @property
+    def subtotal(self):
+        """Calculate cart subtotal"""
+        return sum(item.total_price for item in self.items.all())
+
+    def clear(self):
+        """Remove all items from cart"""
+        self.items.all().delete()
+    
+    def add_item(self, product, quantity=1):
+        """Add item to cart or update quantity if exists"""
+        from django.core.exceptions import ValidationError
+        
+        # Check if product is buy_now type
+        if product.product_type not in ['buy_now', 'both']:
+            raise ValidationError("Only buy_now or both products can be added to cart")
+        
+        # Check stock
+        if product.stock_quantity and quantity > product.stock_quantity:
+            raise ValidationError(f"Only {product.stock_quantity} units available")
+        
+        # Get or create cart item
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=self,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+        
+        if not created:
+            # Update quantity (add to existing)
+            cart_item.quantity += quantity
+            if product.stock_quantity and cart_item.quantity > product.stock_quantity:
+                raise ValidationError(f"Only {product.stock_quantity} units available")
+            cart_item.save()
+        
+        return cart_item
+
+
+class CartItem(models.Model):
+    """Individual items in a cart"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        'Auction',  # Using string reference since Auction is in same file
+        on_delete=models.CASCADE,
+        limit_choices_to={'product_type__in': ['buy_now', 'both']}
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Cart Item'
+        verbose_name_plural = 'Cart Items'
+        unique_together = ['cart', 'product']  # One product per cart (update quantity instead)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product.title} in {self.cart.user.username}'s cart"
+
+    @property
+    def price(self):
+        """Get the buy_now_price of the product"""
+        return self.product.buy_now_price
+
+    @property
+    def total_price(self):
+        """Calculate total price for this item"""
+        return self.price * self.quantity
+
+    def clean(self):
+        """Validate cart item"""
+        from django.core.exceptions import ValidationError
+
+        # Check if product allows buy_now
+        if self.product.product_type not in ['buy_now', 'both']:
+            raise ValidationError("Only buy_now or both products can be added to cart")
+
+        # Check stock availability
+        if self.product.stock_quantity and self.quantity > self.product.stock_quantity:
+            raise ValidationError(f"Only {self.product.stock_quantity} units available")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Order(models.Model):
+    """Customer orders for buy_now products"""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('paid', 'Paid'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='orders'
+    )
+
+    # Order details
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Pricing
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Shipping information
+    shipping_name = models.CharField(max_length=200)
+    shipping_phone = models.CharField(max_length=20)
+    shipping_address = models.TextField()
+    shipping_city = models.CharField(max_length=100)
+
+    # Payment information
+    payment_method = models.CharField(max_length=50, default='mpesa')
+    payment_status = models.CharField(max_length=20, default='pending')
+    mpesa_checkout_request_id = models.CharField(max_length=100, blank=True, null=True)
+    mpesa_transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
+
+    # Notes
+    customer_notes = models.TextField(blank=True)
+    admin_notes = models.TextField(blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Order'
+        verbose_name_plural = 'Orders'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order {self.order_number} - {self.user.username}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # Generate order number: ORD-YYYYMMDD-XXXX
+            from django.utils import timezone
+            import random
+            date_str = timezone.now().strftime('%Y%m%d')
+            random_str = str(random.randint(1000, 9999))
+            self.order_number = f"ORD-{date_str}-{random_str}"
+        super().save(*args, **kwargs)
+
+    @property
+    def total_items(self):
+        """Total number of items in order"""
+        return sum(item.quantity for item in self.items.all())
+
+    def calculate_totals(self):
+        """Calculate order totals"""
+        self.subtotal = sum(item.total_price for item in self.items.all())
+        self.total_amount = self.subtotal + self.shipping_fee
+        self.save()
+
+
+class OrderItem(models.Model):
+    """Individual items in an order"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        'Auction',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='order_items'
+    )
+
+    # Store product details at time of purchase
+    product_title = models.CharField(max_length=500)
+    product_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Order Item'
+        verbose_name_plural = 'Order Items'
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product_title} in Order {self.order.order_number}"
+
+    @property
+    def total_price(self):
+        """Calculate total price for this item"""
+        return self.product_price * self.quantity
+
+    def save(self, *args, **kwargs):
+        # Store product details at time of purchase
+        if not self.product_title:
+            self.product_title = self.product.title
+        if not self.product_price:
+            self.product_price = self.product.buy_now_price
+        super().save(*args, **kwargs)
+
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from decimal import Decimal
+from .models import Auction, Round
+
+
+@receiver(post_save, sender=Auction)
+def create_first_round(sender, instance, created, **kwargs):
+    """
+    Automatically create Round 1 for a new Auction.
+    """
+    if created and not instance.rounds.filter(round_number=1).exists():
+        # Set default min/max pledge based on base_price
+        base = instance.base_price or Decimal('1000.00')
+        
+        Round.objects.create(
+            auction=instance,
+            round_number=1,
+            base_price=base,
+            min_pledge=instance.min_pledge or base,
+            max_pledge=instance.max_pledge or (base * 10),
+            participation_fee=instance.participation_fee or Decimal('0.00'),
+            start_time=timezone.now(),
+            end_time=timezone.now() + timezone.timedelta(days=365),  # Far future - admin controls
+            is_active=True,
+        )
+
+
+class PromoBanner(models.Model):
+    """Admin-managed promotional banners with scrolling text"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    text = models.CharField(max_length=500, help_text='Promotional text to display')
+    is_active = models.BooleanField(default=True, help_text='Show this banner')
+    background_color = models.CharField(
+        max_length=20, 
+        default='#FF6B00',
+        help_text='Background color (hex code like #FF6B00)'
+    )
+    text_color = models.CharField(
+        max_length=20,
+        default='#FFFFFF',
+        help_text='Text color (hex code like #FFFFFF)'
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Lower numbers appear first'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Promo Banner'
+        verbose_name_plural = 'Promo Banners'
+        ordering = ['display_order', '-created_at']
+
+    def __str__(self):
+        return f"{self.text[:50]}... {'(Active)' if self.is_active else '(Inactive)'}"

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h2>
+            <p class="text-gray-600">Join BidMarket and start bidding on amazing products!</p>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="bg-white rounded-lg shadow-sm p-8">
+            <form id="signupForm" method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        Username *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username"
+                        required
+                        minlength="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Choose a username"
+                    >
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address *
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="your@email.com"
+                    >
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number (for M-Pesa) *
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone_number" 
+                        name="phone_number"
+                        required
+                        pattern="[0-9]{10,12}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="0712345678"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Format: 07XXXXXXXX or 01XXXXXXXX</p>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password1" class="block text-sm font-medium text-gray-700 mb-2">
+                        Password *
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password1" 
+                        name="password1"
+                        required
+                        minlength="8"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="At least 8 characters"
+                    >
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="password2" class="block text-sm font-medium text-gray-700 mb-2">
+                        Confirm Password *
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password2" 
+                        name="password2"
+                        required
+                        minlength="8"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Repeat password"
+                    >
+                </div>
+
+                <!-- Terms & Conditions -->
+                <div class="flex items-start">
+                    <input 
+                        type="checkbox" 
+                        id="terms" 
+                        name="terms"
+                        required
+                        class="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                    >
+                    <label for="terms" class="ml-2 text-sm text-gray-600">
+                        I agree to the <a href="#" class="text-orange-500 hover:text-orange-600 font-medium">Terms & Conditions</a> and <a href="#" class="text-orange-500 hover:text-orange-600 font-medium">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <!-- Error Messages -->
+                {% if form.errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <ul class="list-disc list-inside text-sm">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    id="submitBtn"
+                    class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition"
+                >
+                    Create Account
+                </button>
+            </form>
+
+            <!-- Sign In Link -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account? 
+                    <a href="{% url 'login' %}" class="text-orange-500 hover:text-orange-600 font-semibold">
+                        Sign In
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+            <div>
+                <div class="text-orange-500 font-bold text-2xl mb-1">100+</div>
+                <div class="text-xs text-gray-600">Active Auctions</div>
+            </div>
+            <div>
+                <div class="text-orange-500 font-bold text-2xl mb-1">70%</div>
+                <div class="text-xs text-gray-600">Average Savings</div>
+            </div>
+            <div>
+                <div class="text-orange-500 font-bold text-2xl mb-1">24/7</div>
+                <div class="text-xs text-gray-600">Support</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    const password1 = document.getElementById('password1').value;
+    const password2 = document.getElementById('password2').value;
+    const errorDiv = document.getElementById('errorMessage');
+    
+    if (password1 !== password2) {
+        e.preventDefault();
+        errorDiv.textContent = 'Passwords do not match!';
+        errorDiv.classList.remove('hidden');
+        return false;
+    }
+    
+    errorDiv.classList.add('hidden');
+});
+</script>
+{% endblock %}

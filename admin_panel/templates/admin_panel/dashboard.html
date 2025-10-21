@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Seller Dashboard - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Dashboard Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-500">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <a href="{% url 'admin_panel:auction_create' %}" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Auction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            <!-- Total Revenue Card -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                                <dd class="text-2xl font-bold text-gray-900">KSh {{ stats.total_revenue|floatformat:0|intcomma }}</dd>
+                                <dd class="text-xs text-gray-500 mt-1">Auctions + Orders</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Auctions Card -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Auctions</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ stats.active_auctions }}</dd>
+                                <dd class="text-xs text-gray-500 mt-1">{{ stats.total_auctions }} total</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Orders Card (NEW) -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ stats.total_orders }}</dd>
+                                <dd class="text-xs text-gray-500 mt-1">{{ stats.pending_orders }} pending</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Bids Card -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Bids</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ stats.total_bids }}</dd>
+                                <dd class="text-xs text-gray-500 mt-1">{{ stats.total_participants }} participants</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Breakdown (NEW) -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden shadow rounded-lg border border-blue-200">
+                <div class="p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-blue-800">Auction Revenue</p>
+                            <p class="text-2xl font-bold text-blue-900">KSh {{ stats.auction_revenue|floatformat:0|intcomma }}</p>
+                        </div>
+                        <div class="text-blue-600">💰</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-50 to-green-100 overflow-hidden shadow rounded-lg border border-green-200">
+                <div class="p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-green-800">Order Revenue</p>
+                            <p class="text-2xl font-bold text-green-900">KSh {{ stats.order_revenue|floatformat:0|intcomma }}</p>
+                        </div>
+                        <div class="text-green-600">🛍️</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 overflow-hidden shadow rounded-lg border border-purple-200">
+                <div class="p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-purple-800">Processing Orders</p>
+                            <p class="text-2xl font-bold text-purple-900">{{ stats.processing_orders }}</p>
+                        </div>
+                        <div class="text-purple-600">📦</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Recent Orders (NEW) -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">📦 Recent Orders</h3>
+                </div>
+                <div class="px-4 py-5 sm:p-6">
+                    {% if recent_orders %}
+                        <ul class="divide-y divide-gray-200">
+                            {% for order in recent_orders %}
+                            <li class="py-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">
+                                            <a href="{% url 'admin_panel:order_detail' order.id %}" class="hover:text-indigo-600">
+                                                Order #{{ order.order_number }}
+                                            </a>
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            {{ order.shipping_name }} • {{ order.created_at|timesince }} ago
+                                        </p>
+                                        <p class="text-sm font-semibold text-gray-900">KSh {{ order.total_amount|floatformat:0|intcomma }}</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        {% if order.status == 'pending' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                        {% elif order.status == 'paid' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
+                                        {% elif order.status == 'processing' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Processing</span>
+                                        {% elif order.status == 'shipped' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Shipped</span>
+                                        {% elif order.status == 'delivered' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Delivered</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-8">No orders yet</p>
+                    {% endif %}
+                    <div class="mt-4">
+                        <a href="{% url 'admin_panel:order_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                            View all orders →
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auctions Ending Soon -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">⏰ Ending Soon (24h)</h3>
+                </div>
+                <div class="px-4 py-5 sm:p-6">
+                    {% if ending_soon %}
+                        <ul class="divide-y divide-gray-200">
+                            {% for auction in ending_soon %}
+                            <li class="py-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate">{{ auction.title }}</p>
+                                        <p class="text-sm text-gray-500">Base: KSh {{ auction.base_price|floatformat:0|intcomma }}</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Ends: {{ auction.end_time|date:"M d, H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-8">No auctions ending soon</p>
+                    {% endif %}
+                    <div class="mt-4">
+                        <a href="{% url 'admin_panel:auction_list' %}?status=active" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                            View all active auctions →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Auctions -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">🎯 Recent Auctions</h3>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                {% if recent_auctions %}
+                    <ul class="divide-y divide-gray-200">
+                        {% for auction in recent_auctions %}
+                        <li class="py-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">
+                                        <a href="{% url 'admin_panel:auction_detail' auction.id %}" class="hover:text-indigo-600">
+                                            {{ auction.title }}
+                                        </a>
+                                    </p>
+                                    <p class="text-sm text-gray-500">{{ auction.category.name }} • Created {{ auction.created_at|timesince }} ago</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    {% if auction.status == 'active' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                                    {% elif auction.status == 'draft' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Draft</span>
+                                    {% elif auction.status == 'closed' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Closed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">No auctions yet</p>
+                {% endif %}
+                <div class="mt-4">
+                    <a href="{% url 'admin_panel:auction_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                        View all auctions →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">⚡ Quick Actions</h3>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <a href="{% url 'admin_panel:auction_create' %}" class="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span class="mt-2 block text-sm font-medium text-gray-900">Create New Auction</span>
+                    </a>
+
+                    <a href="{% url 'admin_panel:order_list' %}" class="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span class="mt-2 block text-sm font-medium text-gray-900">Manage Orders</span>
+                    </a>
+
+                    <a href="{% url 'admin_panel:revenue_report' %}" class="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-6 text-center hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span class="mt-2 block text-sm font-medium text-gray-900">View Revenue Report</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

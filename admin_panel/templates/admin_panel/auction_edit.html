@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Product - BidMarket{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'admin_panel:auction_detail' auction.id %}" class="text-indigo-600 hover:text-indigo-700 font-medium mb-4 inline-block">
+                ← Back to Product Details
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Edit Product</h1>
+            <p class="text-gray-600 mt-2">Update product information</p>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <form id="editAuctionForm" class="space-y-6">
+
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Title *
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        required
+                        value="{{ auction.title }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description *
+                    </label>
+                    <textarea
+                        id="description"
+                        rows="4"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >{{ auction.description }}</textarea>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                        Category *
+                    </label>
+                    <select
+                        id="category"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                        <option value="">Select a category</option>
+                    </select>
+                </div>
+
+                <!-- Product Type (Read-only after creation) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Type
+                    </label>
+                    <div class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                        {% if auction.product_type == 'buy_now' %}
+                            Buy Now - Fixed Price Only
+                        {% elif auction.product_type == 'auction' %}
+                            Auction - Bidding Only
+                        {% elif auction.product_type == 'both' %}
+                            Both - Buy Now or Bid
+                        {% endif %}
+                        <input type="hidden" id="product_type" value="{{ auction.product_type }}">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Product type cannot be changed after creation</p>
+                </div>
+
+                <!-- Buy Now Price (if applicable) -->
+                {% if auction.product_type == 'buy_now' or auction.product_type == 'both' %}
+                <div>
+                    <label for="buy_now_price" class="block text-sm font-medium text-gray-700 mb-2">
+                        Buy Now Price (KSh) *
+                    </label>
+                    <input
+                        type="number"
+                        id="buy_now_price"
+                        step="1"
+                        min="1"
+                        value="{{ auction.buy_now_price }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Stock Quantity (if applicable) -->
+                {% if auction.product_type == 'buy_now' or auction.product_type == 'both' %}
+                <div>
+                    <label for="stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                        Stock Quantity *
+                    </label>
+                    <input
+                        type="number"
+                        id="stock_quantity"
+                        value="{{ auction.stock_quantity }}"
+                        min="0"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Base Price (if auction) -->
+                {% if auction.product_type == 'auction' or auction.product_type == 'both' %}
+                <div>
+                    <label for="base_price" class="block text-sm font-medium text-gray-700 mb-2">
+                        Base Price (KSh) *
+                    </label>
+                    <input
+                        type="number"
+                        id="base_price"
+                        step="1"
+                        min="1"
+                        value="{{ auction.base_price }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Participation Fee (if auction) -->
+                {% if auction.product_type == 'auction' or auction.product_type == 'both' %}
+                <div>
+                    <label for="participation_fee" class="block text-sm font-medium text-gray-700 mb-2">
+                        Entry Fee (KSh) *
+                    </label>
+                    <input
+                        type="number"
+                        id="participation_fee"
+                        step="1"
+                        min="0"
+                        value="{{ auction.participation_fee }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Timing (if auction) -->
+                {% if auction.product_type == 'auction' or auction.product_type == 'both' %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="start_time" class="block text-sm font-medium text-gray-700 mb-2">
+                            Start Time *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="start_time"
+                            value="{{ auction.start_time|date:'Y-m-d\TH:i' }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                    </div>
+                    <div>
+                        <label for="end_time" class="block text-sm font-medium text-gray-700 mb-2">
+                            End Time *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="end_time"
+                            value="{{ auction.end_time|date:'Y-m-d\TH:i' }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Image Upload -->
+                <div>
+                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Image
+                    </label>
+                    {% if auction.main_image %}
+                    <div class="mb-3">
+                        <img src="{{ auction.main_image.url }}" alt="{{ auction.title }}" class="w-32 h-32 object-cover rounded-lg">
+                        <p class="text-sm text-gray-500 mt-1">Current image (leave empty to keep)</p>
+                    </div>
+                    {% endif %}
+                    <input
+                        type="file"
+                        id="main_image"
+                        accept="image/*"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- ========== FLASH SALES & HOMEPAGE CURATION ========== -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">📣 Promotions & Homepage</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Flash Sale Toggle -->
+                        <div class="col-span-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="is_flash_sale"
+                                    {% if auction.is_flash_sale %}checked{% endif %}
+                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                    onchange="toggleFlashSaleFields()"
+                                >
+                                <span class="ml-2 text-sm font-medium text-gray-700">
+                                    ⚡ Mark as Flash Sale
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Discount Percentage -->
+                        <div id="discountField" style="display: {% if auction.is_flash_sale %}block{% else %}none{% endif %};">
+                            <label for="discount_percentage" class="block text-sm font-medium text-gray-700 mb-2">
+                                Discount Percentage
+                            </label>
+                            <input
+                                type="number"
+                                id="discount_percentage"
+                                min="0"
+                                max="99"
+                                value="{{ auction.discount_percentage }}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            >
+                        </div>
+
+                        <!-- Flash Sale End Time -->
+                        <div id="flashEndField" style="display: {% if auction.is_flash_sale %}block{% else %}none{% endif %};">
+                            <label for="flash_sale_ends_at" class="block text-sm font-medium text-gray-700 mb-2">
+                                Flash Sale Ends At
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="flash_sale_ends_at"
+                                value="{% if auction.flash_sale_ends_at %}{{ auction.flash_sale_ends_at|date:'Y-m-d\TH:i' }}{% endif %}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            >
+                        </div>
+
+                        <!-- Featured Toggle -->
+                        <div class="col-span-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="is_featured"
+                                    {% if auction.is_featured %}checked{% endif %}
+                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                >
+                                <span class="ml-2 text-sm font-medium text-gray-700">
+                                    ⭐ Feature in Hero Carousel
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div>
+                            <label for="display_order" class="block text-sm font-medium text-gray-700 mb-2">
+                                Display Order
+                            </label>
+                            <input
+                                type="number"
+                                id="display_order"
+                                min="0"
+                                value="{{ auction.display_order }}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            >
+                        </div>
+
+                    </div>
+                </div>
+                <!-- ========== END FLASH SALES SECTION ========== -->
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"></div>
+
+                <!-- Success Message -->
+                <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg"></div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
+                    >
+                        Update Product
+                    </button>
+
+                        href="{% url 'admin_panel:auction_detail' auction.id %}"
+                        class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
+                    >
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const AUCTION_ID = '{{ auction.id }}';
+
+    // Toggle flash sale fields
+    window.toggleFlashSaleFields = function() {
+        const isFlashSale = document.getElementById('is_flash_sale').checked;
+        const discountField = document.getElementById('discountField');
+        const flashEndField = document.getElementById('flashEndField');
+
+        if (isFlashSale) {
+            discountField.style.display = 'block';
+            flashEndField.style.display = 'block';
+        } else {
+            discountField.style.display = 'none';
+            flashEndField.style.display = 'none';
+        }
+    };
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Load categories
+    async function loadCategories() {
+        try {
+            const response = await fetch('/api/categories/', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const select = document.getElementById('category');
+            const currentCategoryId = '{{ auction.category.id }}';
+
+            select.innerHTML = '<option value="">Select a category</option>';
+
+            const categories = data.results || data;
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                if (cat.id === currentCategoryId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    // Update product
+    document.getElementById('editAuctionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('category', document.getElementById('category').value);
+
+        const productType = document.getElementById('product_type').value;
+        formData.append('product_type', productType);
+
+        // Add pricing fields based on product type
+        if (productType === 'buy_now' || productType === 'both') {
+            const buyNowPrice = document.getElementById('buy_now_price');
+            const stockQuantity = document.getElementById('stock_quantity');
+            if (buyNowPrice) formData.append('buy_now_price', buyNowPrice.value);
+            if (stockQuantity) formData.append('stock_quantity', stockQuantity.value);
+        }
+
+        if (productType === 'auction' || productType === 'both') {
+            const basePrice = document.getElementById('base_price');
+            const participationFee = document.getElementById('participation_fee');
+            const startTime = document.getElementById('start_time');
+            const endTime = document.getElementById('end_time');
+
+            if (basePrice) formData.append('base_price', basePrice.value);
+            if (participationFee) formData.append('participation_fee', participationFee.value);
+            if (startTime) formData.append('start_time', new Date(startTime.value).toISOString());
+            if (endTime) formData.append('end_time', new Date(endTime.value).toISOString());
+        }
+
+        // Add image if changed
+        const imageInput = document.getElementById('main_image');
+        if (imageInput.files.length > 0) {
+            formData.append('main_image', imageInput.files[0]);
+        }
+
+        // Add flash sale and homepage curation fields
+        formData.append('is_flash_sale', document.getElementById('is_flash_sale').checked);
+        formData.append('discount_percentage', document.getElementById('discount_percentage').value || 0);
+        formData.append('is_featured', document.getElementById('is_featured').checked);
+        formData.append('display_order', document.getElementById('display_order').value || 0);
+
+        const flashEndTime = document.getElementById('flash_sale_ends_at').value;
+        if (flashEndTime) {
+            formData.append('flash_sale_ends_at', new Date(flashEndTime).toISOString());
+        }
+
+        try {
+            const response = await fetch('/api/auctions/' + AUCTION_ID + '/', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: formData
+            });
+
+            if (response.ok) {
+                successDiv.textContent = '✅ Product updated successfully!';
+                successDiv.classList.remove('hidden');
+                submitBtn.textContent = 'Updated ✓';
+
+                // Redirect after 1 second
+                setTimeout(() => {
+                    window.location.href = '/admin-panel/auctions/' + AUCTION_ID + '/';
+                }, 1000);
+            } else {
+                const error = await response.json();
+                errorDiv.textContent = 'Error: ' + JSON.stringify(error);
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Product';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorDiv.textContent = 'Failed to update product. Please try again.';
+            errorDiv.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Update Product';
+        }
+    });
+
+    // Initialize
+    loadCategories();
+})();
+</script>
+{% endblock %}

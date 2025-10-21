@@ -1,0 +1,296 @@
+import { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ManagementLayout from '../../components/layout/ManagementLayout';
+import { auctionsAPI } from '../../api/endpoints';
+import { formatCurrency, getTimeRemaining, isAuctionActive } from '../../utils/helpers';
+import axios from '../../api/axios';
+import SetRangeModal from '../../components/modals/SetRangeModal';
+
+export default function ManageProductPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showRangeModal, setShowRangeModal] = useState(false);
+
+  // Fetch product details
+  const { data: product, isLoading, refetch } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => auctionsAPI.getById(id).then(res => res.data),
+  });
+
+  // Handle activation with custom range
+  const handleActivateWithRange = async (rangeData) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/api/auctions/${id}/activate/`,
+        rangeData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('bidmarket_access_token')}`,
+          },
+        }
+      );
+      alert(`✅ Auction activated! Buyers can bid between ${formatCurrency(rangeData.min_pledge)} - ${formatCurrency(rangeData.max_pledge)}`);
+      refetch();
+      setShowRangeModal(false);
+    } catch (error) {
+      console.error('Activation error:', error);
+      alert('Failed to activate: ' + (error.response?.data?.error || error.message));
+      throw error;
+    }
+  };
+
+  // Close mutation
+  const closeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/auctions/${id}/close/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('bidmarket_access_token')}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      alert(`✅ ${data.message}\nWinner: ${data.winner.username}\nAmount: ${formatCurrency(data.winner.amount)}`);
+      queryClient.invalidateQueries(['product', id]);
+    },
+    onError: (error) => {
+      alert('Failed to close: ' + (error.response?.data?.error || error.message));
+    },
+  });
+
+  const handleClose = () => {
+    if (window.confirm('Are you sure you want to close this auction? This will select the highest bidder as the winner.')) {
+      closeMutation.mutate();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ManagementLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin text-4xl mb-4">⏳</div>
+            <p className="text-gray-600">Loading product...</p>
+          </div>
+        </div>
+      </ManagementLayout>
+    );
+  }
+
+  if (!product) {
+    return (
+      <ManagementLayout>
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-600 mb-4">Product not found</p>
+          <Link to="/management/products" className="text-orange-600 hover:underline">
+            Back to Products
+          </Link>
+        </div>
+      </ManagementLayout>
+    );
+  }
+
+  const isActive = isAuctionActive(
+    product.start_time,
+    product.end_time,
+    product.status,
+    product.product_type
+  );
+
+  const timeRemaining = getTimeRemaining(product.end_time);
+  const timeString = timeRemaining.days > 0
+    ? `${timeRemaining.days}d ${timeRemaining.hours}h ${timeRemaining.minutes}m`
+    : `${timeRemaining.hours}h ${timeRemaining.minutes}m`;
+
+  return (
+    <ManagementLayout>
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <Link to="/management/products" className="text-orange-600 hover:underline mb-2 inline-block">
+              ← Back to Products
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
+          </div>
+          <div className="flex gap-3">
+            <Link
+              to={`/management/products/${id}/edit`}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              ✏️ Edit
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Product Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Main Card */}
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              {/* Image */}
+              <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200">
+                {product.main_image ? (
+                  <img
+                    src={product.main_image}
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-8xl">📦</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Category</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {product.category_name || 'Uncategorized'}
+                    </p>
+                  </div>
+                  <div>
+                    {product.status === 'active' ? (
+                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        LIVE
+                      </span>
+                    ) : product.status === 'draft' ? (
+                      <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        DRAFT
+                      </span>
+                    ) : (
+                      <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        CLOSED
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="prose max-w-none mb-4">
+                  <p className="text-gray-700">{product.description}</p>
+                </div>
+
+                {/* Product Type */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Product Type</p>
+                  <p className="text-lg font-bold text-blue-900 capitalize">
+                    {product.product_type.replace('_', ' ')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Stats & Actions */}
+          <div className="space-y-6">
+            {/* Stats Card */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">📊 Statistics</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600">Starting Bid</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(product.base_price)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600">Entry Fee</p>
+                  <p className="text-xl font-bold text-orange-600">
+                    {formatCurrency(product.participation_fee)}
+                  </p>
+                </div>
+
+                {product.status === 'active' && (
+                  <>
+                    <div className="border-t pt-4">
+                      <p className="text-sm text-gray-600">Current Highest Bid</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {product.highest_bid
+                          ? formatCurrency(product.highest_bid)
+                          : 'No bids yet'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-600">Participants</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {product.participant_count || 0}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-600">Time Remaining</p>
+                      <p className="text-xl font-bold text-gray-900">{timeString}</p>
+                    </div>
+                  </>
+                )}
+
+                {product.status === 'closed' && product.winner_info && (
+                  <div className="border-t pt-4">
+                    <p className="text-sm text-gray-600 mb-2">🏆 Winner</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {product.winner_info.username}
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCurrency(product.winning_amount)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions Card */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">⚡ Actions</h2>
+
+              {product.status === 'draft' && (
+                <button
+                  onClick={() => setShowRangeModal(true)}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 mb-3"
+                >
+                  ✅ Activate Auction
+                </button>
+              )}
+
+              {product.status === 'active' && (
+                <button
+                  onClick={handleClose}
+                  disabled={closeMutation.isPending}
+                  className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 disabled:bg-gray-400 mb-3"
+                >
+                  {closeMutation.isPending ? '⏳ Closing...' : '🏁 Close Auction'}
+                </button>
+              )}
+
+              <Link
+                to={`/auction/${id}`}
+                className="block w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 text-center"
+              >
+                👁️ View as Buyer
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Range Setting Modal */}
+      <SetRangeModal
+        isOpen={showRangeModal}
+        onClose={() => setShowRangeModal(false)}
+        auction={product}
+        onActivate={handleActivateWithRange}
+      />
+    </ManagementLayout>
+  );
+}

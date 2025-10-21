@@ -1,0 +1,333 @@
+/* Hero Auction Section - Same background as home */
+.hero-auction-section {
+  position: relative;
+  margin-bottom: 1.5rem;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+/* Fireworks Animation Container */
+.fireworks-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Individual Firework */
+.firework {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  animation: firework-explosion 2s ease-out infinite;
+}
+
+.firework:nth-child(1) { top: 15%; left: 15%; animation-delay: 0s; }
+.firework:nth-child(2) { top: 25%; left: 85%; animation-delay: 0.3s; }
+.firework:nth-child(3) { top: 60%; left: 50%; animation-delay: 0.6s; }
+.firework:nth-child(4) { top: 35%; left: 25%; animation-delay: 0.9s; }
+.firework:nth-child(5) { top: 75%; left: 75%; animation-delay: 1.2s; }
+.firework:nth-child(6) { top: 45%; left: 60%; animation-delay: 1.5s; }
+.firework:nth-child(7) { top: 20%; left: 40%; animation-delay: 0.2s; }
+.firework:nth-child(8) { top: 65%; left: 20%; animation-delay: 0.5s; }
+.firework:nth-child(9) { top: 50%; left: 90%; animation-delay: 0.8s; }
+.firework:nth-child(10) { top: 30%; left: 70%; animation-delay: 1.1s; }
+.firework:nth-child(11) { top: 80%; left: 35%; animation-delay: 1.4s; }
+.firework:nth-child(12) { top: 40%; left: 10%; animation-delay: 1.7s; }
+
+@keyframes firework-explosion {
+  0% {
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.8), 0 0 0 6px rgba(255, 140, 0, 0.6), 0 0 0 9px rgba(255, 69, 0, 0.4);
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 -50px 0 2px rgba(255, 215, 0, 0.7), 50px 0 0 2px rgba(255, 140, 0, 0.7), 0 50px 0 2px rgba(255, 69, 0, 0.7), -50px 0 0 2px rgba(255, 20, 147, 0.7), 35px -35px 0 2px rgba(138, 43, 226, 0.7), 35px 35px 0 2px rgba(0, 191, 255, 0.7), -35px 35px 0 2px rgba(50, 205, 50, 0.7), -35px -35px 0 2px rgba(255, 215, 0, 0.7);
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 -70px 0 0px transparent, 70px 0 0 0px transparent, 0 70px 0 0px transparent, -70px 0 0 0px transparent, 50px -50px 0 0px transparent, 50px 50px 0 0px transparent, -50px 50px 0 0px transparent, -50px -50px 0 0px transparent;
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Main Content */
+.hero-auction-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Sliding Savings Animation - Contained within cream box */
+.savings-slider-container {
+  position: relative;
+  height: 2rem;
+  overflow: hidden;
+}
+
+.savings-slide-wrapper {
+  display: flex;
+  flex-direction: column;
+  animation: flash-slide-vertical 6s ease-in-out infinite;
+}
+
+.savings-text {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@keyframes flash-slide-vertical {
+  0%, 30% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  33%, 36% {
+    opacity: 0;
+    transform: translateY(-2rem);
+  }
+  37%, 63% {
+    transform: translateY(-2rem);
+    opacity: 1;
+  }
+  66%, 69% {
+    opacity: 0;
+    transform: translateY(-4rem);
+  }
+  70%, 96% {
+    transform: translateY(-4rem);
+    opacity: 1;
+  }
+  97%, 100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+/* ⭐ NEW: Sliding Urgency Message Animation */
+.urgency-slider-container {
+  position: relative;
+  height: 1.5rem;
+  overflow: hidden;
+}
+
+.urgency-slide-wrapper {
+  display: flex;
+  flex-direction: column;
+  animation: flash-slide-urgency 6s ease-in-out infinite;
+}
+
+.urgency-text {
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@keyframes flash-slide-urgency {
+  0%, 30% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  33%, 36% {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+  37%, 63% {
+    transform: translateY(-1.5rem);
+    opacity: 1;
+  }
+  66%, 69% {
+    opacity: 0;
+    transform: translateY(-3rem);
+  }
+  70%, 96% {
+    transform: translateY(-3rem);
+    opacity: 1;
+  }
+  97%, 100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+/* Promo Banners Inside Container */
+.promo-banners-wrapper {
+  overflow: hidden;
+  border-bottom: 2px solid #fee2e2;
+}
+
+.promo-banner-item {
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 1.5rem;
+}
+
+.promo-text-animate {
+  display: flex;
+  gap: 100px;
+  animation: slide-horizontal 20s linear infinite;
+  white-space: nowrap;
+}
+
+.promo-text-animate span {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+
+@keyframes slide-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* LIVE Badge BLINKING Animation */
+.live-badge {
+  animation: badge-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes badge-blink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 25px rgba(34, 197, 94, 1), 0 0 50px rgba(34, 197, 94, 0.6);
+  }
+}
+
+/* Live Dot Blinking */
+.live-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  animation: dot-blink 1s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+
+/* Slow Pulse Animation for Price Box */
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+/* CTA Button */
+.cta-button {
+  position: relative;
+  overflow: hidden;
+  transition: none;
+}
+
+.cta-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-auction-section {
+    padding: 1rem;
+  }
+
+  .hero-auction-content {
+    padding: 1rem;
+  }
+  
+  .hero-auction-content > div {
+    gap: 1rem;
+  }
+  
+  .live-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+  
+  .cta-button {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .promo-text-animate span {
+    font-size: 0.75rem;
+  }
+  
+  .savings-text {
+    font-size: 0.875rem;
+  }
+  
+  .urgency-text {
+    font-size: 0.625rem;
+  }
+}
+
+
+
+/* Siren Blinking CTA Button - Color Brightness */
+.cta-button {
+  animation: sirenBlink 1s ease-in-out infinite;
+}
+
+@keyframes sirenBlink {
+  0%, 100% {
+    background-color: #DC2626; /* red-600 */
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    background-color: #EF4444; /* red-500 - brighter */
+    box-shadow: 0 10px 25px -3px rgba(239, 68, 68, 0.6);
+  }
+}

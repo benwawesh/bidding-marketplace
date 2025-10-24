@@ -42,8 +42,17 @@ export default function AuctionDetailPage() {
   // Set current round
   useEffect(() => {
     if (rounds && rounds.length > 0) {
+      // Find active round, or use the MOST RECENT round (highest round_number)
       const activeRound = rounds.find(r => r.is_active);
-      setCurrentRound(activeRound || rounds[0]);
+      if (activeRound) {
+        setCurrentRound(activeRound);
+      } else {
+        // No active round - use the most recent one (last in array)
+        const mostRecentRound = rounds.reduce((latest, current) => 
+          current.round_number > latest.round_number ? current : latest
+        , rounds[0]);
+        setCurrentRound(mostRecentRound);
+      }
     }
   }, [rounds]);
 
@@ -58,7 +67,7 @@ export default function AuctionDetailPage() {
     checkUserParticipation();
   }, [isAuthenticated, currentRound, id]);
 
-  // WebSocket connection for real-time updates
+    // WebSocket connection for real-time updates
   const { isConnected } = useWebSocket(
     id,
     (data) => {
@@ -66,6 +75,33 @@ export default function AuctionDetailPage() {
     },
     (bidData) => {
       console.log('New bid placed:', bidData);
+    },
+    async (roundData) => {
+      // New round created!
+      console.log('🔄 New round started!', roundData);
+      
+      // Refetch rounds to get updated data
+      try {
+        const updatedRounds = await getRounds(id);
+        if (updatedRounds && updatedRounds.length > 0) {
+          const newActiveRound = updatedRounds.find(r => r.is_active);
+          setCurrentRound(newActiveRound || updatedRounds[updatedRounds.length - 1]);
+          
+          // Reset participation status (user needs to pay for new round)
+          setHasParticipated(false);
+          
+          // Clear leaderboard (fresh start for new round)
+          setLeaderboardData(null);
+          
+          // Show success message
+          setSuccessMessage(roundData.message || 'New round has started!');
+          setTimeout(() => setSuccessMessage(''), 5000);
+          
+          console.log('✅ Updated to new round:', newActiveRound?.round_number);
+        }
+      } catch (error) {
+        console.error('Error fetching updated rounds:', error);
+      }
     }
   );
 

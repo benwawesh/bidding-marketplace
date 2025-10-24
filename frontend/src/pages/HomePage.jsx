@@ -11,6 +11,7 @@ import BuyNowCard from '../components/cards/BuyNowCard';
 import BothCard from '../components/cards/BothCard';
 import PromoBar from '../components/layout/PromoBar';
 import Navbar from '../components/layout/Navbar';
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -141,21 +142,64 @@ export default function HomePage() {
 
             {/* Buy Now Section */}
             {buyNowProducts.length > 0 && (
-              <HorizontalCarousel 
-                title="Buy Now - Instant Purchase" 
-                titleColor="blue"
-                viewAllLink="#buy-now"
-              >
-                {buyNowProducts.map(product => (
-                  <BuyNowCard 
-                    key={product.id} 
-                    product={product} 
-                    onAddToCart={handleAddToCart}
-                    isAddingToCart={addToCartMutation.isPending}
-                  />
-                ))}
-              </HorizontalCarousel>
+              <section id="buy-now" className="my-8 relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-orange-600">Buy Now - Instant Purchase</h2>
+                <Link
+                  to="/buy-now"
+                  className="text-sm text-orange-500 hover:underline"
+                >
+                  View All
+                </Link>
+                </div>
+
+                {/* Slider Container */}
+                <div className="relative">
+                  {/* Left Arrow */}
+                  <button
+                    id="scrollLeft"
+                    onClick={() => document.getElementById('buyNowSlider').scrollBy({ left: -400, behavior: 'smooth' })}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full shadow hover:bg-orange-100 p-2 transition"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Cards Slider */}
+                  <div
+                    id="buyNowSlider"
+                    className="flex gap-4 overflow-x-hidden scroll-smooth"
+                  >
+                    {buyNowProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="w-[calc(20%-0.8rem)] flex-shrink-0 transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+                      >
+                        <BuyNowCard
+                          product={product}
+                          onAddToCart={handleAddToCart}
+                          isAddingToCart={addToCartMutation.isPending}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right Arrow */}
+                  <button
+                    id="scrollRight"
+                    onClick={() => document.getElementById('buyNowSlider').scrollBy({ left: 400, behavior: 'smooth' })}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full shadow hover:bg-orange-100 p-2 transition"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </section>
             )}
+
+
 
             {/* Both Options Section */}
             {bothProducts.length > 0 && (

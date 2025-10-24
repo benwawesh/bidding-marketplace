@@ -10,8 +10,10 @@ from asgiref.sync import async_to_sync
 from .models import Auction, Category, Bid, Round, Participation
 from .serializers import (
     AuctionListSerializer, AuctionDetailSerializer, AuctionCreateSerializer,
-    CategorySerializer, BidSerializer, RoundSerializer, ParticipationSerializer
+    CategorySerializer, BidSerializer, RoundSerializer, ParticipationSerializer,
 )
+from decimal import Decimal, InvalidOperation
+
 
 
 class AuctionViewSet(viewsets.ModelViewSet):
@@ -350,6 +352,107 @@ class AuctionViewSet(viewsets.ModelViewSet):
             'rounds': rounds_revenue
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def create_next_round(self, request, id=None):
+        """
+        Admin-only: Create the next bidding round for this auction.
+        Each new round can have a new base_price and participation_fee.
+        """
+        auction = self.get_object()
+
+        # ✅ Ensure only admins can create new rounds
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only admins can create new rounds.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # ✅ Ensure auction is still active
+        if auction.status != 'active':
+            return Response(
+                {'error': 'Only active auctions can have new rounds.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Get the most recent round
+        last_round = auction.rounds.order_by('-round_number').first()
+        next_round_number = 1 if not last_round else last_round.round_number + 1
+
+        # ✅ Extract data from the request
+        base_price = request.data.get('base_price')
+        participation_fee = request.data.get('participation_fee')
+        min_pledge = request.data.get('min_pledge')
+        max_pledge = request.data.get('max_pledge')
+        duration_days = request.data.get('duration_days', 7)  # Default: 7 days
+
+        # ✅ Validate required fields
+        missing_fields = [
+            field for field in ['base_price', 'participation_fee', 'min_pledge', 'max_pledge']
+            if request.data.get(field) is None
+        ]
+        if missing_fields:
+            return Response(
+                {'error': f"Missing fields: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            base_price = Decimal(base_price)
+            participation_fee = Decimal(participation_fee)
+            min_pledge = Decimal(min_pledge)
+            max_pledge = Decimal(max_pledge)
+        except (InvalidOperation, TypeError):
+            return Response(
+                {'error': 'base_price, participation_fee, min_pledge, and max_pledge must be valid decimal numbers.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Ensure new base price is not lower than previous
+        if last_round and base_price < last_round.base_price:
+            return Response(
+                {'error': f'New base price ({base_price}) cannot be lower than previous round ({last_round.base_price}).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Ensure pledge range is valid
+        if min_pledge < base_price:
+            return Response(
+                {'error': f'min_pledge cannot be lower than base_price ({base_price}).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if max_pledge <= min_pledge:
+            return Response(
+                {'error': 'max_pledge must be greater than min_pledge.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Auto-close previous round (if active)
+        if last_round and last_round.is_active:
+            last_round.is_active = False
+            last_round.save(update_fields=['is_active'])
+
+        # ✅ Create the new round
+        now = timezone.now()
+        end_time = now + timezone.timedelta(days=int(duration_days))
+
+        new_round = Round.objects.create(
+            auction=auction,
+            round_number=next_round_number,
+            base_price=base_price,
+            min_pledge=min_pledge,
+            max_pledge=max_pledge,
+            participation_fee=participation_fee,
+            start_time=now,
+            end_time=end_time,
+            is_active=True
+        )
+
+        return Response({
+            'message': f'Round {next_round_number} created successfully for auction "{auction.title}".',
+            'round': RoundSerializer(new_round).data
+        }, status=status.HTTP_201_CREATED)
+
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -359,7 +462,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    lookup_field = 'id'
+    lookup_field = 'slug'
     
     def get_queryset(self):
         """Admin sees all categories, public sees only active"""
@@ -402,13 +505,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer.save()
         logger.warning(f"CREATE CATEGORY - Saved successfully!")
     
+
     def perform_update(self, serializer):
         """Only superusers can update categories"""
         if not self.request.user.is_superuser:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Only admins can update categories")
         serializer.save()
-    
+
+    @action(detail=True, methods=['get'])
+    def products(self, request, id=None):
+        """Return all products under a specific category"""
+        category = self.get_object()
+        products = Auction.objects.filter(category=category, is_active=True)
+        serializer = AuctionListSerializer(products, many=True)
+        return Response(serializer.data)
+
     def perform_destroy(self, instance):
         """Only superusers can delete - soft delete by setting is_active=False"""
         if not self.request.user.is_superuser:
@@ -436,6 +548,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
             'message': f'Category {"activated" if category.is_active else "deactivated"}',
             'category': CategorySerializer(category).data
         })
+
+    @action(detail=True, methods=['get'])
+    def products(self, request, id=None):
+        """Return all products under a specific category"""
+        try:
+            category = self.get_object()
+        except:
+            return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get only active auctions under this category
+        products = Auction.objects.filter(category=category, is_active=True)
+        serializer = AuctionSerializer(products, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class BidViewSet(viewsets.ModelViewSet):
@@ -508,7 +633,7 @@ class BidViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            
+
             # Enforce maximum pledge
             if pledge_amount > current_round.max_pledge:
                 return Response(
@@ -542,10 +667,10 @@ class BidViewSet(viewsets.ModelViewSet):
 
             # 🚀 INSTANT WEBSOCKET BROADCAST
             channel_layer = get_channel_layer()
-            
+
             # Get fresh leaderboard data (now includes position and is_current_user)
             leaderboard_data = self._get_leaderboard_data(auction, current_round, request.user.id)
-            
+
             # Broadcast to all connected clients
             async_to_sync(channel_layer.group_send)(
                 f'auction_{auction_id}',
@@ -1165,3 +1290,157 @@ class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
             'average_order_value': str(total_revenue / total_orders if total_orders > 0 else 0),
             'orders_by_status': stats_by_status,
         })
+
+
+
+class RoundViewSet(viewsets.ModelViewSet):
+    queryset = Round.objects.select_related('auction').all()
+    serializer_class = RoundSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'id'
+
+    def perform_create(self, serializer):
+        """Auto-increment round_number when creating a new round"""
+        auction = serializer.validated_data['auction']
+        last_round = auction.rounds.order_by('-round_number').first()
+        next_round_number = (last_round.round_number + 1) if last_round else 1
+        serializer.save(round_number=next_round_number)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        auction_id = self.request.query_params.get('auction', None)
+        if auction_id:
+            queryset = queryset.filter(auction_id=auction_id)
+        return queryset.order_by('round_number')
+
+    # -------------------- Close Round --------------------
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def close(self, request, id=None):
+        round_obj = self.get_object()
+
+        if not request.user.is_superuser:
+            return Response({'error': 'Only admins can close rounds'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not round_obj.is_active:
+            return Response({'error': 'Round is already closed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        round_obj.is_active = False
+        round_obj.save()
+
+        return Response({
+            'message': f'Round {round_obj.round_number} closed successfully',
+            'auction': str(round_obj.auction.id)
+        })
+
+    # -------------------- Round Summary --------------------
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def summary(self, request, id=None):
+        round_obj = self.get_object()
+
+        participants = Participation.objects.filter(round=round_obj, payment_status='completed')
+        total_revenue = participants.aggregate(total=Sum('fee_paid'))['total'] or 0
+        valid_bids = round_obj.bids.filter(is_valid=True)
+        highest_bid = valid_bids.order_by('-pledge_amount', 'submitted_at').first()
+
+        return Response({
+            'round_number': round_obj.round_number,
+            'auction': round_obj.auction.title,
+            'participants': participants.count(),
+            'bids': valid_bids.count(),
+            'total_revenue': str(total_revenue),
+            'highest_bid': str(highest_bid.pledge_amount) if highest_bid else None,
+            'is_open': round_obj.is_open
+        })
+
+    # -------------------- Create Next Round --------------------
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def create_next_round(self, request, id=None):
+        """Create the next round for this auction"""
+        auction = get_object_or_404(Auction, id=id)
+
+        if not request.user.is_superuser:
+            return Response({"error": "Only admins can create rounds"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Extract data
+        base_price = request.data.get('base_price')
+        participation_fee = request.data.get('participation_fee')
+        min_pledge = request.data.get('min_pledge')
+        max_pledge = request.data.get('max_pledge', None)
+
+        # Required fields check
+        if base_price is None or participation_fee is None or min_pledge is None:
+            return Response(
+                {"error": "base_price, participation_fee, and min_pledge are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Type casting & validation
+        try:
+            base_price = float(base_price)
+            participation_fee = float(participation_fee)
+            min_pledge = float(min_pledge)
+            max_pledge = float(max_pledge) if max_pledge else None
+        except ValueError:
+            return Response({"error": "All price fields must be valid numbers"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if base_price <= 0 or participation_fee < 0 or min_pledge <= 0:
+            return Response(
+                {"error": "base_price, participation_fee, and min_pledge must be positive numbers"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if max_pledge is not None and max_pledge < min_pledge:
+            return Response(
+                {"error": "max_pledge cannot be less than min_pledge"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Determine next round number
+        last_round = auction.rounds.order_by('-round_number').first()
+        next_round_number = last_round.round_number + 1 if last_round else 1
+
+        # Use serializer to create round
+        serializer = RoundSerializer(data={
+            "auction": auction.id,
+            "round_number": next_round_number,
+            "base_price": base_price,
+            "participation_fee": participation_fee,
+            "min_pledge": min_pledge,
+            "max_pledge": max_pledge
+        })
+
+        if serializer.is_valid():
+            new_round = serializer.save()
+            
+            # Auto-close previous active rounds
+            auction.rounds.filter(is_active=True).exclude(id=new_round.id).update(is_active=False)
+            
+            # Broadcast new round via WebSocket
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'auction_{auction.id}',
+                {
+                    'type': 'round_update',
+                    'data': {
+                        'round_id': str(new_round.id),
+                        'round_number': new_round.round_number,
+                        'base_price': str(new_round.base_price),
+                        'min_pledge': str(new_round.min_pledge),
+                        'max_pledge': str(new_round.max_pledge) if new_round.max_pledge else None,
+                        'participation_fee': str(new_round.participation_fee),
+                        'is_active': new_round.is_active,
+                        'message': f'Round {new_round.round_number} has started!'
+                    }
+                }
+            )
+            
+            return Response({
+                "round_id": serializer.data["id"],
+                "round_number": serializer.data["round_number"],
+                "message": f"Round {serializer.data['round_number']} created successfully"
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

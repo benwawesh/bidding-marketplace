@@ -6,6 +6,8 @@ import { auctionsAPI } from '../../api/endpoints';
 import { formatCurrency, getTimeRemaining, isAuctionActive } from '../../utils/helpers';
 import axios from '../../api/axios';
 import SetRangeModal from '../../components/modals/SetRangeModal';
+import AuctionRoundsTab from './AuctionRoundsTab';
+
 
 // Sales Stats Tab Component
 function SalesStatsTab({ productId }) {
@@ -94,6 +96,9 @@ export default function ManageProductPage() {
   const [showRangeModal, setShowRangeModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
+
+   
+
   // Fetch product details
   const { data: product, isLoading, refetch } = useQuery({
     queryKey: ['product', id],
@@ -123,10 +128,37 @@ export default function ManageProductPage() {
   };
 
   // Close mutation
-  const closeMutation = useMutation({
+const closeMutation = useMutation({
+  mutationFn: async () => {
+    if (!currentRound) throw new Error("No active round found");
+
+    const response = await axios.post(
+      `http://127.0.0.1:8000/api/rounds/${currentRound.id}/close/`, // ✅ use round ID
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('bidmarket_access_token')}`,
+        },
+      }
+    );
+    return response.data;
+  },
+  onSuccess: (data) => {
+    alert(`✅ ${data.message}\nWinner: ${data.winner.username}\nAmount: ${formatCurrency(data.winner.amount)}`);
+    queryClient.invalidateQueries(['product', id]);
+  },
+  onError: (error) => {
+    alert('Failed to close: ' + (error.response?.data?.error || error.message));
+  },
+});
+
+
+
+    // Create Next Round Mutation
+  const createNextRoundMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/auctions/${id}/close/`,
+        `http://127.0.0.1:8000/api/auctions/${id}/create_next_round/`,
         {},
         {
           headers: {
@@ -137,13 +169,21 @@ export default function ManageProductPage() {
       return response.data;
     },
     onSuccess: (data) => {
-      alert(`✅ ${data.message}\nWinner: ${data.winner.username}\nAmount: ${formatCurrency(data.winner.amount)}`);
+      alert(`✅ Next round created successfully!\nRound ID: ${data.round_id}\nRegistration Fee: ${formatCurrency(data.registration_fee)}`);
       queryClient.invalidateQueries(['product', id]);
     },
     onError: (error) => {
-      alert('Failed to close: ' + (error.response?.data?.error || error.message));
+      console.error('Error creating next round:', error);
+      alert('❌ Failed to create next round: ' + (error.response?.data?.error || error.message));
     },
   });
+
+  const handleCreateNextRound = () => {
+    if (window.confirm('Are you sure you want to create the next round for this auction?')) {
+      createNextRoundMutation.mutate();
+    }
+  };
+
 
   const handleClose = () => {
     if (window.confirm('Are you sure you want to close this auction? This will select the highest bidder as the winner.')) {
@@ -191,6 +231,7 @@ export default function ManageProductPage() {
 
   const showAuctionTabs = product.product_type === 'auction' || product.product_type === 'both';
   const showBuyNowTabs = product.product_type === 'buy_now' || product.product_type === 'both';
+  const currentRound = product.rounds?.find(r => r.is_active) || product.rounds?.[product.rounds.length - 1];
 
   return (
     <ManagementLayout>
@@ -210,6 +251,15 @@ export default function ManageProductPage() {
             >
               ✏️ Edit
             </Link>
+
+           <button
+            onClick={() => navigate(`/management/products/${id}/create-next-round`)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            ➕ Create Next Round
+          </button>
+
+
           </div>
         </div>
 
@@ -260,6 +310,18 @@ export default function ManageProductPage() {
                 >
                   💰 Revenue
                 </button>
+
+                <button
+                  onClick={() => setActiveTab('rounds')}
+                  className={`px-6 py-3 font-semibold transition ${
+                    activeTab === 'rounds'
+                      ? 'text-red-600 border-b-2 border-red-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  🏁 Rounds
+                </button>
+
               </>
             )}
 
@@ -474,22 +536,30 @@ export default function ManageProductPage() {
           </div>
         )}
 
-        {/* Auction Tabs */}
         {activeTab === 'participants' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="text-center mb-4">
-              <Link
-                to={`/management/auctions/${id}/participants`}
-                className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700"
-              >
-                View Full Participants List →
-              </Link>
+            <h2 className="text-2xl font-bold mb-4 text-center">Auction Rounds</h2>
+            <div className="flex flex-col items-center gap-3">
+              {product.rounds?.length > 0 ? (
+                product.rounds.map((r) => (
+                  <Link
+                    key={r.id}
+                    to={`/management/auctions/${id}/rounds/${r.id}/participants`}
+                    className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 w-60 text-center"
+                  >
+                    View Participants - Round {r.round_number || r.id}
+                  </Link>
+                ))
+              ) : (
+                <p className="text-gray-600">No rounds available yet</p>
+              )}
             </div>
-            <p className="text-gray-600 text-center">
-              See all users who paid the entry fee with full contact details
+            <p className="text-gray-600 text-center mt-4">
+              Click a round to see all participants and their pledges
             </p>
           </div>
         )}
+
 
         {activeTab === 'bids' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -549,6 +619,46 @@ export default function ManageProductPage() {
             </p>
           </div>
         )}
+
+        {/* Auction Rounds Tab */}
+        {activeTab === 'rounds' && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-2xl font-bold mb-6 text-center">Auction Rounds</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {product.rounds?.length > 0 ? (
+              product.rounds
+                .sort((a, b) => (a.round_number || a.id) - (b.round_number || b.id))
+                .map((r) => (
+                  <Link
+                    key={r.id}
+                    to={`/management/products/${id}/rounds/${r.id}`} // ✅ updated
+                    className="bg-red-50 hover:bg-red-100 border border-red-300 rounded-xl shadow-md p-5 flex flex-col items-center transition transform hover:-translate-y-1"
+                  >
+                    <div className="text-lg font-bold text-red-600 mb-2">
+                      Round {r.round_number || r.id}
+                    </div>
+                    <div className="text-gray-700 mb-1">
+                      Participants: {r.participant_count ?? 0}
+                    </div>
+                    <div className="text-gray-700 mb-2">
+                      Highest Pledge: {r.highest_pledge ? formatCurrency(r.highest_pledge) : '-'}
+                    </div>
+                    <span className="mt-auto text-sm text-red-800 font-semibold hover:underline">
+                      View Details →
+                    </span>
+                  </Link>
+                ))
+            ) : (
+              <p className="text-gray-600 col-span-full text-center">
+                No rounds available yet
+              </p>
+            )}
+          </div>
+        </div>
+        )}
+
+
 
         {activeTab === 'sales' && (
           <SalesStatsTab productId={id} />

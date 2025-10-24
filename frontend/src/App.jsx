@@ -26,6 +26,19 @@ import OrderDetailPage from './pages/management/OrderDetailPage';
 import ProductBuyersPage from './pages/management/ProductBuyersPage';
 import CategoriesPage from './pages/management/CategoriesPage';
 import UsersPage from './pages/management/UsersPage';
+import CategoryList from './pages/CategoryList';
+import CategoryDetail from './pages/CategoryDetail';
+import BuyNowPage from "./pages/BuyNowPage";
+import CreateNextRoundPage from './pages/management/CreateNextRoundPage';
+import RoundBids from './pages/management/RoundBids'; // <- import the page
+import RoundParticipants from "./pages/management/RoundParticipants";
+import AuctionRoundsTab from './pages/management/AuctionRoundsTab';
+import RoundDetailPage from './pages/management/RoundDetailPage';
+
+
+
+
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +65,9 @@ function App() {
             <Route path="/category/:categorySlug" element={<CategoryPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/categories" element={<CategoryList />} />
+            <Route path="/buy-now" element={<BuyNowPage />} />
+            
 
             {/* Management Routes (Superuser Only) */}
             <Route 
@@ -150,6 +166,15 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/management/category/:id" 
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <CategoryDetail />
+                </ProtectedRoute>
+              } 
+            />
+
 
             {/* Users Management */}
             <Route 
@@ -160,6 +185,51 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+
+            <Route
+              path="/management/products/:id/create-next-round"
+              element={<CreateNextRoundPage />}
+            />
+
+            {/* Auction Management - Round Bids */}
+            <Route
+              path="/management/auctions/:productId/round/:roundId/bids"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <RoundBids />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* <Route
+              path="/management/auctions/:productId/round/:roundId/participants"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <RoundParticipants />
+                </ProtectedRoute>
+              }
+            /> */}
+
+            <Route
+              path="/management/auctions/:productId/rounds"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <AuctionRoundsTab />
+                </ProtectedRoute>
+              }
+            />
+
+         <Route
+  path="/management/products/:productId/rounds/:roundId"
+  element={
+    <ProtectedRoute requireSuperuser={true}>
+      <RoundDetailPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

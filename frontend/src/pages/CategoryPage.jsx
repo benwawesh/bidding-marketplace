@@ -6,7 +6,7 @@ import AuctionCard from '../components/cards/AuctionCard';
 import BothCard from '../components/cards/BothCard';
 
 export default function CategoryPage() {
-  const { slug } = useParams();
+  const { categorySlug } = useParams();
   
   const { data: auctions = [], isLoading } = useQuery({
     queryKey: ['auctions'],
@@ -15,11 +15,11 @@ export default function CategoryPage() {
 
   // Filter by category (case-insensitive match)
   const categoryProducts = auctions.filter(
-    p => p.status === 'active' && 
-    p.category_name?.toLowerCase() === slug.toLowerCase()
-  );
+  p => p.status === 'active' && 
+  p.category_name?.toLowerCase() === categorySlug.toLowerCase()
+);
 
-  const categoryName = categoryProducts[0]?.category_name || slug;
+const categoryName = categoryProducts[0]?.category_name || categorySlug;
 
   const handleAddToCart = (productId, title) => {
     alert(`✅ ${title} added to cart!`);

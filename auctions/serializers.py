@@ -4,6 +4,7 @@ from .models import Category, Auction, Round, Participation, Bid, Payment, Cart,
 from accounts.models import User
 
 
+
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for product categories"""
     auction_count = serializers.SerializerMethodField()
@@ -30,31 +31,6 @@ class UserMinimalSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'user_type']
 
 
-class RoundSerializer(serializers.ModelSerializer):
-    """Serializer for auction rounds"""
-    is_open = serializers.ReadOnlyField()
-    participant_count = serializers.SerializerMethodField()
-    bid_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Round
-        fields = [
-            'id', 'auction', 'round_number', 'base_price',
-            'participation_fee', 'start_time', 'end_time',
-            'is_active', 'is_open', 'participant_count',
-            'bid_count', 'created_at'
-        ]
-        read_only_fields = ['id', 'created_at']
-
-    def get_participant_count(self, obj):
-        """Count participants in this round"""
-        return obj.participations.filter(payment_status='completed').count()
-
-    def get_bid_count(self, obj):
-        """Count bids in this round"""
-        return obj.bids.filter(is_valid=True).count()
-
-
 class BidSerializer(serializers.ModelSerializer):
     """Serializer for bids (pledge amounts)"""
     user_info = UserMinimalSerializer(source='user', read_only=True)
@@ -69,7 +45,7 @@ class BidSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'submitted_at', 'is_valid']
 
     def validate(self, data):
-        """Validate bid meets minimum requirements"""
+        """Validate bid meets minimum and maximum requirements"""
         round_obj = data.get('round')
         pledge_amount = data.get('pledge_amount')
 
@@ -81,6 +57,18 @@ class BidSerializer(serializers.ModelSerializer):
         if pledge_amount < round_obj.base_price:
             raise serializers.ValidationError(
                 f"Pledge amount must be at least KES {round_obj.base_price}"
+            )
+
+        # Check against min_pledge
+        if round_obj.min_pledge and pledge_amount < round_obj.min_pledge:
+            raise serializers.ValidationError(
+                f"Pledge amount must be at least the minimum pledge KES {round_obj.min_pledge}"
+            )
+
+        # Check against max_pledge (if set)
+        if round_obj.max_pledge and pledge_amount > round_obj.max_pledge:
+            raise serializers.ValidationError(
+                f"Pledge amount cannot exceed the maximum pledge KES {round_obj.max_pledge}"
             )
 
         # Check if user has paid participation fee for this round
@@ -99,19 +87,103 @@ class BidSerializer(serializers.ModelSerializer):
         return data
 
 
+# ✅ Minimal user serializer for basic participation info
+class UserMinimalSerializer(serializers.ModelSerializer):
+    age = serializers.ReadOnlyField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'phone_number',
+            'gender',
+            'age',
+        ]
+
+
+# ✅ Participation serializer for general tracking
 class ParticipationSerializer(serializers.ModelSerializer):
-    """Serializer for participation tracking"""
     user_info = UserMinimalSerializer(source='user', read_only=True)
     round_number = serializers.IntegerField(source='round.round_number', read_only=True)
 
     class Meta:
         model = Participation
         fields = [
-            'id', 'user', 'user_info', 'auction', 'round',
-            'round_number', 'fee_paid', 'payment_status',
-            'paid_at', 'created_at'
+            'id',
+            'user',
+            'user_info',
+            'auction',
+            'round',
+            'round_number',
+            'fee_paid',
+            'payment_status',
+            'paid_at',
+            'created_at'
         ]
         read_only_fields = ['id', 'user', 'paid_at', 'created_at']
+
+
+# ✅ Detailed participant info for Round Detail Page
+class ParticipantDetailSerializer(serializers.ModelSerializer):
+    """Detailed participant info for round participants"""
+    user = serializers.SerializerMethodField()
+    pledge_amount = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Participation
+        fields = [
+            'id', 'user', 'fee_paid', 'payment_status',
+            'paid_at', 'created_at', 'pledge_amount'
+        ]
+
+    def get_user(self, obj):
+        """Return detailed user info"""
+        user = obj.user
+        return {
+            'id': str(user.id),
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': f"{user.first_name} {user.last_name}".strip(),
+            'email': user.email,
+            'phone_number': getattr(user, 'phone_number', None),
+            'age': getattr(user, 'age', None),
+        }
+
+    def get_pledge_amount(self, obj):
+        """Return latest valid pledge for this participant in the round"""
+        latest_bid = obj.round.bids.filter(user=obj.user, is_valid=True).order_by('-submitted_at').first()
+        return latest_bid.pledge_amount if latest_bid else 0
+
+
+
+class RoundSerializer(serializers.ModelSerializer):
+    """Serializer for auction rounds"""
+    is_open = serializers.ReadOnlyField()
+    participant_count = serializers.SerializerMethodField()
+    bid_count = serializers.SerializerMethodField()
+    participants = ParticipantDetailSerializer(source='participations', many=True, read_only=True)  # ✅
+
+    class Meta:
+        model = Round
+        fields = [
+            'id', 'auction', 'round_number', 'base_price',
+            'participation_fee', 'start_time', 'end_time',
+            'min_pledge', 'max_pledge',
+            'is_active', 'is_open', 'participant_count',
+            'bid_count', 'created_at', 'participants'
+        ]
+        read_only_fields = ['id', 'created_at']
+
+    def get_participant_count(self, obj):
+        return obj.participations.filter(payment_status='completed').count()
+
+    def get_bid_count(self, obj):
+        return obj.bids.filter(is_valid=True).count()
 
 
 class PaymentSerializer(serializers.ModelSerializer):

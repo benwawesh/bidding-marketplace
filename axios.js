@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: '/api',  // Changed from http://127.0.0.1:8000/api
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,7 +33,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('bidmarket_refresh_token');
-        const response = await axios.post('http://127.0.0.1:8000/accounts/api/token/refresh/', {
+        const response = await axios.post('/accounts/api/token/refresh/', {  // Changed to relative
           refresh: refreshToken,
         });
 

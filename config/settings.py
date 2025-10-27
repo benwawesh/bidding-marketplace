@@ -310,3 +310,20 @@ LOGGING = {
 import os
 LOGS_DIR = BASE_DIR / 'logs'
 os.makedirs(LOGS_DIR, exist_ok=True)
+
+# Production CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://157.245.40.136",
+    "https://bidsoko.com",
+    "https://www.bidsoko.com",
+    "http://bidsoko.com",
+    "http://www.bidsoko.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://157.245.40.136",
+    "https://bidsoko.com",
+    "https://www.bidsoko.com",
+]

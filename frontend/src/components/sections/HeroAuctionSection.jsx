@@ -8,7 +8,7 @@ export default function HeroAuctionSection({ auction }) {
   // Fetch active promo banners
   const { data: promoBanners = [] } = useQuery({
     queryKey: ['promo-banners'],
-    queryFn: () => axios.get('http://127.0.0.1:8000/api/promo-banners/').then(res => res.data),
+    queryFn: () => axios.get('/api/promo-banners/').then(res => res.data),
   });
 
   if (!auction) {
@@ -79,7 +79,7 @@ export default function HeroAuctionSection({ auction }) {
               <img
                 src={auction.main_image.startsWith('http')
                   ? auction.main_image
-                  : `http://127.0.0.1:8000${auction.main_image}`
+                  : `${auction.main_image}`
                 }
                 alt={auction.title}
                 className="w-full h-full object-cover min-h-[450px]"

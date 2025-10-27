@@ -13,7 +13,7 @@ export default function AuctionCard({ product }) {
             <img 
               src={product.main_image.startsWith('http') 
                 ? product.main_image 
-                : `http://127.0.0.1:8000${product.main_image}`
+                : `${product.main_image}`
               } 
               alt={product.title}
               className="w-full h-full object-cover"

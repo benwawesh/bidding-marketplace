@@ -23,7 +23,7 @@ export default function CategoryList() {
             className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition bg-white"
           >
             <img
-              src={cat.image ? `http://127.0.0.1:8000${cat.image}` : "/placeholder.jpg"}
+              src={cat.image ? `${cat.image}` : "/placeholder.jpg"}
               alt={cat.name}
               className="w-full h-40 object-cover"
             />

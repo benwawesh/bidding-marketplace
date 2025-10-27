@@ -22,7 +22,7 @@ export default function AllProductsPage() {
   // Activate mutation
   const activateMutation = useMutation({
     mutationFn: (productId) => 
-      axios.post(`http://127.0.0.1:8000/api/auctions/${productId}/activate/`),
+      axios.post(`/api/auctions/${productId}/activate/`),
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-products']);
       toast.success('✅ Product activated successfully!');
@@ -252,7 +252,7 @@ export default function AllProductsPage() {
                               <img 
                                 src={product.main_image.startsWith('http') 
                                   ? product.main_image 
-                                  : `http://127.0.0.1:8000${product.main_image}`
+                                  : `${product.main_image}`
                                 } 
                                 alt={product.title} 
                                 className="w-full h-full object-cover" 
@@ -369,7 +369,7 @@ export default function AllProductsPage() {
                             <img 
                               src={product.main_image.startsWith('http') 
                                 ? product.main_image 
-                                : `http://127.0.0.1:8000${product.main_image}`
+                                : `${product.main_image}`
                               }
                               alt={product.title}
                               className="w-full h-full object-cover"

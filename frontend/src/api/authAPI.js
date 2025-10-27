@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authUtils } from '../utils/auth';
 
-const AUTH_BASE_URL = 'http://127.0.0.1:8000';
+const AUTH_BASE_URL = '';
 
 export const authAPI = {
   async register(userData) {

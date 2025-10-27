@@ -72,7 +72,7 @@ export default function EditProductPage() {
       if (product.main_image) {
         const imageUrl = product.main_image.startsWith('http') 
           ? product.main_image 
-          : `http://127.0.0.1:8000${product.main_image}`;
+          : `${product.main_image}`;
         setImagePreview(imageUrl);
       }
     }
@@ -89,12 +89,12 @@ export default function EditProductPage() {
             formData.append(key, data[key]);
           }
         });
-        return axios.put(`http://127.0.0.1:8000/api/auctions/${id}/`, formData, {
+        return axios.put(`/api/auctions/${id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
       // Otherwise send JSON
-      return axios.put(`http://127.0.0.1:8000/api/auctions/${id}/`, data);
+      return axios.put(`/api/auctions/${id}/`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['product', id]);
@@ -363,7 +363,7 @@ export default function EditProductPage() {
                               if (product.main_image) {
                                 const imageUrl = product.main_image.startsWith('http') 
                                   ? product.main_image 
-                                  : `http://127.0.0.1:8000${product.main_image}`;
+                                  : `${product.main_image}`;
                                 setImagePreview(imageUrl);
                               }
                             }}

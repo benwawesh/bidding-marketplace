@@ -109,7 +109,7 @@ export default function ManageProductPage() {
   const handleActivateWithRange = async (rangeData) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/auctions/${id}/activate/`,
+        `/api/auctions/${id}/activate/`,
         rangeData,
         {
           headers: {
@@ -133,7 +133,7 @@ const closeMutation = useMutation({
     if (!currentRound) throw new Error("No active round found");
 
     const response = await axios.post(
-      `http://127.0.0.1:8000/api/rounds/${currentRound.id}/close/`, // ✅ use round ID
+      `/api/rounds/${currentRound.id}/close/`, // ✅ use round ID
       {},
       {
         headers: {
@@ -158,7 +158,7 @@ const closeMutation = useMutation({
   const createNextRoundMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/auctions/${id}/create_next_round/`,
+        `/api/auctions/${id}/create_next_round/`,
         {},
         {
           headers: {

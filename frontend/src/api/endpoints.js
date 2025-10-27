@@ -1,6 +1,6 @@
 import axios from './axios';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = "/api";
 
 export const auctionsAPI = {
   getAll: () => axios.get(`${API_URL}/auctions/`),
@@ -75,11 +75,11 @@ export const customersAPI = {
 };
 
 export const usersAPI = {
-  register: (data) => axios.post('http://127.0.0.1:8000/accounts/api/users/', data),
-  getMe: () => axios.get('http://127.0.0.1:8000/accounts/api/users/me/'),
-  updateProfile: (data) => axios.patch('http://127.0.0.1:8000/accounts/api/users/update_profile/', data),
+  register: (data) => axios.post('/accounts/api/users/', data),
+  getMe: () => axios.get('/accounts/api/users/me/'),
+  updateProfile: (data) => axios.patch('/accounts/api/users/update_profile/', data),
   // Admin endpoints
-  adminList: (params) => axios.get('http://127.0.0.1:8000/accounts/api/users/admin_list/', { params }),
-  adminDetail: (id) => axios.get(`http://127.0.0.1:8000/accounts/api/users/${id}/admin_detail/`),
-  adminStats: () => axios.get('http://127.0.0.1:8000/accounts/api/users/admin_stats/'),
+  adminList: (params) => axios.get('/accounts/api/users/admin_list/', { params }),
+  adminDetail: (id) => axios.get(`/accounts/api/users/${id}/admin_detail/`),
+  adminStats: () => axios.get('/accounts/api/users/admin_stats/'),
 };

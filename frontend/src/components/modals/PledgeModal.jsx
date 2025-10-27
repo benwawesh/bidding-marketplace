@@ -33,13 +33,13 @@ const pledgeMutation = useMutation({
     if (existingBid) {
       // Update existing bid
       const response = await axios.patch(
-        `http://127.0.0.1:8000/api/bids/${existingBid.id}/`,
+        `/api/bids/${existingBid.id}/`,
         { pledge_amount: amount }
       );
       return response.data;
     } else {
       // Create new bid
-      const response = await axios.post('http://127.0.0.1:8000/api/bids/', {
+      const response = await axios.post('/api/bids/', {
         auction: roundData.auction,
         round: roundData.id,
         pledge_amount: amount,

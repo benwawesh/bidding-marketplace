@@ -9,7 +9,7 @@ export default function PaymentModal({ auctionId, roundId, amount, onSuccess, on
   const paymentMutation = useMutation({
     mutationFn: async () => {
       // Create participation record
-      const response = await axios.post('http://127.0.0.1:8000/api/participations/', {
+      const response = await axios.post('/api/participations/', {
         auction: auctionId,
         round: roundId,
         fee_paid: amount,

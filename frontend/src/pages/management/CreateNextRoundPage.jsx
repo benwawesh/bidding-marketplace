@@ -49,7 +49,7 @@ export default function CreateNextRoundPage() {
       };
 
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/auctions/${id}/create_next_round/`,
+        `/api/auctions/${id}/create_next_round/`,
         payload,
         {
           headers: {

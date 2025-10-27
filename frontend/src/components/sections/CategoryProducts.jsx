@@ -11,7 +11,7 @@ function CategoryProducts({ categoryId }) {
     if (!categoryId) return;
     async function fetchProducts() {
       try {
-        const res = await axios.get(`http://localhost:8000/api/categories/${categoryId}/products/`);
+        const res = await axios.get(`/api/categories/${categoryId}/products/`);
         setProducts(res.data);
       } catch (err) {
         setError('Failed to load products');

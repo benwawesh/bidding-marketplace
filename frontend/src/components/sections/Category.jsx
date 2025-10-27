@@ -8,7 +8,7 @@ function Category({ onSelectCategory }) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await axios.get('http://localhost:8000/api/categories/');
+        const res = await axios.get('/api/categories/');
         setCategories(res.data);
       } catch (error) {
         console.error('Error fetching categories:', error);

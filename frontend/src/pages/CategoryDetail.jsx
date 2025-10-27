@@ -37,7 +37,7 @@ export default function CategoryDetail() {
               className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition bg-white"
             >
               <img
-                src={prod.main_image ? `http://127.0.0.1:8000${prod.main_image}` : "/placeholder.jpg"}
+                src={prod.main_image ? `${prod.main_image}` : "/placeholder.jpg"}
                 alt={prod.title}
                 className="w-full h-40 object-cover"
               />

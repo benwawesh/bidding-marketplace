@@ -59,10 +59,10 @@ export default function Navbar() {
                     Hi, <span className="font-semibold text-gray-900">{user?.first_name || user?.username}</span>
                   </span>
                   <Link
-                    to="/profile"
+                    to="/dashboard"
                     className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                   >
-                    👤 Profile
+                    📊 Dashboard
                   </Link>
                   <button
                     onClick={handleLogout}

@@ -53,7 +53,8 @@ export const placeBid = async (auctionId, pledgeAmount) => {
 export const getMyBids = async () => {
   try {
     const token = localStorage.getItem('bidmarket_access_token');
-    const response = await axios.get('/bids/my_bids/', {
+    // Use /bids/ endpoint - it already filters to current user via get_queryset
+    const response = await axios.get('/bids/', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -62,6 +63,33 @@ export const getMyBids = async () => {
   } catch (error) {
     console.error('Error fetching my bids:', error);
     throw error;
+  }
+};
+
+// Get user's latest bid for a specific auction and round
+export const getMyLatestBidForRound = async (auctionId, roundId) => {
+  try {
+    const token = localStorage.getItem('bidmarket_access_token');
+    // Use /bids/ endpoint - it already filters to current user via get_queryset
+    const response = await axios.get('/bids/', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Filter bids for this auction and round, get the most recent
+    const bidsForRound = response.data.filter(
+      (bid) => bid.auction?.id === auctionId && bid.round_info?.id === roundId && bid.is_valid
+    );
+
+    if (bidsForRound.length === 0) return null;
+
+    // Sort by submitted_at descending and return the first (most recent)
+    bidsForRound.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+    return bidsForRound[0];
+  } catch (error) {
+    console.error('Error fetching latest bid for round:', error);
+    return null;
   }
 };
 

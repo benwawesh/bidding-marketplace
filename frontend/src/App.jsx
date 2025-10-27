@@ -34,6 +34,8 @@ import RoundBids from './pages/management/RoundBids'; // <- import the page
 import RoundParticipants from "./pages/management/RoundParticipants";
 import AuctionRoundsTab from './pages/management/AuctionRoundsTab';
 import RoundDetailPage from './pages/management/RoundDetailPage';
+import WinnerCalculationPage from './pages/management/WinnerCalculationPage';
+import UserDashboard from './pages/UserDashboard';
 
 
 
@@ -65,6 +67,14 @@ function App() {
             <Route path="/category/:categorySlug" element={<CategoryPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/categories" element={<CategoryList />} />
             <Route path="/buy-now" element={<BuyNowPage />} />
             
@@ -228,8 +238,15 @@ function App() {
   }
 />
 
-
-
+            {/* Winner Calculation Page */}
+            <Route
+              path="/management/products/:productId/winner"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <WinnerCalculationPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

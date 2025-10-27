@@ -35,14 +35,33 @@ class BidSerializer(serializers.ModelSerializer):
     """Serializer for bids (pledge amounts)"""
     user_info = UserMinimalSerializer(source='user', read_only=True)
     round_number = serializers.IntegerField(source='round.round_number', read_only=True)
+    auction_info = serializers.SerializerMethodField()
+    round_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Bid
         fields = [
             'id', 'user', 'user_info', 'auction', 'round',
-            'round_number', 'pledge_amount', 'is_valid', 'submitted_at'
+            'round_number', 'auction_info', 'round_info',
+            'pledge_amount', 'is_valid', 'submitted_at'
         ]
         read_only_fields = ['id', 'user', 'submitted_at', 'is_valid']
+
+    def get_auction_info(self, obj):
+        """Return basic auction information"""
+        return {
+            'id': str(obj.auction.id),
+            'title': obj.auction.title,
+            'status': obj.auction.status,
+        }
+
+    def get_round_info(self, obj):
+        """Return basic round information"""
+        return {
+            'id': str(obj.round.id),
+            'round_number': obj.round.round_number,
+            'is_active': obj.round.is_active,
+        }
 
     def validate(self, data):
         """Validate bid meets minimum and maximum requirements"""

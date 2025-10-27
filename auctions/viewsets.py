@@ -8,6 +8,7 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Auction, Category, Bid, Round, Participation
+from accounts.models import User
 from .serializers import (
     AuctionListSerializer, AuctionDetailSerializer, AuctionCreateSerializer,
     CategorySerializer, BidSerializer, RoundSerializer, ParticipationSerializer,
@@ -452,6 +453,106 @@ class AuctionViewSet(viewsets.ModelViewSet):
             'message': f'Round {next_round_number} created successfully for auction "{auction.title}".',
             'round': RoundSerializer(new_round).data
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def winner_calculation(self, request, id=None):
+        """
+        Calculate and return winner based on average pledge across ALL rounds.
+        Users who didn't participate in a round get 0 for that round.
+        Average = (sum of all pledges) / (total number of rounds)
+        """
+        auction = self.get_object()
+
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only admins can view winner calculations'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all rounds for this auction
+        rounds = auction.rounds.all().order_by('round_number')
+        total_rounds = rounds.count()
+
+        if total_rounds == 0:
+            return Response({
+                'error': 'No rounds created yet',
+                'total_rounds': 0,
+                'participants': []
+            })
+
+        # Get all users who participated in at least one round
+        from django.db.models import Q
+        participant_users = User.objects.filter(
+            Q(bids__auction=auction, bids__is_valid=True) |
+            Q(participations__auction=auction, participations__payment_status='completed')
+        ).distinct()
+
+        # Calculate average for each user
+        user_calculations = []
+
+        for user in participant_users:
+            round_details = []
+            total_pledge = Decimal('0.00')
+            rounds_participated = 0
+
+            for round_obj in rounds:
+                # Get user's latest valid bid for this round
+                bid = Bid.objects.filter(
+                    user=user,
+                    round=round_obj,
+                    is_valid=True
+                ).order_by('-submitted_at').first()
+
+                if bid:
+                    pledge_amount = bid.pledge_amount
+                    total_pledge += pledge_amount
+                    rounds_participated += 1
+                    participated = True
+                else:
+                    pledge_amount = Decimal('0.00')
+                    participated = False
+
+                round_details.append({
+                    'round_number': round_obj.round_number,
+                    'pledge_amount': str(pledge_amount),
+                    'participated': participated
+                })
+
+            # Calculate average: total_pledge / total_rounds (not rounds_participated!)
+            average_pledge = total_pledge / total_rounds if total_rounds > 0 else Decimal('0.00')
+
+            user_calculations.append({
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'full_name': f"{user.first_name} {user.last_name}".strip(),
+                    'email': user.email,
+                    'phone_number': getattr(user, 'phone_number', None),
+                },
+                'total_pledge': str(total_pledge),
+                'rounds_participated': rounds_participated,
+                'total_rounds': total_rounds,
+                'average_pledge': str(average_pledge),
+                'round_details': round_details
+            })
+
+        # Sort by average pledge (descending)
+        user_calculations.sort(key=lambda x: Decimal(x['average_pledge']), reverse=True)
+
+        # Determine winner
+        winner = user_calculations[0] if user_calculations else None
+
+        return Response({
+            'auction': {
+                'id': str(auction.id),
+                'title': auction.title,
+                'status': auction.status
+            },
+            'total_rounds': total_rounds,
+            'total_participants': len(user_calculations),
+            'winner': winner,
+            'all_participants': user_calculations
+        })
 
 
 

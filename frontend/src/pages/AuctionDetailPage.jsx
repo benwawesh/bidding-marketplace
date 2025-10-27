@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { auctionsAPI } from '../api/endpoints';
@@ -13,7 +13,8 @@ import PledgeModal from '../components/PledgeModal';
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const { user, isAuthenticated } = useContext(AuthContext);
-  
+  const queryClient = useQueryClient();
+
   const [currentRound, setCurrentRound] = useState(null);
   const [hasParticipated, setHasParticipated] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState(null);
@@ -33,7 +34,7 @@ export default function AuctionDetailPage() {
   }
 
   // Fetch rounds
-  const { data: rounds } = useQuery({
+  const { data: rounds, refetch: refetchRounds } = useQuery({
     queryKey: ['rounds', id],
     queryFn: () => getRounds(id),
     enabled: !!product,
@@ -75,32 +76,39 @@ export default function AuctionDetailPage() {
     },
     (bidData) => {
       console.log('New bid placed:', bidData);
+      // Refetch product data to update highest bid display
+      queryClient.invalidateQueries(['product', id]);
     },
     async (roundData) => {
       // New round created!
       console.log('🔄 New round started!', roundData);
-      
-      // Refetch rounds to get updated data
+
+      // Reset participation status (user needs to pay for new round)
+      setHasParticipated(false);
+
+      // Clear leaderboard (fresh start for new round)
+      setLeaderboardData(null);
+
+      // Refetch rounds using React Query to update the cache
       try {
-        const updatedRounds = await getRounds(id);
-        if (updatedRounds && updatedRounds.length > 0) {
-          const newActiveRound = updatedRounds.find(r => r.is_active);
-          setCurrentRound(newActiveRound || updatedRounds[updatedRounds.length - 1]);
-          
-          // Reset participation status (user needs to pay for new round)
-          setHasParticipated(false);
-          
-          // Clear leaderboard (fresh start for new round)
-          setLeaderboardData(null);
-          
-          // Show success message
-          setSuccessMessage(roundData.message || 'New round has started!');
-          setTimeout(() => setSuccessMessage(''), 5000);
-          
-          console.log('✅ Updated to new round:', newActiveRound?.round_number);
+        const result = await refetchRounds();
+
+        if (result.data && result.data.length > 0) {
+          const newActiveRound = result.data.find(r => r.is_active);
+          const roundToSet = newActiveRound || result.data[result.data.length - 1];
+
+          // Update current round state
+          setCurrentRound(roundToSet);
+
+          // Show prominent success message with round number
+          const roundNumber = roundToSet.round_number;
+          setSuccessMessage(`🎯 NEW ROUND ${roundNumber} HAS STARTED! Join now to participate in this round.`);
+          setTimeout(() => setSuccessMessage(''), 8000); // Show for 8 seconds
+
+          console.log('✅ Updated to new round:', roundNumber);
         }
       } catch (error) {
-        console.error('Error fetching updated rounds:', error);
+        console.error('Error refetching rounds:', error);
       }
     }
   );
@@ -296,12 +304,33 @@ export default function AuctionDetailPage() {
 
                 {/* Round Info */}
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between items-center pb-3 border-b">
-                    <span className="text-sm text-gray-600">Minimum Pledge:</span>
-                    <span className="font-bold text-gray-900">
-                      {formatCurrency(currentRound.min_pledge || currentRound.base_price)}
-                    </span>
+                  {/* Pledge Range Card */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+                    <p className="text-xs font-semibold text-gray-600 mb-2 text-center">PLEDGE RANGE</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 mb-1">Minimum</p>
+                        <p className="font-bold text-green-600 text-lg">
+                          {formatCurrency(currentRound.min_pledge || currentRound.base_price)}
+                        </p>
+                      </div>
+                      <div className="text-2xl text-gray-400">↔</div>
+                      <div className="flex-1 text-right">
+                        <p className="text-xs text-gray-600 mb-1">Maximum</p>
+                        <p className="font-bold text-red-600 text-lg">
+                          {currentRound.max_pledge
+                            ? formatCurrency(currentRound.max_pledge)
+                            : 'No limit'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-blue-200">
+                      <p className="text-xs text-center text-gray-700">
+                        💡 <strong>Tip:</strong> Pledge the MAXIMUM to maximize your chances of winning!
+                      </p>
+                    </div>
                   </div>
+
                   <div className="flex justify-between items-center pb-3 border-b">
                     <span className="text-sm text-gray-600">Entry Fee:</span>
                     <span className="font-bold text-orange-600">
@@ -311,8 +340,8 @@ export default function AuctionDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Current Highest:</span>
                     <span className="font-bold text-red-600 text-lg">
-                      {product.highest_bid
-                        ? formatCurrency(product.highest_bid)
+                      {product.highest_bid?.amount
+                        ? formatCurrency(parseFloat(product.highest_bid.amount))
                         : 'No bids yet'}
                     </span>
                   </div>

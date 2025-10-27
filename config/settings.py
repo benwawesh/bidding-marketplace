@@ -179,9 +179,17 @@ MPESA_CALLBACK_URL = 'http://127.0.0.1:8000/api/payments/callback/'
 # CORS Configuration for React Frontend
 # =======================
 CORS_ALLOWED_ORIGINS = [
+    # Local development
     "http://localhost:5173",      # Vite dev server (default port)
     "http://127.0.0.1:5173",      # Alternative localhost
     "http://localhost:3000",      # Backup port
+    "http://127.0.0.1:8000",      # Django dev server
+    # Production
+    "http://157.245.40.136",
+    "https://bidsoko.com",
+    "https://www.bidsoko.com",
+    "http://bidsoko.com",
+    "http://www.bidsoko.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -311,18 +319,12 @@ import os
 LOGS_DIR = BASE_DIR / 'logs'
 os.makedirs(LOGS_DIR, exist_ok=True)
 
-# Production CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://157.245.40.136",
-    "https://bidsoko.com",
-    "https://www.bidsoko.com",
-    "http://bidsoko.com",
-    "http://www.bidsoko.com",
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
+# CSRF Trusted Origins (for both local and production)
 CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://157.245.40.136",
     "https://bidsoko.com",
     "https://www.bidsoko.com",

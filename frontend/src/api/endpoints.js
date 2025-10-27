@@ -1,6 +1,6 @@
 import axios from './axios';
 
-const API_URL = "/api";
+const API_URL = "";
 
 export const auctionsAPI = {
   getAll: () => axios.get(`${API_URL}/auctions/`),
@@ -82,4 +82,15 @@ export const usersAPI = {
   adminList: (params) => axios.get('/accounts/api/users/admin_list/', { params }),
   adminDetail: (id) => axios.get(`/accounts/api/users/${id}/admin_detail/`),
   adminStats: () => axios.get('/accounts/api/users/admin_stats/'),
+};
+
+export const mpesaAPI = {
+  initiateOrderPayment: (orderId, phoneNumber) =>
+    axios.post('/payments/mpesa/initiate-order/', { order_id: orderId, phone_number: phoneNumber }),
+  checkOrderPaymentStatus: (orderId) =>
+    axios.get(`/payments/mpesa/order-status/${orderId}/`),
+  getMyTransactions: () =>
+    axios.get('/payments/mpesa/my-transactions/'),
+  mockOrderPayment: (orderId) =>
+    axios.post('/payments/mock-order/', { order_id: orderId }),
 };

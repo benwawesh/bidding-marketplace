@@ -164,16 +164,24 @@ LOGOUT_REDIRECT_URL = 'home'  # Redirect to home page after logout
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+# =======================
 # M-Pesa Daraja API Configuration
-# ================================
-MPESA_ENVIRONMENT = 'sandbox'  # Change to 'production' when ready
-MPESA_CONSUMER_KEY = 'your_consumer_key_here'  # Get from Daraja Portal
-MPESA_CONSUMER_SECRET = 'your_consumer_secret_here'  # Get from Daraja Portal
+# =======================
+MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')
+MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='')
+MPESA_SHORTCODE = config('MPESA_SHORTCODE', default='174379')
+MPESA_PASSKEY = config('MPESA_PASSKEY', default='bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
+MPESA_INITIATOR_NAME = config('MPESA_INITIATOR_NAME', default='testapi')
+MPESA_INITIATOR_PASSWORD = config('MPESA_INITIATOR_PASSWORD', default='')
 
-# Sandbox test credentials
-MPESA_SHORTCODE = '174379'
-MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
-MPESA_CALLBACK_URL = 'http://127.0.0.1:8000/api/payments/callback/'
+# M-Pesa API URLs
+if MPESA_ENVIRONMENT == 'sandbox':
+    MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke'
+    MPESA_CALLBACK_URL = 'http://127.0.0.1:8000/api/payments/mpesa/callback/'
+else:
+    MPESA_BASE_URL = 'https://api.safaricom.co.ke'
+    MPESA_CALLBACK_URL = 'https://bidsoko.com/api/payments/mpesa/callback/'
 
 # =======================
 # CORS Configuration for React Frontend

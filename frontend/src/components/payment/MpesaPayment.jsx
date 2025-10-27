@@ -1,0 +1,265 @@
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { mpesaAPI } from '../../api/mpesaAPI';
+import toast from 'react-hot-toast';
+import { Smartphone, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react';
+
+/**
+ * M-Pesa Payment Component
+ * Handles STK Push payment flow
+ */
+export default function MpesaPayment({ orderId, amount, onSuccess, onCancel }) {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
+  const [countdown, setCountdown] = useState(120); // 2 minutes timeout
+
+  // Poll payment status when we have a checkout request ID
+  const { data: paymentStatus, refetch } = useQuery({
+    queryKey: ['payment-status', orderId],
+    queryFn: () => mpesaAPI.checkOrderPaymentStatus(orderId).then(res => res.data),
+    enabled: !!checkoutRequestId && isProcessing,
+    refetchInterval: isProcessing ? 3000 : false, // Poll every 3 seconds
+  });
+
+  // Initiate payment mutation
+  const initiatePayment = useMutation({
+    mutationFn: () => mpesaAPI.initiateOrderPayment(orderId, phoneNumber),
+    onSuccess: (response) => {
+      toast.success('Payment request sent! Check your phone.');
+      setCheckoutRequestId(response.data.checkout_request_id);
+      setIsProcessing(true);
+    },
+    onError: (error) => {
+      const errorMsg = error.response?.data?.error || 'Failed to initiate payment';
+      toast.error(errorMsg);
+      setIsProcessing(false);
+    },
+  });
+
+  // Handle countdown timer
+  useEffect(() => {
+    if (!isProcessing) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setIsProcessing(false);
+          toast.error('Payment timeout. Please try again.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isProcessing]);
+
+  // Check payment status
+  useEffect(() => {
+    if (!paymentStatus) return;
+
+    if (paymentStatus.payment_status === 'completed') {
+      setIsProcessing(false);
+      toast.success('Payment successful!');
+      onSuccess?.(paymentStatus);
+    } else if (paymentStatus.payment_status === 'failed') {
+      setIsProcessing(false);
+      toast.error(paymentStatus.result_desc || 'Payment failed');
+    }
+  }, [paymentStatus, onSuccess]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Validate phone number
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    initiatePayment.mutate();
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (isProcessing) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <Loader2 className="w-16 h-16 text-green-600 animate-spin" />
+          </div>
+
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            Payment in Progress
+          </h3>
+
+          <p className="text-gray-600 mb-4">
+            Check your phone for the M-Pesa prompt and enter your PIN
+          </p>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Smartphone className="w-5 h-5 text-green-600" />
+              <span className="font-medium text-green-900">
+                Phone: {phoneNumber}
+              </span>
+            </div>
+            <div className="text-2xl font-bold text-green-600">
+              KSH {amount.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="text-sm text-gray-500 mb-2">Time remaining</div>
+            <div className="text-3xl font-mono font-bold text-orange-600">
+              {formatTime(countdown)}
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-left bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="font-medium mb-1">Having issues?</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-800">
+                <li>Make sure your phone has M-Pesa registered</li>
+                <li>Check if you have sufficient balance</li>
+                <li>Ensure you have network connectivity</li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setIsProcessing(false);
+              setCheckoutRequestId(null);
+              setCountdown(120);
+            }}
+            className="text-orange-600 hover:text-orange-700 font-medium"
+          >
+            Cancel Payment
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (paymentStatus?.payment_status === 'completed') {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto text-center">
+        <div className="flex justify-center mb-4">
+          <CheckCircle2 className="w-16 h-16 text-green-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          Payment Successful!
+        </h3>
+        <p className="text-gray-600 mb-4">
+          Your payment has been received and processed.
+        </p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="text-sm text-gray-600 mb-1">M-Pesa Receipt</div>
+          <div className="text-xl font-mono font-bold text-green-900">
+            {paymentStatus.mpesa_receipt}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+      <div className="text-center mb-6">
+        <div className="flex justify-center mb-4">
+          <div className="bg-green-100 rounded-full p-4">
+            <Smartphone className="w-12 h-12 text-green-600" />
+          </div>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          Pay with M-Pesa
+        </h3>
+        <p className="text-gray-600">
+          Enter your M-Pesa registered phone number
+        </p>
+      </div>
+
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <div className="text-sm text-gray-600 mb-1">Amount to Pay</div>
+        <div className="text-3xl font-bold text-orange-600">
+          KSH {amount.toLocaleString()}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              +254
+            </span>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="712345678"
+              className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              maxLength="10"
+              required
+            />
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Format: 0712345678 or 712345678
+          </p>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex gap-2">
+            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <div className="text-sm text-blue-900">
+              <p className="font-medium mb-1">What happens next?</p>
+              <ol className="list-decimal list-inside space-y-1 text-blue-800">
+                <li>You'll receive an M-Pesa prompt on your phone</li>
+                <li>Enter your M-Pesa PIN to confirm</li>
+                <li>You'll receive a confirmation SMS</li>
+                <li>Your order will be processed immediately</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={initiatePayment.isPending || !phoneNumber}
+            className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {initiatePayment.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Smartphone className="w-5 h-5" />
+                Pay Now
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

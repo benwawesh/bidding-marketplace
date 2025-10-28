@@ -8,7 +8,7 @@ export default function HeroAuctionSection({ auction }) {
   // Fetch active promo banners
   const { data: promoBanners = [] } = useQuery({
     queryKey: ['promo-banners'],
-    queryFn: () => axios.get('/api/promo-banners/').then(res => res.data),
+    queryFn: () => axios.get('/promo-banners/').then(res => res.data),
   });
 
   if (!auction) {

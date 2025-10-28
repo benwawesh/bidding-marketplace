@@ -359,14 +359,56 @@ class CheckPaymentStatusView(APIView):
                     'paid_at': participation.paid_at
                 })
 
-            pending = Participation.objects.filter(
+            pending_participation = Participation.objects.filter(
                 user=request.user,
                 auction=auction,
                 round=current_round,
                 payment_status='pending'
             ).first()
 
-            if pending:
+            if pending_participation:
+                # Find the pending payment
+                pending_payment = Payment.objects.filter(
+                    user=request.user,
+                    auction=auction,
+                    status='pending'
+                ).first()
+
+                if pending_payment and pending_payment.transaction_id:
+                    # Query M-Pesa for the payment status
+                    mpesa = MpesaAPI()
+                    query_result = mpesa.query_stk_push_status(pending_payment.transaction_id)
+
+                    if query_result.get('status') == 'completed':
+                        # Update payment and participation to completed
+                        with transaction.atomic():
+                            pending_payment.status = 'completed'
+                            pending_payment.save()
+
+                            pending_participation.payment_status = 'completed'
+                            pending_participation.paid_at = timezone.now()
+                            pending_participation.save()
+
+                        return Response({
+                            'has_paid': True,
+                            'participation_fee': float(current_round.participation_fee),
+                            'paid_at': pending_participation.paid_at
+                        })
+                    elif query_result.get('status') in ['cancelled', 'timeout', 'failed']:
+                        # Update payment and participation to failed
+                        with transaction.atomic():
+                            pending_payment.status = 'failed'
+                            pending_payment.save()
+
+                            pending_participation.payment_status = 'failed'
+                            pending_participation.save()
+
+                        return Response({
+                            'has_paid': False,
+                            'status': query_result.get('status'),
+                            'message': query_result.get('message')
+                        })
+
                 return Response({
                     'has_paid': False,
                     'status': 'pending',

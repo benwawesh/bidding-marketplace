@@ -16,10 +16,12 @@ class MpesaAPI:
         if self.base_url == 'sandbox':
             self.auth_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
             self.stk_push_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+            self.query_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query'
             self.callback_url = getattr(settings, 'MPESA_CALLBACK_URL', 'https://yourdomain.com/api/payments/callback/')
         else:
             self.auth_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
             self.stk_push_url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+            self.query_url = 'https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query'
             self.callback_url = getattr(settings, 'MPESA_CALLBACK_URL', 'https://yourdomain.com/api/payments/callback/')
 
         self.consumer_key = getattr(settings, 'MPESA_CONSUMER_KEY', '')
@@ -129,3 +131,92 @@ class MpesaAPI:
             raise ValueError('Invalid Kenyan phone number format')
 
         return phone
+
+    def query_stk_push_status(self, checkout_request_id):
+        """Query the status of an STK Push transaction"""
+        access_token = self.get_access_token()
+        if not access_token:
+            return {'success': False, 'message': 'Failed to get access token'}
+
+        password, timestamp = self.generate_password()
+
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        payload = {
+            'BusinessShortCode': self.business_shortcode,
+            'Password': password,
+            'Timestamp': timestamp,
+            'CheckoutRequestID': checkout_request_id
+        }
+
+        try:
+            response = requests.post(
+                self.query_url,
+                json=payload,
+                headers=headers,
+                timeout=30
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            result_code = result.get('ResultCode')
+
+            if result_code == '0':
+                # Payment successful
+                return {
+                    'success': True,
+                    'status': 'completed',
+                    'message': result.get('ResultDesc', 'Payment successful')
+                }
+            elif result_code == '1032':
+                # User cancelled
+                return {
+                    'success': False,
+                    'status': 'cancelled',
+                    'message': 'Payment cancelled by user'
+                }
+            elif result_code == '1037':
+                # Timeout - user didn't enter PIN
+                return {
+                    'success': False,
+                    'status': 'timeout',
+                    'message': 'Payment request timed out'
+                }
+            elif result_code == '1':
+                # Insufficient funds
+                return {
+                    'success': False,
+                    'status': 'failed',
+                    'message': 'Insufficient funds'
+                }
+            elif result_code == '1001':
+                # Invalid credentials
+                return {
+                    'success': False,
+                    'status': 'failed',
+                    'message': 'Invalid M-Pesa credentials'
+                }
+            elif result_code is None or result_code == '':
+                # Still pending
+                return {
+                    'success': False,
+                    'status': 'pending',
+                    'message': 'Payment still pending'
+                }
+            else:
+                # Other error
+                return {
+                    'success': False,
+                    'status': 'failed',
+                    'message': result.get('ResultDesc', 'Payment failed')
+                }
+
+        except requests.exceptions.RequestException as e:
+            print(f"Query error: {str(e)}")
+            return {'success': False, 'status': 'error', 'message': f'Network error: {str(e)}'}
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return {'success': False, 'status': 'error', 'message': f'Error: {str(e)}'}

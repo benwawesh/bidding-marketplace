@@ -158,7 +158,7 @@ const closeMutation = useMutation({
   const createNextRoundMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.post(
-        `/api/auctions/${id}/create_next_round/`,
+        `/auctions/${id}/create_next_round/`,
         {},
         {
           headers: {

@@ -49,7 +49,7 @@ export default function CreateNextRoundPage() {
       };
 
       const response = await axios.post(
-        `/api/auctions/${id}/create_next_round/`,
+        `/auctions/${id}/create_next_round/`,
         payload,
         {
           headers: {

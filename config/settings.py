@@ -178,7 +178,8 @@ MPESA_INITIATOR_PASSWORD = config('MPESA_INITIATOR_PASSWORD', default='')
 # M-Pesa API URLs
 if MPESA_ENVIRONMENT == 'sandbox':
     MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke'
-    MPESA_CALLBACK_URL = 'http://127.0.0.1:8000/api/payments/mpesa/callback/'
+    # Use public URL even for sandbox so M-Pesa can reach callback
+    MPESA_CALLBACK_URL = 'https://bidsoko.com/api/payments/mpesa/callback/'
 else:
     MPESA_BASE_URL = 'https://api.safaricom.co.ke'
     MPESA_CALLBACK_URL = 'https://bidsoko.com/api/payments/mpesa/callback/'

@@ -15,14 +15,14 @@ export default function PaymentModal({ auctionId, roundId, amount, onSuccess, on
   // Poll payment status when we have a checkout request ID
   const { data: paymentStatus, refetch } = useQuery({
     queryKey: ['payment-status', auctionId],
-    queryFn: () => authAxios.get(`/payments/status/${auctionId}/`).then(res => res.data),
+    queryFn: () => authAxios.get(`/api/payments/status/${auctionId}/`).then(res => res.data),
     enabled: !!checkoutRequestId && isProcessing,
     refetchInterval: isProcessing ? 3000 : false, // Poll every 3 seconds
   });
 
   // Initiate M-Pesa payment mutation
   const initiatePayment = useMutation({
-    mutationFn: () => authAxios.post('/payments/initiate/', {
+    mutationFn: () => authAxios.post('/api/payments/initiate/', {
       auction_id: auctionId,
       phone_number: phoneNumber
     }),

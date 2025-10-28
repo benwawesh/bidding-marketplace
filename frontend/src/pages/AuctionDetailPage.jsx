@@ -7,7 +7,7 @@ import { auctionsAPI } from '../api/endpoints';
 import { getRounds, checkParticipation, mockPayment, placeBid } from '../api/bidAPI';
 import { formatCurrency, isAuctionActive } from '../utils/helpers';
 import Leaderboard from '../components/Leaderboard';
-import PaymentModal from '../components/PaymentModal';
+import PaymentModal from '../components/modals/PaymentModal';
 import PledgeModal from '../components/PledgeModal';
 
 export default function AuctionDetailPage() {
@@ -396,12 +396,15 @@ export default function AuctionDetailPage() {
       </div>
 
       {/* Modals */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        roundData={currentRound}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
+      {showPaymentModal && currentRound && (
+        <PaymentModal
+          auctionId={id}
+          roundId={currentRound.id}
+          amount={currentRound.participation_fee}
+          onSuccess={handlePaymentSuccess}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
 
       <PledgeModal
         maximumPledge={currentRound?.max_pledge}

@@ -371,11 +371,12 @@ class CheckPaymentStatusView(APIView):
                     'paid_at': participation.paid_at
                 })
 
+            # Check for pending OR failed participation (user might be retrying)
             pending_participation = Participation.objects.filter(
                 user=request.user,
                 auction=auction,
                 round=current_round,
-                payment_status='pending'
+                payment_status__in=['pending', 'failed']
             ).first()
 
             if pending_participation:

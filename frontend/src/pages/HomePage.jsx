@@ -17,10 +17,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  // Fetch data
+  // Fetch data with auto-refresh every 30 seconds
   const { data: auctions = [], isLoading: auctionsLoading } = useQuery({
     queryKey: ['auctions'],
     queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({

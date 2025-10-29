@@ -13,11 +13,12 @@ export default function PaymentModal({ auctionId, roundId, amount, onSuccess, on
   const [paymentComplete, setPaymentComplete] = useState(false);
 
   // Poll payment status when we have a checkout request ID
+  // Reduced polling to avoid M-Pesa API rate limits (429 errors)
   const { data: paymentStatus, refetch } = useQuery({
     queryKey: ['payment-status', auctionId],
     queryFn: () => authAxios.get(`/api/payments/status/${auctionId}/`).then(res => res.data),
     enabled: !!checkoutRequestId && isProcessing,
-    refetchInterval: isProcessing ? 3000 : false, // Poll every 3 seconds
+    refetchInterval: isProcessing ? 8000 : false, // Poll every 8 seconds (reduced from 3s)
   });
 
   // Initiate M-Pesa payment mutation

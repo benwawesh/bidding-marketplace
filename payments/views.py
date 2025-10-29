@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.db import transaction
+from django.core.cache import cache
 import json
 
 from auctions.models import Auction, Participation, Payment, Round
@@ -388,9 +389,17 @@ class CheckPaymentStatusView(APIView):
                 ).first()
 
                 if pending_payment and pending_payment.transaction_id:
-                    # Query M-Pesa for the payment status
-                    mpesa = MpesaAPI()
-                    query_result = mpesa.query_stk_push_status(pending_payment.transaction_id)
+                    # Check cache first to avoid rate limits (429 errors)
+                    cache_key = f'mpesa_query_{pending_payment.transaction_id}'
+                    query_result = cache.get(cache_key)
+
+                    if not query_result:
+                        # Query M-Pesa for the payment status
+                        mpesa = MpesaAPI()
+                        query_result = mpesa.query_stk_push_status(pending_payment.transaction_id)
+
+                        # Cache the result for 5 seconds to prevent rate limiting
+                        cache.set(cache_key, query_result, 5)
 
                     if query_result.get('status') == 'completed':
                         # Update payment and participation to completed

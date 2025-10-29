@@ -1539,9 +1539,9 @@ class RoundViewSet(viewsets.ModelViewSet):
             )
             
             return Response({
-                "round_id": serializer.data["id"],
-                "round_number": serializer.data["round_number"],
-                "message": f"Round {serializer.data['round_number']} created successfully"
+                "round_id": str(new_round.id),
+                "round_number": new_round.round_number,
+                "message": f"Round {new_round.round_number} created successfully"
             }, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

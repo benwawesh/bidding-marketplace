@@ -63,7 +63,7 @@ export const useWebSocket = (auctionId, onLeaderboardUpdate, onBidPlaced, onRoun
 
     socket.onclose = (event) => {
       if (!isMounted) return;
-      console.log('🔌 WebSocket closed');
+      console.log('🔌 WebSocket closed, code:', event.code);
       setIsConnected(false);
     };
 

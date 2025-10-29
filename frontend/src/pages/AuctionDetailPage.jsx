@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { auctionsAPI } from '../api/endpoints';
-import { getRounds, checkParticipation, mockPayment, placeBid } from '../api/bidAPI';
+import { getRounds, checkParticipation, placeBid } from '../api/bidAPI';
 import { formatCurrency, isAuctionActive } from '../utils/helpers';
 import Leaderboard from '../components/Leaderboard';
 import PaymentModal from '../components/modals/PaymentModal';
@@ -33,11 +33,12 @@ export default function AuctionDetailPage() {
     return <Navigate to={`/product/${id}`} replace />;
   }
 
-  // Fetch rounds
+  // Fetch rounds with automatic polling every 10 seconds for real-time updates
   const { data: rounds, refetch: refetchRounds } = useQuery({
     queryKey: ['rounds', id],
     queryFn: () => getRounds(id),
     enabled: !!product,
+    refetchInterval: 10000, // Poll every 10 seconds as backup to WebSocket
   });
 
   // Set current round
@@ -117,17 +118,17 @@ export default function AuctionDetailPage() {
   const handlePaymentSuccess = async () => {
     try {
       if (!currentRound) return;
-      
-      await mockPayment(id, currentRound.id, parseFloat(currentRound.participation_fee));
-      
+
+      // Payment is already completed via M-Pesa, just update UI
       setHasParticipated(true);
-      setSuccessMessage('Payment successful! Now enter your pledge.');
-      
+      setSuccessMessage('✅ Payment successful! You can now place your pledge.');
+
+      // Show success message then open pledge modal
       setTimeout(() => {
         setShowPaymentModal(false);
         setShowPledgeModal(true);
         setSuccessMessage('');
-      }, 1000);
+      }, 1500);
     } catch (err) {
       console.error('Payment error:', err);
       throw err;

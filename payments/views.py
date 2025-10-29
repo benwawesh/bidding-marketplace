@@ -43,6 +43,7 @@ class InitiatePaymentView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Check if already completed payment
             existing_participation = Participation.objects.filter(
                 user=request.user,
                 auction=auction,
@@ -65,6 +66,23 @@ class InitiatePaymentView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Get or create participation record (reuse if pending/failed)
+            participation, created = Participation.objects.get_or_create(
+                user=request.user,
+                auction=auction,
+                round=current_round,
+                defaults={
+                    'fee_paid': current_round.participation_fee,
+                    'payment_status': 'pending'
+                }
+            )
+
+            # If participation already exists but was failed, reset to pending
+            if not created and participation.payment_status in ['failed', 'cancelled']:
+                participation.payment_status = 'pending'
+                participation.save()
+
+            # Create new payment record
             payment = Payment.objects.create(
                 user=request.user,
                 auction=auction,
@@ -72,14 +90,6 @@ class InitiatePaymentView(APIView):
                 amount=current_round.participation_fee,
                 method='mpesa',
                 status='pending'
-            )
-
-            participation = Participation.objects.create(
-                user=request.user,
-                auction=auction,
-                round=current_round,
-                fee_paid=current_round.participation_fee,
-                payment_status='pending'
             )
 
             account_ref = f"AUC-{auction.id}"
@@ -103,8 +113,10 @@ class InitiatePaymentView(APIView):
                     'payment_id': str(payment.id)
                 })
             else:
+                # Delete payment but keep participation for retry
                 payment.delete()
-                participation.delete()
+                participation.payment_status = 'failed'
+                participation.save()
 
                 return Response(
                     {'error': result.get('message')},

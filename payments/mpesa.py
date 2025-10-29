@@ -164,42 +164,49 @@ class MpesaAPI:
             result = response.json()
             result_code = result.get('ResultCode')
 
-            if result_code == '0':
+            # Log the response for debugging
+            print(f"M-Pesa Query Response: {result}")
+            print(f"Result Code: {result_code} (type: {type(result_code)})")
+
+            # Convert result_code to string for comparison
+            result_code_str = str(result_code) if result_code is not None else None
+
+            if result_code_str == '0':
                 # Payment successful
                 return {
                     'success': True,
                     'status': 'completed',
                     'message': result.get('ResultDesc', 'Payment successful')
                 }
-            elif result_code == '1032':
+            elif result_code_str == '1032':
                 # User cancelled
                 return {
                     'success': False,
                     'status': 'cancelled',
                     'message': 'Payment cancelled by user'
                 }
-            elif result_code == '1037':
+            elif result_code_str == '1037':
                 # Timeout - user didn't enter PIN
                 return {
                     'success': False,
                     'status': 'timeout',
                     'message': 'Payment request timed out'
                 }
-            elif result_code == '1':
+            elif result_code_str == '1':
                 # Insufficient funds
                 return {
                     'success': False,
                     'status': 'failed',
                     'message': 'Insufficient funds'
                 }
-            elif result_code == '1001':
+            elif result_code_str == '1001':
                 # Invalid credentials
                 return {
                     'success': False,
                     'status': 'failed',
                     'message': 'Invalid M-Pesa credentials'
                 }
-            elif result_code is None or result_code == '':
+            elif result_code_str is None or result_code_str == 'None' or result_code_str == '':
                 # Still pending
                 return {
                     'success': False,
@@ -207,7 +214,8 @@ class MpesaAPI:
                     'message': 'Payment still pending'
                 }
             else:
-                # Other error
+                # Other error - log it
+                print(f"Unknown M-Pesa result code: {result_code_str}")
                 return {
                     'success': False,
                     'status': 'failed',

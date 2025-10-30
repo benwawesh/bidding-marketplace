@@ -34,10 +34,9 @@ class PromoBarSettings(models.Model):
         default="📞",
         help_text="Emoji displayed before phone number"
     )
-    announcement_text = models.CharField(
-        max_length=200,
+    announcement_text = models.TextField(
         default="🚚 Free Delivery on Orders Over KES 5,000",
-        help_text="Announcement text (shown on larger screens)"
+        help_text="Announcement texts separated by '|' (pipe). Example: '🚚 Free Delivery|⚡ Flash Sale Today|🎉 50% Off Selected Items'"
     )
 
     # Right side CTA button

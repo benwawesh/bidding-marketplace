@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function PromoBar() {
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
   // Fetch promo bar settings from API
   const { data: settings } = useQuery({
     queryKey: ['promobar-settings'],
@@ -18,13 +22,28 @@ export default function PromoBar() {
     brand_emoji = '🎯',
     phone_number = '0711 011 011',
     phone_emoji = '📞',
-    announcement_text = '🚚 Free Delivery on Orders Over KES 5,000',
+    announcement_texts = ['🚚 Free Delivery on Orders Over KES 5,000'],
     cta_text = 'SHOP NOW',
     cta_link = '/browse',
     background_color = '#f9e5c9',
     text_color = '#1f2937',
     accent_color = '#ea580c',
   } = settings || {};
+
+  // Rotate announcements every 4 seconds
+  useEffect(() => {
+    if (announcement_texts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentAnnouncementIndex((prev) => (prev + 1) % announcement_texts.length);
+        setIsAnimating(false);
+      }, 500); // Half of transition time
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [announcement_texts.length]);
 
   return (
     <div
@@ -48,18 +67,35 @@ export default function PromoBar() {
           </div>
 
           {/* Center - Announcement/Highlight - Mobile Responsive */}
-          <div className="flex-1 text-center hidden sm:block">
-            <p className="text-xs md:text-sm font-semibold">
-              {phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span> |
-              <span className="ml-2 hidden md:inline">{announcement_text}</span>
+          <div className="flex-1 text-center hidden sm:block overflow-hidden">
+            <p className="text-xs md:text-sm font-semibold flex items-center justify-center gap-2">
+              <span>{phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span></span>
+              <span className="hidden md:inline">|</span>
+              <span className="hidden md:inline-block relative h-5">
+                <span
+                  className={`absolute left-0 right-0 font-bold transition-all duration-500 ${
+                    isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+                  }`}
+                  style={{ color: accent_color }}
+                >
+                  {announcement_texts[currentAnnouncementIndex]}
+                </span>
+              </span>
             </p>
           </div>
 
           {/* Mobile: Show phone number only */}
-          <div className="flex-1 text-center sm:hidden">
-            <p className="text-xs font-semibold">
-              {phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span>
-            </p>
+          <div className="flex-1 text-center sm:hidden overflow-hidden">
+            <div className="relative h-5">
+              <p
+                className={`text-xs font-bold absolute left-0 right-0 transition-all duration-500 ${
+                  isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+                }`}
+                style={{ color: accent_color }}
+              >
+                {announcement_texts[currentAnnouncementIndex]}
+              </p>
+            </div>
           </div>
 
           {/* Right Side - CTA Button - Mobile Responsive */}

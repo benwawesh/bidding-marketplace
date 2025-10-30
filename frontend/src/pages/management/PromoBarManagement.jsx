@@ -338,15 +338,19 @@ export default function PromoBarManagement() {
                 {/* Announcement Text */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Announcement Text
+                    Announcement Texts (Rotating)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     name="announcement_text"
                     defaultValue={promoBar?.announcement_text}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Enter announcements separated by | (pipe). Example:&#10;🚚 Free Delivery on Orders Over KES 5,000|⚡ Flash Sale Today - 50% Off|🎉 New Arrivals Every Week"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Separate multiple announcements with <code className="bg-gray-100 px-1 rounded">|</code> (pipe). They will rotate with sliding animation every 4 seconds.
+                  </p>
                 </div>
 
                 {/* CTA Link */}

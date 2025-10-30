@@ -55,40 +55,57 @@ export default function PromoBar() {
     >
       <div className="max-w-7xl mx-auto px-4 py-2 sm:py-3">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left Side - Brand/Highlight - Mobile Responsive */}
-          <div className="flex items-center">
+          {/* Left Side - Brand & Phone - Mobile Responsive */}
+          <div className="flex items-center gap-3">
             <span
-              className="text-base sm:text-xl font-bold tracking-wide"
+              className="text-base sm:text-xl font-bold tracking-wide whitespace-nowrap"
               style={{ color: accent_color }}
             >
               {brand_emoji} <span className="hidden sm:inline">{brand_text}</span>
               <span className="sm:hidden">{brand_text_mobile}</span>
             </span>
+            {/* Phone on desktop only */}
+            <span className="hidden md:flex items-center text-xs font-semibold whitespace-nowrap">
+              {phone_emoji} <span style={{ color: accent_color }} className="font-bold ml-1">{phone_number}</span>
+            </span>
           </div>
 
-          {/* Center - Announcement/Highlight - Mobile Responsive */}
-          <div className="flex-1 text-center hidden sm:block overflow-hidden">
-            <p className="text-xs md:text-sm font-semibold flex items-center justify-center gap-2">
-              <span>{phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span></span>
-              <span className="hidden md:inline">|</span>
-              <span className="hidden md:inline-block relative h-5">
-                <span
-                  className={`absolute left-0 right-0 font-bold transition-all duration-500 ${
-                    isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
-                  }`}
-                  style={{ color: accent_color }}
-                >
-                  {announcement_texts[currentAnnouncementIndex]}
-                </span>
-              </span>
-            </p>
+          {/* Center - Announcement (Takes 3/4 of space) - Desktop */}
+          <div className="flex-1 hidden md:flex items-center justify-center overflow-hidden px-4">
+            <div className="relative h-6 w-full max-w-3xl">
+              <p
+                className={`absolute inset-0 text-sm font-bold text-center transition-all duration-700 flex items-center justify-center ${
+                  isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+                }`}
+                style={{ color: accent_color }}
+              >
+                {announcement_texts[currentAnnouncementIndex]}
+              </p>
+            </div>
           </div>
 
-          {/* Mobile: Show phone number only */}
-          <div className="flex-1 text-center sm:hidden overflow-hidden">
+          {/* Center - Announcement - Tablet (shows phone + announcement) */}
+          <div className="flex-1 hidden sm:flex md:hidden items-center justify-center gap-3 overflow-hidden px-2">
+            <span className="text-xs font-semibold whitespace-nowrap">
+              {phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span>
+            </span>
+            <div className="relative h-5 flex-1">
+              <p
+                className={`absolute inset-0 text-xs font-bold text-center transition-all duration-700 flex items-center justify-center ${
+                  isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+                }`}
+                style={{ color: accent_color }}
+              >
+                {announcement_texts[currentAnnouncementIndex]}
+              </p>
+            </div>
+          </div>
+
+          {/* Mobile: Announcement only */}
+          <div className="flex-1 sm:hidden overflow-hidden px-2">
             <div className="relative h-5">
               <p
-                className={`text-xs font-bold absolute left-0 right-0 transition-all duration-500 ${
+                className={`absolute inset-0 text-xs font-bold text-center transition-all duration-700 flex items-center justify-center ${
                   isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
                 }`}
                 style={{ color: accent_color }}

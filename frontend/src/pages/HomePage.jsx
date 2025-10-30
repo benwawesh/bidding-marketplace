@@ -5,12 +5,9 @@ import toast from 'react-hot-toast';
 import LeftSidebar from '../components/layout/LeftSidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import HeroAuctionSection from '../components/sections/HeroAuctionSection';
-import HorizontalCarousel from '../components/carousels/HorizontalCarousel';
 import CategoriesGrid from '../components/sections/CategoriesGrid';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import BothCard from '../components/cards/BothCard';
-import PromoBar from '../components/layout/PromoBar';
-import Navbar from '../components/layout/Navbar';
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
@@ -99,41 +96,39 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-rose-100">
-      <PromoBar />
-      <Navbar />
-
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          🎯 <strong>HYBRID MARKETPLACE:</strong> Buy Instantly OR Bid to Save up to 70% | 
-          <a href="#browse" className="underline font-bold ml-1">EXPLORE NOW</a>
-        </div>
-      </div>
-
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="w-full overflow-x-hidden">
+      {/* Search Bar - Mobile Responsive */}
+      <div className="bg-white shadow-sm w-full">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <form className="flex gap-2">
             <input
               type="text"
-              placeholder="Search products, brands and categories"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+              placeholder="Search products..."
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded focus:outline-none focus:border-orange-500"
             />
-            <button 
-              type="submit" 
-              className="bg-orange-500 text-white px-8 py-3 rounded font-semibold hover:bg-orange-600 transition uppercase"
+            <button
+              type="submit"
+              className="bg-orange-500 text-white px-3 sm:px-8 py-2 sm:py-3 rounded font-semibold hover:bg-orange-600 transition text-sm sm:text-base"
             >
-              Search
+              <span className="hidden sm:inline">Search</span>
+              <span className="sm:hidden text-lg">🔍</span>
             </button>
           </form>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 py-4">
-        <div className="flex gap-4">
-          
-          <LeftSidebar categories={categories} />
+      {/* Main Content - Mobile First */}
+      <div className="w-full">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex flex-col lg:flex-row gap-0 lg:gap-4">
 
-          <main className="flex-1 min-w-0">
+            {/* Left Sidebar - Hidden on mobile */}
+            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+              <LeftSidebar categories={categories} />
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 min-w-0 w-full px-3 sm:px-4 py-4">
             
             {/* HERO SECTION - SINGLE LIVE AUCTION with FIREWORKS */}
             <HeroAuctionSection auction={heroAuction} />
@@ -141,83 +136,59 @@ export default function HomePage() {
             {/* Categories Grid */}
             <CategoriesGrid categories={categories} />
 
-            {/* Buy Now Section */}
+            {/* Buy Now Section - Mobile First */}
             {buyNowProducts.length > 0 && (
-              <section id="buy-now" className="my-8 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-orange-600">Buy Now - Instant Purchase</h2>
-                <Link
-                  to="/buy-now"
-                  className="text-sm text-orange-500 hover:underline"
-                >
-                  View All
-                </Link>
+              <section id="buy-now" className="my-4 sm:my-6 md:my-8">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-orange-600">
+                    Buy Now
+                  </h2>
+                  <Link
+                    to="/buy-now"
+                    className="text-xs sm:text-sm text-orange-500 hover:underline"
+                  >
+                    View All
+                  </Link>
                 </div>
 
-                {/* Slider Container */}
-                <div className="relative">
-                  {/* Left Arrow */}
-                  <button
-                    id="scrollLeft"
-                    onClick={() => document.getElementById('buyNowSlider').scrollBy({ left: -400, behavior: 'smooth' })}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full shadow hover:bg-orange-100 p-2 transition"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-
-                  {/* Cards Slider */}
-                  <div
-                    id="buyNowSlider"
-                    className="flex gap-4 overflow-x-hidden scroll-smooth"
-                  >
-                    {buyNowProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="w-[calc(20%-0.8rem)] flex-shrink-0 transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
-                      >
-                        <BuyNowCard
-                          product={product}
-                          onAddToCart={handleAddToCart}
-                          isAddingToCart={addToCartMutation.isPending}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Right Arrow */}
-                  <button
-                    id="scrollRight"
-                    onClick={() => document.getElementById('buyNowSlider').scrollBy({ left: 400, behavior: 'smooth' })}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full shadow hover:bg-orange-100 p-2 transition"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                {/* Mobile: Simple Grid, Desktop: Scrollable */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                  {buyNowProducts.map((product) => (
+                    <div key={product.id} className="w-full">
+                      <BuyNowCard
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        isAddingToCart={addToCartMutation.isPending}
+                      />
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
 
 
 
-            {/* Both Options Section */}
+            {/* Both Options Section - Mobile First */}
             {bothProducts.length > 0 && (
-              <HorizontalCarousel 
-                title="Both Options - You Decide" 
-                titleColor="purple"
-                viewAllLink="#both"
-              >
-                {bothProducts.map(product => (
-                  <BothCard 
-                    key={product.id} 
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    isAddingToCart={addToCartMutation.isPending}
-                  />
-                ))}
-              </HorizontalCarousel>
+              <section className="my-4 sm:my-6 md:my-8">
+                <div className="mb-3 sm:mb-4">
+                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-purple-600">
+                    Both Options - You Decide
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                  {bothProducts.map(product => (
+                    <div key={product.id} className="w-full">
+                      <BothCard
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        isAddingToCart={addToCartMutation.isPending}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
 
             {/* Empty State - No Products at All */}
@@ -233,8 +204,12 @@ export default function HomePage() {
 
           </main>
 
-          <RightSidebar stats={stats} />
+            {/* Right Sidebar - Hidden on mobile */}
+            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+              <RightSidebar stats={stats} />
+            </aside>
 
+          </div>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import MainLayout from './components/layout/MainLayout';
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -56,27 +57,28 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/product/:id" element={<ProductDetailPage />} />
-            <Route path="/auction/:id" element={<AuctionDetailPage />} />
-            <Route path="/browse" element={<BrowsePage />} />
-            <Route path="/category/:categorySlug" element={<CategoryPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/categories" element={<CategoryList />} />
-            <Route path="/buy-now" element={<BuyNowPage />} />
+          <MainLayout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/auction/:id" element={<AuctionDetailPage />} />
+              <Route path="/browse" element={<BrowsePage />} />
+              <Route path="/category/:categorySlug" element={<CategoryPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/categories" element={<CategoryList />} />
+              <Route path="/buy-now" element={<BuyNowPage />} />
             
 
             {/* Management Routes (Superuser Only) */}
@@ -250,7 +252,8 @@ function App() {
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+            </Routes>
+          </MainLayout>
         </Router>
       </AuthProvider>
     </QueryClientProvider>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/layout/Navbar';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -41,27 +40,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
-      <Navbar />
-      
-      <div className="flex items-center justify-center py-12 px-4">
+    <div className="flex items-center justify-center py-8 sm:py-12 px-4">
         <div className="max-w-md w-full">
-          {/* Logo/Brand */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-orange-600 mb-2">BidMarket</h1>
-            <p className="text-gray-600">Sign in to your account</p>
+          {/* Logo/Brand - Mobile Responsive */}
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">BidMarket</h1>
+            <p className="text-sm sm:text-base text-gray-600">Sign in to your account</p>
           </div>
 
-          {/* Login Card */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          {/* Login Card - Mobile Responsive */}
+          <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username */}
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              {/* Username - Mobile Responsive */}
               <div>
                 <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
                   Username
@@ -73,12 +69,12 @@ export default function LoginPage() {
                   required
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter your username"
                 />
               </div>
 
-              {/* Password */}
+              {/* Password - Mobile Responsive */}
               <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                   Password
@@ -90,16 +86,16 @@ export default function LoginPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter your password"
                 />
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Button - Mobile Responsive */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-orange-600 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
@@ -123,7 +119,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-      </div>
     </div>
   );
 }

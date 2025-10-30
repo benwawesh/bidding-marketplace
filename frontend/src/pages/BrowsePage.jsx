@@ -71,44 +71,33 @@ export default function BrowsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-orange-600">BidMarket</Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/" className="text-gray-700 hover:text-orange-600">Home</Link>
-            <Link to="/browse" className="text-orange-600 font-semibold">Browse</Link>
-            <Link to="/cart" className="text-gray-700 hover:text-orange-600">Cart</Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Search Bar */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen">
+      {/* Search Bar - Mobile Responsive */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
           <form className="flex gap-2">
             <input
               type="text"
               placeholder="Search products..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded focus:outline-none focus:border-orange-500"
             />
-            <button 
-              type="submit" 
-              className="bg-orange-500 text-white px-8 py-3 rounded font-semibold hover:bg-orange-600 transition uppercase"
+            <button
+              type="submit"
+              className="bg-orange-500 text-white px-4 sm:px-8 py-2 sm:py-3 rounded font-semibold hover:bg-orange-600 transition text-sm sm:text-base uppercase"
             >
-              Search
+              <span className="hidden sm:inline">Search</span>
+              <span className="sm:hidden">🔍</span>
             </button>
           </form>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex gap-6">
-          
-          {/* Sidebar Filters */}
-          <aside className="w-64 flex-shrink-0">
+      {/* Main Content - Mobile Responsive */}
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+
+          {/* Sidebar Filters - Hidden on mobile, show on large screens */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
               
               {/* Product Type Filter */}
@@ -186,15 +175,20 @@ export default function BrowsePage() {
 
           {/* Products Grid */}
           <main className="flex-1">
-            
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
+
+            {/* Results Header - Mobile Responsive */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Browse Products
-                <span className="text-lg font-normal text-gray-600 ml-2">
+                <span className="text-sm sm:text-lg font-normal text-gray-600 ml-2">
                   ({filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'})
                 </span>
               </h1>
+
+              {/* Mobile Filter Toggle Button - Only show on mobile */}
+              <button className="lg:hidden bg-orange-500 text-white px-4 py-2 rounded font-semibold text-sm">
+                🔍 Filters
+              </button>
             </div>
 
             {/* Loading State */}
@@ -205,9 +199,9 @@ export default function BrowsePage() {
               </div>
             )}
 
-            {/* Products Grid */}
+            {/* Products Grid - Mobile Responsive */}
             {!auctionsLoading && filteredProducts.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                 {filteredProducts.map(product => renderCard(product))}
               </div>
             )}

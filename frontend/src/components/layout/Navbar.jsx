@@ -30,7 +30,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-            <span className="text-xl sm:text-2xl font-bold text-orange-600">BidMarket</span>
+            <span className="text-xl sm:text-2xl font-bold text-orange-600">BidSoko</span>
           </Link>
 
           {/* Desktop Navigation Links */}

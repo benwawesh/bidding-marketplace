@@ -89,7 +89,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-orange-50 flex items-center justify-center">
         <div className="text-center">
           <div className="skeleton w-20 h-20 rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading BidMarket...</p>
+          <p className="text-gray-600">Loading BidSoko...</p>
         </div>
       </div>
     );

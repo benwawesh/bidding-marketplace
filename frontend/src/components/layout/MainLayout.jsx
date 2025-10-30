@@ -42,7 +42,7 @@ export default function MainLayout({ children }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* About */}
             <div>
-              <h3 className="text-lg font-bold mb-4 text-orange-500">BidMarket</h3>
+              <h3 className="text-lg font-bold mb-4 text-orange-500">BidSoko</h3>
               <p className="text-gray-400 text-sm">
                 Kenya's premier hybrid marketplace. Buy instantly or bid to save!
               </p>
@@ -81,7 +81,7 @@ export default function MainLayout({ children }) {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 BidMarket. All rights reserved.</p>
+            <p>&copy; 2025 BidSoko. All rights reserved.</p>
           </div>
         </div>
       </footer>

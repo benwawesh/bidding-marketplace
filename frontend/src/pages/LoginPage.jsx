@@ -44,7 +44,7 @@ export default function LoginPage() {
         <div className="max-w-md w-full">
           {/* Logo/Brand - Mobile Responsive */}
           <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">BidMarket</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">BidSoko</h1>
             <p className="text-sm sm:text-base text-gray-600">Sign in to your account</p>
           </div>
 

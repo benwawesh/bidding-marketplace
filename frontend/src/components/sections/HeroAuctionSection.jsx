@@ -73,8 +73,8 @@ export default function HeroAuctionSection({ auction }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-5">
 
-          {/* Left Side - Product Image (60%) - Mobile Responsive */}
-          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden">
+          {/* Left Side - Product Image (60%) - Proper mobile aspect ratio */}
+          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden aspect-[16/9] lg:aspect-auto lg:min-h-[400px]">
             {auction.main_image ? (
               <img
                 src={auction.main_image.startsWith('http')
@@ -82,10 +82,10 @@ export default function HeroAuctionSection({ auction }) {
                   : `${auction.main_image}`
                 }
                 alt={auction.title}
-                className="w-full h-full object-cover min-h-[250px] sm:min-h-[350px] lg:min-h-[450px]"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="text-4xl sm:text-6xl opacity-20">🎯</div>
+              <div className="text-6xl opacity-20">🎯</div>
             )}
 
             {/* LIVE Badge - Blinking - Mobile Responsive */}

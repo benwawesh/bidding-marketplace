@@ -18,7 +18,7 @@ export default function PromoBarManagement() {
 
   // Update promo bar mutation
   const updateMutation = useMutation({
-    mutationFn: (data) => api.put('/api/settings/promobar/', data),
+    mutationFn: (data) => api.put('/settings/promobar/', data),
     onSuccess: () => {
       queryClient.invalidateQueries(['promobar-settings']);
       toast.success('✅ Promo bar updated successfully!');

@@ -1,22 +1,31 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import PromoBarSettings
 from .serializers import PromoBarSettingsSerializer
+
+
+class IsStaffOrSuperuser(IsAuthenticated):
+    """Custom permission to allow only staff or superuser"""
+    def has_permission(self, request, view):
+        return (
+            super().has_permission(request, view) and
+            (request.user.is_staff or request.user.is_superuser)
+        )
 
 
 class PromoBarSettingsAPIView(APIView):
     """
     GET: Fetch active promo bar settings (public)
-    PUT/PATCH: Update promo bar settings (admin only)
+    PUT/PATCH: Update promo bar settings (staff/superuser only)
     """
 
     def get_permissions(self):
-        """Allow GET for everyone, PUT/PATCH for admins only"""
+        """Allow GET for everyone, PUT/PATCH for staff/superusers only"""
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAdminUser()]
+        return [IsStaffOrSuperuser()]
 
     def get(self, request):
         """Get the active promo bar settings"""

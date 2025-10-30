@@ -27,4 +27,10 @@ urlpatterns = [
 
     # Settings
     path('settings/', views.SettingsView.as_view(), name='settings'),
+
+    # Promo Bar Management
+    path('promobar/', views.PromoBarManagementView.as_view(), name='promobar_management'),
+    path('promobar/create/', views.PromoBarCreateView.as_view(), name='promobar_create'),
+    path('promobar/<int:promo_id>/update/', views.PromoBarUpdateView.as_view(), name='promobar_update'),
+    path('promobar/<int:promo_id>/delete/', views.PromoBarDeleteView.as_view(), name='promobar_delete'),
 ]

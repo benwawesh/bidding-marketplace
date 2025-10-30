@@ -474,3 +474,103 @@ class CreateRoundView(AdminRequiredMixin, View):
         except Exception as e:
             messages.error(request, f'Error creating round: {str(e)}')
             return redirect('admin_panel:auction_detail', auction_id=auction.id)
+
+
+class PromoBarManagementView(AdminRequiredMixin, TemplateView):
+    """View for managing promo bar settings"""
+    template_name = 'admin_panel/promobar_management.html'
+
+    def get_context_data(self, **kwargs):
+        from .models import PromoBarSettings
+
+        context = super().get_context_data(**kwargs)
+
+        # Get all promo bars (active and inactive)
+        context['promo_bars'] = PromoBarSettings.objects.all()
+
+        # Get active promo bar
+        context['active_promo'] = PromoBarSettings.objects.filter(is_active=True).first()
+
+        return context
+
+
+class PromoBarCreateView(AdminRequiredMixin, View):
+    """Create a new promo bar"""
+
+    def post(self, request):
+        from .models import PromoBarSettings
+
+        try:
+            # Create new promo bar
+            promo_bar = PromoBarSettings.objects.create(
+                brand_text=request.POST.get('brand_text', 'BIDSOKO LUXE'),
+                brand_text_mobile=request.POST.get('brand_text_mobile', 'BIDSOKO'),
+                brand_emoji=request.POST.get('brand_emoji', '🎯'),
+                phone_number=request.POST.get('phone_number', '0711 011 011'),
+                phone_emoji=request.POST.get('phone_emoji', '📞'),
+                announcement_text=request.POST.get('announcement_text', '🚚 Free Delivery on Orders Over KES 5,000'),
+                cta_text=request.POST.get('cta_text', 'SHOP NOW'),
+                cta_link=request.POST.get('cta_link', '/browse'),
+                background_color=request.POST.get('background_color', '#f9e5c9'),
+                text_color=request.POST.get('text_color', '#1f2937'),
+                accent_color=request.POST.get('accent_color', '#ea580c'),
+                is_active=request.POST.get('is_active') == 'on'
+            )
+
+            messages.success(request, '✅ Promo bar created successfully!')
+
+        except Exception as e:
+            messages.error(request, f'Error creating promo bar: {str(e)}')
+
+        return redirect('admin_panel:promobar_management')
+
+
+class PromoBarUpdateView(AdminRequiredMixin, View):
+    """Update an existing promo bar"""
+
+    def post(self, request, promo_id):
+        from .models import PromoBarSettings
+
+        try:
+            promo_bar = get_object_or_404(PromoBarSettings, id=promo_id)
+
+            # Update fields
+            promo_bar.brand_text = request.POST.get('brand_text', promo_bar.brand_text)
+            promo_bar.brand_text_mobile = request.POST.get('brand_text_mobile', promo_bar.brand_text_mobile)
+            promo_bar.brand_emoji = request.POST.get('brand_emoji', promo_bar.brand_emoji)
+            promo_bar.phone_number = request.POST.get('phone_number', promo_bar.phone_number)
+            promo_bar.phone_emoji = request.POST.get('phone_emoji', promo_bar.phone_emoji)
+            promo_bar.announcement_text = request.POST.get('announcement_text', promo_bar.announcement_text)
+            promo_bar.cta_text = request.POST.get('cta_text', promo_bar.cta_text)
+            promo_bar.cta_link = request.POST.get('cta_link', promo_bar.cta_link)
+            promo_bar.background_color = request.POST.get('background_color', promo_bar.background_color)
+            promo_bar.text_color = request.POST.get('text_color', promo_bar.text_color)
+            promo_bar.accent_color = request.POST.get('accent_color', promo_bar.accent_color)
+            promo_bar.is_active = request.POST.get('is_active') == 'on'
+
+            promo_bar.save()
+
+            messages.success(request, '✅ Promo bar updated successfully!')
+
+        except Exception as e:
+            messages.error(request, f'Error updating promo bar: {str(e)}')
+
+        return redirect('admin_panel:promobar_management')
+
+
+class PromoBarDeleteView(AdminRequiredMixin, View):
+    """Delete a promo bar"""
+
+    def post(self, request, promo_id):
+        from .models import PromoBarSettings
+
+        try:
+            promo_bar = get_object_or_404(PromoBarSettings, id=promo_id)
+            promo_bar.delete()
+
+            messages.success(request, '✅ Promo bar deleted successfully!')
+
+        except Exception as e:
+            messages.error(request, f'Error deleting promo bar: {str(e)}')
+
+        return redirect('admin_panel:promobar_management')

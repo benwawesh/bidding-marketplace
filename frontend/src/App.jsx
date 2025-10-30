@@ -37,6 +37,7 @@ import AuctionRoundsTab from './pages/management/AuctionRoundsTab';
 import RoundDetailPage from './pages/management/RoundDetailPage';
 import WinnerCalculationPage from './pages/management/WinnerCalculationPage';
 import UserDashboard from './pages/UserDashboard';
+import PromoBarManagement from './pages/management/PromoBarManagement';
 
 
 
@@ -189,13 +190,23 @@ function App() {
 
 
             {/* Users Management */}
-            <Route 
-              path="/management/users" 
+            <Route
+              path="/management/users"
               element={
                 <ProtectedRoute requireSuperuser={true}>
                   <UsersPage />
                 </ProtectedRoute>
-              } 
+              }
+            />
+
+            {/* Promo Bar Management */}
+            <Route
+              path="/management/promobar"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <PromoBarManagement />
+                </ProtectedRoute>
+              }
             />
 
             <Route

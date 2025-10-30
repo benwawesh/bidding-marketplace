@@ -81,6 +81,17 @@ export default function ManagementLayout({ children }) {
                 >
                   👥 Users
                 </Link>
+
+                <Link
+                  to="/management/promobar"
+                  className={`block px-4 py-3 rounded-lg transition ${
+                    isActive('/management/promobar')
+                      ? 'bg-red-600 text-white font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  🎨 Promo Bar
+                </Link>
               </nav>
 
               {/* Quick Links */}

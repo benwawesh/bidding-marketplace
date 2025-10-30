@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Promo Bar Management - BidSoko Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-3xl font-bold text-gray-900">Promo Bar Management</h1>
+                    <p class="mt-1 text-sm text-gray-500">Manage promotional banners displayed on your site</p>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+                            class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create New Promo Bar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Active Promo Bar Preview -->
+        {% if active_promo %}
+        <div class="bg-white shadow rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">🌟 Currently Active Promo Bar</h2>
+            <div class="border-2 border-green-500 rounded-lg overflow-hidden">
+                <div class="p-4" style="background-color: {{ active_promo.background_color }}; color: {{ active_promo.text_color }};">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center">
+                            <span class="text-xl font-bold" style="color: {{ active_promo.accent_color }};">
+                                {{ active_promo.brand_emoji }} {{ active_promo.brand_text }}
+                            </span>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <p class="text-sm font-semibold">
+                                {{ active_promo.phone_emoji }} <span style="color: {{ active_promo.accent_color }};">{{ active_promo.phone_number }}</span> | {{ active_promo.announcement_text }}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="px-6 py-2 rounded-full font-bold text-sm text-white" style="background-color: {{ active_promo.accent_color }};">
+                                {{ active_promo.cta_text }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Promo Bars List -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">All Promo Bars</h2>
+            </div>
+
+            {% if promo_bars %}
+            <ul class="divide-y divide-gray-200">
+                {% for promo in promo_bars %}
+                <li class="px-6 py-4 hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-medium text-gray-900">
+                                    {{ promo.brand_emoji }} {{ promo.brand_text }}
+                                </h3>
+                                {% if promo.is_active %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✅ Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm text-gray-600">
+                                <div>
+                                    <span class="font-semibold">Phone:</span> {{ promo.phone_emoji }} {{ promo.phone_number }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold">CTA:</span> {{ promo.cta_text }} → {{ promo.cta_link }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold">Colors:</span>
+                                    <span class="inline-block w-4 h-4 rounded border" style="background-color: {{ promo.background_color }};"></span>
+                                    <span class="inline-block w-4 h-4 rounded border" style="background-color: {{ promo.accent_color }};"></span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">{{ promo.announcement_text }}</p>
+                        </div>
+                        <div class="flex items-center gap-2 ml-4">
+                            <button onclick="openEditModal({{ promo.id }}, '{{ promo.brand_text|escapejs }}', '{{ promo.brand_text_mobile|escapejs }}', '{{ promo.brand_emoji|escapejs }}', '{{ promo.phone_number|escapejs }}', '{{ promo.phone_emoji|escapejs }}', '{{ promo.announcement_text|escapejs }}', '{{ promo.cta_text|escapejs }}', '{{ promo.cta_link|escapejs }}', '{{ promo.background_color|escapejs }}', '{{ promo.text_color|escapejs }}', '{{ promo.accent_color|escapejs }}', {{ promo.is_active|lower }})"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Edit
+                            </button>
+                            <form method="post" action="{% url 'admin_panel:promobar_delete' promo.id %}" onsubmit="return confirm('Are you sure you want to delete this promo bar?');">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No promo bars</h3>
+                <p class="mt-1 text-sm text-gray-500">Get started by creating a new promo bar.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="document.getElementById('createModal').classList.add('hidden')"></div>
+
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-3xl w-full z-20">
+            <form method="post" action="{% url 'admin_panel:promobar_create' %}">
+                {% csrf_token %}
+                <div class="bg-white px-6 py-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Promo Bar</h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Text (Desktop)</label>
+                            <input type="text" name="brand_text" value="BIDSOKO LUXE" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Text (Mobile)</label>
+                            <input type="text" name="brand_text_mobile" value="BIDSOKO" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Emoji</label>
+                            <input type="text" name="brand_emoji" value="🎯" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <input type="text" name="phone_number" value="0711 011 011" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone Emoji</label>
+                            <input type="text" name="phone_emoji" value="📞" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">CTA Button Text</label>
+                            <input type="text" name="cta_text" value="SHOP NOW" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Announcement Text</label>
+                            <input type="text" name="announcement_text" value="🚚 Free Delivery on Orders Over KES 5,000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">CTA Link</label>
+                            <input type="text" name="cta_link" value="/browse" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Background Color</label>
+                            <input type="color" name="background_color" value="#f9e5c9" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Text Color</label>
+                            <input type="color" name="text_color" value="#1f2937" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Accent Color</label>
+                            <input type="color" name="accent_color" value="#ea580c" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_active" checked class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2 text-sm text-gray-700">Set as active (will deactivate other promo bars)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-3 flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700">
+                        Create Promo Bar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="document.getElementById('editModal').classList.add('hidden')"></div>
+
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-3xl w-full z-20">
+            <form method="post" id="editForm">
+                {% csrf_token %}
+                <div class="bg-white px-6 py-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Promo Bar</h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Text (Desktop)</label>
+                            <input type="text" name="brand_text" id="edit_brand_text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Text (Mobile)</label>
+                            <input type="text" name="brand_text_mobile" id="edit_brand_text_mobile" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Brand Emoji</label>
+                            <input type="text" name="brand_emoji" id="edit_brand_emoji" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <input type="text" name="phone_number" id="edit_phone_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone Emoji</label>
+                            <input type="text" name="phone_emoji" id="edit_phone_emoji" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">CTA Button Text</label>
+                            <input type="text" name="cta_text" id="edit_cta_text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Announcement Text</label>
+                            <input type="text" name="announcement_text" id="edit_announcement_text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">CTA Link</label>
+                            <input type="text" name="cta_link" id="edit_cta_link" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Background Color</label>
+                            <input type="color" name="background_color" id="edit_background_color" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Text Color</label>
+                            <input type="color" name="text_color" id="edit_text_color" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Accent Color</label>
+                            <input type="color" name="accent_color" id="edit_accent_color" class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_active" id="edit_is_active" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2 text-sm text-gray-700">Set as active (will deactivate other promo bars)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-3 flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700">
+                        Update Promo Bar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(id, brandText, brandTextMobile, brandEmoji, phoneNumber, phoneEmoji, announcementText, ctaText, ctaLink, bgColor, textColor, accentColor, isActive) {
+    document.getElementById('editForm').action = "{% url 'admin_panel:promobar_update' 0 %}".replace('0', id);
+    document.getElementById('edit_brand_text').value = brandText;
+    document.getElementById('edit_brand_text_mobile').value = brandTextMobile;
+    document.getElementById('edit_brand_emoji').value = brandEmoji;
+    document.getElementById('edit_phone_number').value = phoneNumber;
+    document.getElementById('edit_phone_emoji').value = phoneEmoji;
+    document.getElementById('edit_announcement_text').value = announcementText;
+    document.getElementById('edit_cta_text').value = ctaText;
+    document.getElementById('edit_cta_link').value = ctaLink;
+    document.getElementById('edit_background_color').value = bgColor;
+    document.getElementById('edit_text_color').value = textColor;
+    document.getElementById('edit_accent_color').value = accentColor;
+    document.getElementById('edit_is_active').checked = isActive;
+    document.getElementById('editModal').classList.remove('hidden');
+}
+</script>
+
+{% endblock %}

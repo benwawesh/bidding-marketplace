@@ -92,30 +92,73 @@ export default function PaymentModal({ auctionId, roundId, amount, onSuccess, on
   // Success view
   if (paymentComplete) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-md w-full p-8 text-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="bg-white rounded-lg max-w-md w-full p-8 text-center animate-scaleIn">
+          {/* Animated Success Icon */}
           <div className="flex justify-center mb-4">
-            <CheckCircle2 className="w-16 h-16 text-green-600" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+              <CheckCircle2 className="w-16 h-16 text-green-600 relative animate-bounce" />
+            </div>
           </div>
+
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Payment Successful!
+            Payment Successful! 🎉
           </h3>
           <p className="text-gray-600 mb-4">
-            You can now place your pledge in the auction.
+            Your payment has been confirmed. Redirecting you...
           </p>
+
+          {/* Progress Bar for Redirect */}
+          <div className="mb-6">
+            <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="absolute top-0 left-0 h-full bg-green-600 animate-progressFill"></div>
+            </div>
+          </div>
+
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="text-sm text-gray-600 mb-1">Amount Paid</div>
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(amount)}
             </div>
           </div>
+
+          <p className="text-xs text-gray-500 mt-4">
+            You can now place your pledge in the auction
+          </p>
         </div>
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          @keyframes progressFill {
+            from { width: 0%; }
+            to { width: 100%; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out;
+          }
+          .animate-progressFill {
+            animation: progressFill 1.5s linear forwards;
+          }
+        `}</style>
       </div>
     );
   }
 
   // Processing view
   if (isProcessing) {
+    const progressPercentage = ((120 - countdown) / 120) * 100;
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg max-w-md w-full p-8">
@@ -131,6 +174,21 @@ export default function PaymentModal({ auctionId, roundId, amount, onSuccess, on
             <p className="text-gray-600 mb-4">
               Check your phone for the M-Pesa prompt and enter your PIN
             </p>
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-1000 ease-linear"
+                  style={{ width: `${progressPercentage}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Waiting for payment confirmation...
+              </p>
+            </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-center gap-2 mb-2">

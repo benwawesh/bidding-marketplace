@@ -395,14 +395,19 @@ class CheckPaymentStatusView(APIView):
 
                     if not query_result:
                         # Query M-Pesa for the payment status
+                        print(f"[PAYMENT STATUS] Querying M-Pesa for transaction: {pending_payment.transaction_id}")
                         mpesa = MpesaAPI()
                         query_result = mpesa.query_stk_push_status(pending_payment.transaction_id)
+                        print(f"[PAYMENT STATUS] M-Pesa query result: {query_result}")
 
                         # Cache the result for 5 seconds to prevent rate limiting
                         cache.set(cache_key, query_result, 5)
+                    else:
+                        print(f"[PAYMENT STATUS] Using cached result for: {pending_payment.transaction_id}")
 
                     if query_result.get('status') == 'completed':
                         # Update payment and participation to completed
+                        print(f"[PAYMENT STATUS] Payment completed! Updating records for user {request.user.username}")
                         with transaction.atomic():
                             pending_payment.status = 'completed'
                             pending_payment.save()
@@ -411,6 +416,7 @@ class CheckPaymentStatusView(APIView):
                             pending_participation.paid_at = timezone.now()
                             pending_participation.save()
 
+                        print(f"[PAYMENT STATUS] Successfully updated payment and participation to completed")
                         return Response({
                             'has_paid': True,
                             'participation_fee': float(current_round.participation_fee),

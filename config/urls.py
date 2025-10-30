@@ -7,11 +7,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from admin_panel.api_views import PromoBarSettingsAPIView
+
 urlpatterns = [
     path('secret-admin/', admin.site.urls),
     path('', include('auctions.urls')),
     path('accounts/', include('accounts.urls')),
     path('admin-panel/', include('admin_panel.urls')),
+    path('api/settings/promobar/', PromoBarSettingsAPIView.as_view(), name='promobar-settings'),  # PromoBar settings API
     path('api/payments/', include('payments.urls')),  # Must be BEFORE api/
     path('api/', include('auctions.api')),  # This catches everything else
 ]

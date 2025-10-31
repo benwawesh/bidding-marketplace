@@ -58,11 +58,18 @@ class MpesaAPI:
 
     def initiate_stk_push(self, phone_number, amount, account_reference, transaction_desc):
         """Initiate STK Push to customer's phone"""
+        print(f"[STK PUSH] Initiating for phone: {phone_number}, amount: {amount}")
+
         access_token = self.get_access_token()
         if not access_token:
+            print("[STK PUSH ERROR] Failed to get access token")
             return {'success': False, 'message': 'Failed to get access token'}
 
         password, timestamp = self.generate_password()
+
+        print(f"[STK PUSH] Using shortcode: {self.business_shortcode}")
+        print(f"[STK PUSH] Timestamp: {timestamp}")
+        print(f"[STK PUSH] Callback URL: {self.callback_url}")
 
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -83,18 +90,26 @@ class MpesaAPI:
             'TransactionDesc': transaction_desc
         }
 
+        print(f"[STK PUSH] Payload: {payload}")
+
         try:
+            print(f"[STK PUSH] Posting to: {self.stk_push_url}")
             response = requests.post(
                 self.stk_push_url,
                 json=payload,
                 headers=headers,
                 timeout=30
             )
+
+            print(f"[STK PUSH] Response Status: {response.status_code}")
+            print(f"[STK PUSH] Response Body: {response.text}")
+
             response.raise_for_status()
 
             result = response.json()
 
             if result.get('ResponseCode') == '0':
+                print(f"[STK PUSH SUCCESS] CheckoutRequestID: {result.get('CheckoutRequestID')}")
                 return {
                     'success': True,
                     'message': result.get('CustomerMessage', 'STK Push sent'),
@@ -102,16 +117,18 @@ class MpesaAPI:
                     'checkout_request_id': result.get('CheckoutRequestID')
                 }
             else:
+                error_msg = result.get('ResponseDescription', 'STK Push failed')
+                print(f"[STK PUSH FAILED] {error_msg}")
                 return {
                     'success': False,
-                    'message': result.get('ResponseDescription', 'STK Push failed')
+                    'message': error_msg
                 }
 
         except requests.exceptions.RequestException as e:
-            print(f"STK Push error: {str(e)}")
+            print(f"[STK PUSH ERROR] Network error: {str(e)}")
             return {'success': False, 'message': f'Network error: {str(e)}'}
         except Exception as e:
-            print(f"Unexpected error: {str(e)}")
+            print(f"[STK PUSH ERROR] Unexpected error: {str(e)}")
             return {'success': False, 'message': f'Error: {str(e)}'}
 
     def format_phone_number(self, phone):

@@ -98,13 +98,13 @@ export default function HomePage() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* Search Bar - Mobile Responsive */}
-      <div className="bg-white shadow-sm w-full">
+      <div className="bg-rose-50 shadow-sm w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <form className="flex gap-2">
             <input
               type="text"
               placeholder="Search products..."
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-white border border-gray-300 rounded focus:outline-none focus:border-orange-500"
             />
             <button
               type="submit"

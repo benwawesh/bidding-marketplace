@@ -14,6 +14,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const queryClient
   
+  
   = useQueryClient();
 
   // Fetch data with auto-refresh every 30 seconds
@@ -99,22 +100,36 @@ export default function HomePage() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* Search Bar - Mobile Responsive */}
-      <div className="bg-rose-50 shadow-sm w-full">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <form className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-white border border-gray-300 rounded focus:outline-none focus:border-orange-500"
-            />
-            <button
-              type="submit"
-              className="bg-orange-500 text-white px-3 sm:px-8 py-2 sm:py-3 rounded font-semibold hover:bg-orange-600 transition text-sm sm:text-base"
-            >
-              <span className="hidden sm:inline">Search</span>
-              <span className="sm:hidden text-lg">🔍</span>
-            </button>
+      {/* Enhanced Search Bar */}
+      <div className="bg-gradient-to-r from-rose-50 via-orange-50 to-rose-50 shadow-md w-full border-b border-rose-100">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <form className="relative max-w-3xl mx-auto">
+            <div className="relative flex items-center">
+              {/* Search Icon */}
+              <div className="absolute left-4 text-gray-400 pointer-events-none">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Search for products, auctions, categories..."
+                className="flex-1 pl-12 pr-4 py-3 sm:py-4 text-sm sm:text-base bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 shadow-sm hover:shadow-md"
+              />
+
+              <button
+                type="submit"
+                className="absolute right-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full font-semibold hover:from-orange-600 hover:to-rose-600 transition-all duration-300 text-sm sm:text-base shadow-md hover:shadow-lg transform hover:scale-105"
+              >
+                <span className="hidden sm:inline">Search</span>
+                <span className="sm:hidden">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -138,18 +153,28 @@ export default function HomePage() {
             {/* Categories Grid */}
             <CategoriesGrid categories={categories} />
 
-            {/* Buy Now Section - Mobile First */}
+            {/* Buy Now Section - Enhanced Design */}
             {buyNowProducts.length > 0 && (
-              <section id="buy-now" className="my-4 sm:my-6 md:my-8">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-orange-600">
-                    Buy Now
-                  </h2>
+              <section id="buy-now" className="my-6 sm:my-8 md:my-10">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-gradient-to-r from-orange-200 to-rose-200">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg shadow-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                      Buy Now
+                    </h2>
+                  </div>
                   <Link
                     to="/buy-now"
-                    className="text-xs sm:text-sm text-orange-500 hover:underline"
+                    className="group flex items-center gap-2 text-xs sm:text-sm text-orange-600 hover:text-rose-600 font-semibold transition-all duration-300"
                   >
-                    View All
+                    <span>View All</span>
+                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
                 </div>
 
@@ -170,13 +195,20 @@ export default function HomePage() {
 
 
 
-            {/* Both Options Section - Mobile First */}
+            {/* Both Options Section - Enhanced Design */}
             {bothProducts.length > 0 && (
-              <section className="my-4 sm:my-6 md:my-8">
-                <div className="mb-3 sm:mb-4">
-                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-purple-600">
-                    Both Options - You Decide
-                  </h2>
+              <section className="my-6 sm:my-8 md:my-10">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-gradient-to-r from-rose-200 to-orange-200">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-2 rounded-lg shadow-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">
+                      Both Options - You Decide
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">

@@ -153,7 +153,7 @@ class MpesaOrderCallbackView(APIView):
             except MpesaTransaction.DoesNotExist:
                 # Try to find auction payment
                 try:
-                    from .models import Payment, Participation
+                    from auctions.models import Payment, Participation
                     auction_payment = Payment.objects.get(transaction_id=checkout_request_id)
                     print(f"Found auction payment for CheckoutRequestID: {checkout_request_id}")
                 except Payment.DoesNotExist:

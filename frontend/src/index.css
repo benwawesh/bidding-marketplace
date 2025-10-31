@@ -87,16 +87,11 @@
     transform: scale(1.05);
 }
 
-/* Quick-add button slide up */
+/* Quick-add button - always visible */
 .quick-add-btn {
-    transform: translateY(100%);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.product-card:hover .quick-add-btn {
     transform: translateY(0);
     opacity: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Price pulse on hover */

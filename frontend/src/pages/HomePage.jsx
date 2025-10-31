@@ -15,6 +15,8 @@ export default function HomePage() {
   const queryClient
   
   
+  
+  
   = useQueryClient();
 
   // Fetch data with auto-refresh every 30 seconds
@@ -100,8 +102,8 @@ export default function HomePage() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* Enhanced Search Bar */}
-      <div className="bg-gradient-to-r from-rose-50 via-orange-50 to-rose-50 shadow-md w-full border-b border-rose-100">
+      {/* Search Bar */}
+      <div className="bg-rose-50 w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <form className="relative max-w-3xl mx-auto">
             <div className="relative flex items-center">
@@ -115,12 +117,12 @@ export default function HomePage() {
               <input
                 type="text"
                 placeholder="Search for products, auctions, categories..."
-                className="flex-1 pl-12 pr-4 py-3 sm:py-4 text-sm sm:text-base bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="flex-1 pl-12 pr-4 py-3 sm:py-4 text-sm sm:text-base bg-white rounded-full focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300"
               />
 
               <button
                 type="submit"
-                className="absolute right-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full font-semibold hover:from-orange-600 hover:to-rose-600 transition-all duration-300 text-sm sm:text-base shadow-md hover:shadow-lg transform hover:scale-105"
+                className="absolute right-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full font-semibold hover:from-orange-600 hover:to-rose-600 transition-all duration-300 text-sm sm:text-base transform hover:scale-105"
               >
                 <span className="hidden sm:inline">Search</span>
                 <span className="sm:hidden">

@@ -12,7 +12,9 @@ import { Link } from "react-router-dom";
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
-  const queryClient = useQueryClient();
+  const queryClient
+  
+  = useQueryClient();
 
   // Fetch data with auto-refresh every 30 seconds
   const { data: auctions = [], isLoading: auctionsLoading } = useQuery({

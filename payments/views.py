@@ -12,19 +12,40 @@ import json
 
 from auctions.models import Auction, Participation, Payment, Round
 from .mpesa import MpesaAPI
+from .throttling import PaymentRateThrottle
 
 
 class InitiatePaymentView(APIView):
     """Initiate M-Pesa STK Push for participation fee"""
     permission_classes = [IsAuthenticated]
+    throttle_classes = [PaymentRateThrottle]
 
     def post(self, request):
         auction_id = request.data.get('auction_id')
         phone_number = request.data.get('phone_number')
 
+        # Input validation
         if not auction_id or not phone_number:
             return Response(
                 {'error': 'auction_id and phone_number are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate phone number format (basic check)
+        phone_str = str(phone_number).strip()
+        if not phone_str or len(phone_str) < 9 or len(phone_str) > 13:
+            return Response(
+                {'error': 'Invalid phone number format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate auction_id is a valid UUID
+        try:
+            from uuid import UUID
+            UUID(str(auction_id))
+        except (ValueError, AttributeError):
+            return Response(
+                {'error': 'Invalid auction ID format'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

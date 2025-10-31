@@ -121,13 +121,45 @@ class MpesaOrderCallbackView(APIView):
     """Handle M-Pesa payment callbacks for orders"""
     permission_classes = []  # No authentication required for callback
 
+    # M-Pesa known IP ranges (Safaricom production IPs)
+    MPESA_IP_WHITELIST = [
+        '196.201.214.',  # Safaricom IP range
+        '196.201.213.',
+        '196.201.212.',
+    ]
+
+    def verify_mpesa_source(self, request):
+        """Verify the request comes from M-Pesa servers"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+
+        # Check if IP starts with any whitelisted range
+        for allowed_ip in self.MPESA_IP_WHITELIST:
+            if ip.startswith(allowed_ip):
+                return True
+
+        print(f"WARNING: Callback from non-whitelisted IP: {ip}")
+        return False
+
     def post(self, request):
         try:
+            # Security: Verify request source
+            if not self.verify_mpesa_source(request):
+                print(f"SECURITY ALERT: Callback rejected from IP: {request.META.get('REMOTE_ADDR')}")
+                return Response(
+                    {'ResultCode': 1, 'ResultDesc': 'Unauthorized source'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
             callback_data = request.data
 
-            # Log callback for debugging
+            # Log callback for debugging (with IP)
             print("=" * 80)
             print("M-Pesa Order Callback Received:")
+            print(f"Source IP: {request.META.get('REMOTE_ADDR')}")
             print(json.dumps(callback_data, indent=2))
             print("=" * 80)
 

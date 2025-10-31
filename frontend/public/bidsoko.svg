@@ -1,19 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <!-- Orange circle background -->
-  <circle cx="50" cy="50" r="48" fill="#ea580c" stroke="#fff" stroke-width="2"/>
+  <circle cx="50" cy="50" r="48" fill="#ea580c" stroke="#fff" stroke-width="3"/>
 
-  <!-- Gavel icon in white -->
-  <g fill="#fff">
-    <!-- Gavel head -->
-    <rect x="35" y="30" width="20" height="12" rx="2" transform="rotate(45 45 36)"/>
+  <!-- Shopping cart in white -->
+  <g fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cart body -->
+    <path d="M 25 30 L 30 30 L 38 60 L 70 60"/>
 
-    <!-- Gavel handle -->
-    <rect x="52" y="42" width="8" height="28" rx="2" transform="rotate(45 56 56)"/>
+    <!-- Cart basket lines -->
+    <line x1="32" y1="35" x2="36" y2="55"/>
+    <line x1="40" y1="35" x2="44" y2="55"/>
+    <line x1="48" y1="35" x2="52" y2="55"/>
+    <line x1="56" y1="35" x2="60" y2="55"/>
+    <line x1="64" y1="35" x2="68" y2="55"/>
 
-    <!-- Base/stand -->
-    <rect x="25" y="65" width="30" height="6" rx="2"/>
+    <!-- Cart bottom -->
+    <path d="M 30 30 L 72 30 L 70 60 L 38 60 Z"/>
   </g>
 
-  <!-- Letter 'B' -->
-  <text x="62" y="72" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#fff">B</text>
+  <!-- Cart wheels (solid white circles) -->
+  <circle cx="44" cy="70" r="4" fill="#fff"/>
+  <circle cx="64" cy="70" r="4" fill="#fff"/>
+
+  <!-- Bid tag/price tag -->
+  <g>
+    <path d="M 60 22 L 75 22 L 75 40 L 67.5 47 L 60 40 Z" fill="#fff"/>
+    <circle cx="68" cy="30" r="2.5" fill="#ea580c"/>
+  </g>
 </svg>

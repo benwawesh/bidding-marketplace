@@ -4,10 +4,11 @@ import { auctionsAPI } from '../api/endpoints';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import AuctionCard from '../components/cards/AuctionCard';
 import BothCard from '../components/cards/BothCard';
+import MainLayout from '../components/layout/MainLayout';
 
 export default function CategoryPage() {
   const { categorySlug } = useParams();
-  
+
   const { data: auctions = [], isLoading } = useQuery({
     queryKey: ['auctions'],
     queryFn: () => auctionsAPI.getAll().then(res => res.data),
@@ -15,7 +16,7 @@ export default function CategoryPage() {
 
   // Filter by category (case-insensitive match)
   const categoryProducts = auctions.filter(
-  p => p.status === 'active' && 
+  p => p.status === 'active' &&
   p.category_name?.toLowerCase() === categorySlug.toLowerCase()
 );
 
@@ -36,18 +37,8 @@ const categoryName = categoryProducts[0]?.category_name || categorySlug;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-orange-600">BidSoko</Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/" className="text-gray-700 hover:text-orange-600">Home</Link>
-            <Link to="/browse" className="text-gray-700 hover:text-orange-600">Browse</Link>
-            <Link to="/cart" className="text-gray-700 hover:text-orange-600">Cart</Link>
-          </nav>
-        </div>
-      </header>
+    <MainLayout>
+      <div className="min-h-screen bg-gray-50">
 
       {/* Breadcrumb */}
       <div className="bg-white border-b">
@@ -104,5 +95,6 @@ const categoryName = categoryProducts[0]?.category_name || categorySlug;
 
       </div>
     </div>
+    </MainLayout>
   );
 }

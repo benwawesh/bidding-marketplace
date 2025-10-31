@@ -17,12 +17,24 @@ export default function MainLayout({ children }) {
   }
 
   return (
-    <div className="bg-orange-50 min-h-screen flex flex-col">
+    <div className="bg-rose-50 min-h-screen flex flex-col">
       {/* PromoBar - Only on HomePage, above Navbar */}
       {isHomePage && <PromoBar />}
 
       {/* Navbar */}
       <Navbar />
+
+      {/* Promo Banner Section - Only on HomePage, Mobile Responsive */}
+      {isHomePage && (
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2">
+          <div className="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm">
+            🎯 <strong>HYBRID MARKETPLACE:</strong>
+            <span className="hidden sm:inline"> Buy Instantly OR Bid to Save up to 70% |</span>
+            <span className="sm:hidden"> Save up to 70% |</span>
+            <a href="#browse" className="underline font-bold ml-1">EXPLORE NOW</a>
+          </div>
+        </div>
+      )}
 
       {/* Page Content */}
       <main className="flex-1">

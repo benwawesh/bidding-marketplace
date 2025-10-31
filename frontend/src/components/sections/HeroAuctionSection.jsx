@@ -73,8 +73,8 @@ export default function HeroAuctionSection({ auction }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-5">
 
-          {/* Left Side - Product Image (60%) - Proper mobile aspect ratio */}
-          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden aspect-[16/9] lg:aspect-auto lg:min-h-[400px]">
+          {/* Left Side - Product Image (60%) - Compact mobile aspect ratio */}
+          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden aspect-[4/3] lg:aspect-auto lg:min-h-[400px]">
             {auction.main_image ? (
               <img
                 src={auction.main_image.startsWith('http')
@@ -97,82 +97,82 @@ export default function HeroAuctionSection({ auction }) {
             </div>
           </div>
 
-          {/* Right Side - Product Details - Mobile Responsive */}
-          <div className="lg:col-span-2 flex flex-col justify-center p-4 sm:p-6">
-            
+          {/* Right Side - Product Details - Compact Mobile Layout */}
+          <div className="lg:col-span-2 flex flex-col justify-center p-3 sm:p-6">
+
             {/* Category - Mobile Responsive */}
             {auction.category_name && (
-              <span className="inline-block bg-red-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-2 sm:mb-3 w-fit">
+              <span className="inline-block bg-red-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-1 sm:mb-3 w-fit">
                 {auction.category_name}
               </span>
             )}
 
-            {/* Title - Mobile Responsive */}
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900 mb-2 sm:mb-3 leading-tight">
+            {/* Title - Compact Mobile */}
+            <h1 className="text-base sm:text-2xl lg:text-3xl font-black text-gray-900 mb-1 sm:mb-3 leading-tight">
               {auction.title}
             </h1>
 
-            {/* Description - Mobile Responsive */}
+            {/* Description - Hidden on mobile for space */}
             {auction.description && (
-              <p className="text-gray-700 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
+              <p className="text-gray-700 text-xs sm:text-sm mb-2 sm:mb-4 line-clamp-1 sm:line-clamp-2 hidden sm:block">
                 {auction.description}
               </p>
             )}
 
-            {/* Pricing Section - Mobile Responsive */}
-            <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
+            {/* Pricing Section - Compact Mobile */}
+            <div className="space-y-1 sm:space-y-3 mb-2 sm:mb-4">
 
-              {/* Market Price - Strikethrough - Mobile Responsive */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-lg sm:text-2xl font-bold text-gray-500 line-through decoration-red-500 decoration-2">
+              {/* Market Price - Strikethrough - Compact */}
+              <div className="flex items-center gap-1 sm:gap-3">
+                <span className="text-sm sm:text-2xl font-bold text-gray-500 line-through decoration-red-500 decoration-2">
                   {formatCurrency(marketPrice)}
                 </span>
-                <span className="text-red-500 font-bold text-sm sm:text-base">❌</span>
+                <span className="text-red-500 font-bold text-xs sm:text-base">❌</span>
               </div>
 
-              {/* Current Bid Price - Mobile Responsive */}
-              <div className="bg-amber-100 border-2 border-amber-300 rounded-lg p-3 sm:p-4 overflow-hidden">
-                <p className="text-amber-900 text-xs font-bold uppercase tracking-wider mb-1">
+              {/* Current Bid Price - Compact Mobile */}
+              <div className="bg-amber-100 border-2 border-amber-300 rounded-lg p-2 sm:p-4 overflow-hidden">
+                <p className="text-amber-900 text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
                   🎉 Pledge Your Bid From
                 </p>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-900 mb-1">
+                <p className="text-xl sm:text-3xl lg:text-4xl font-black text-amber-900 mb-0.5 sm:mb-1">
                   {formatCurrency(bidPrice)}
                 </p>
-                
-                {/* Sliding Savings Text */}
-                <div className="savings-slider-container relative h-8 overflow-hidden">
+
+                {/* Sliding Savings Text - Compact */}
+                <div className="savings-slider-container relative h-5 sm:h-8 overflow-hidden">
                   <div className="savings-slide-wrapper">
-                    <p className="savings-text text-lg font-bold text-orange-700">
+                    <p className="savings-text text-sm sm:text-lg font-bold text-orange-700">
                       🔥 SAVE {formatCurrency(savings)} ({savingsPercent}% OFF!)
                     </p>
-                    <p className="savings-text text-lg font-bold text-orange-700">
+                    <p className="savings-text text-sm sm:text-lg font-bold text-orange-700">
                       🔥 SAVE {formatCurrency(savings)} ({savingsPercent}% OFF!)
                     </p>
-                    <p className="savings-text text-lg font-bold text-orange-700">
+                    <p className="savings-text text-sm sm:text-lg font-bold text-orange-700">
                       🔥 SAVE {formatCurrency(savings)} ({savingsPercent}% OFF!)
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Pay on Delivery Badge - Mobile Responsive */}
-              <div className="flex items-center justify-center gap-1 sm:gap-2 bg-blue-50 border border-blue-400 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
-                <span className="text-xl sm:text-2xl">🚚</span>
-                <p className="text-blue-900 font-bold text-sm sm:text-base">PAY ON DELIVERY</p>
+              {/* Pay on Delivery Badge - Compact Mobile */}
+              <div className="flex items-center justify-center gap-1 sm:gap-2 bg-blue-50 border border-blue-400 rounded-lg px-2 sm:px-4 py-1.5 sm:py-3">
+                <span className="text-base sm:text-2xl">🚚</span>
+                <p className="text-blue-900 font-bold text-xs sm:text-base">PAY ON DELIVERY</p>
               </div>
             </div>
 
-            {/* Call to Action Button - Mobile Responsive */}
+            {/* Call to Action Button - Compact Mobile */}
             <Link
               to={`/auction/${auction.id}`}
-              className="cta-button relative bg-red-600 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl text-base sm:text-lg font-black uppercase tracking-wide shadow-lg flex items-center justify-center gap-2 sm:gap-3 overflow-hidden"
+              className="cta-button relative bg-red-600 text-white px-3 sm:px-8 py-2.5 sm:py-4 rounded-lg sm:rounded-xl text-sm sm:text-lg font-black uppercase tracking-wide shadow-lg flex items-center justify-center gap-1 sm:gap-3 overflow-hidden"
             >
               <span className="cta-shimmer"></span>
               <span className="relative z-10 text-center">JOIN THE BID NOW!</span>
             </Link>
 
-            {/* Urgency Message - Mobile Responsive */}
-            <div className="urgency-slider-container relative h-5 sm:h-6 overflow-hidden mt-2 sm:mt-3">
+            {/* Urgency Message - Compact Mobile */}
+            <div className="urgency-slider-container relative h-4 sm:h-6 overflow-hidden mt-1 sm:mt-3">
               <div className="urgency-slide-wrapper">
                 <p className="urgency-text text-center text-red-600 font-bold text-xs">
                   ⚡ LIMITED TIME - BID NOW! ⚡

@@ -71,10 +71,11 @@ export default function HeroAuctionSection({ auction }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-5">
+        {/* Mobile: Image takes 60% height, Desktop: 60% width */}
+        <div className="flex flex-col lg:grid lg:grid-cols-5">
 
-          {/* Left Side - Product Image (60%) - Compact mobile aspect ratio */}
-          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden aspect-[4/3] lg:aspect-auto lg:min-h-[400px]">
+          {/* Left Side - Product Image - Larger on mobile (60% of height) */}
+          <div className="lg:col-span-3 relative flex items-center justify-center overflow-hidden aspect-[16/9] lg:aspect-auto lg:min-h-[400px]">
             {auction.main_image ? (
               <img
                 src={auction.main_image.startsWith('http')

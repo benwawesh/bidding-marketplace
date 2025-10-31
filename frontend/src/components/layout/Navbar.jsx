@@ -59,7 +59,10 @@ export default function Navbar() {
                 <span className="text-sm text-gray-600">
                   Hi, <span className="font-semibold text-gray-900">{user?.first_name || user?.username}</span>
                 </span>
-                <Link to="/dashboard" className="text-sm text-gray-700 hover:text-orange-600 font-medium">
+                <Link
+                  to={user?.is_superuser || user?.is_staff ? "/management" : "/dashboard"}
+                  className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                >
                   📊 Dashboard
                 </Link>
                 <button
@@ -126,7 +129,11 @@ export default function Navbar() {
                     <p className="text-sm text-gray-600 mb-2">
                       Hi, <span className="font-semibold">{user?.first_name || user?.username}</span>
                     </p>
-                    <Link to="/dashboard" className="block text-gray-700 hover:text-orange-600 font-medium mb-2" onClick={() => setMobileMenuOpen(false)}>
+                    <Link
+                      to={user?.is_superuser || user?.is_staff ? "/management" : "/dashboard"}
+                      className="block text-gray-700 hover:text-orange-600 font-medium mb-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       📊 Dashboard
                     </Link>
                     <button

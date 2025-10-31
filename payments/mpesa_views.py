@@ -141,15 +141,61 @@ class MpesaOrderCallbackView(APIView):
                 print("ERROR: No CheckoutRequestID in callback")
                 return Response({'ResultCode': 1, 'ResultDesc': 'Invalid callback data'})
 
-            # Find the transaction
+            # Find the transaction - try both MpesaTransaction (orders) and Payment (auctions)
+            mpesa_transaction = None
+            auction_payment = None
+
             try:
                 mpesa_transaction = MpesaTransaction.objects.get(
                     checkout_request_id=checkout_request_id
                 )
+                print(f"Found order transaction for CheckoutRequestID: {checkout_request_id}")
             except MpesaTransaction.DoesNotExist:
-                print(f"ERROR: Transaction not found for CheckoutRequestID: {checkout_request_id}")
-                return Response({'ResultCode': 0, 'ResultDesc': 'Transaction not found'})
+                # Try to find auction payment
+                try:
+                    from .models import Payment, Participation
+                    auction_payment = Payment.objects.get(transaction_id=checkout_request_id)
+                    print(f"Found auction payment for CheckoutRequestID: {checkout_request_id}")
+                except Payment.DoesNotExist:
+                    print(f"ERROR: No transaction found for CheckoutRequestID: {checkout_request_id}")
+                    return Response({'ResultCode': 0, 'ResultDesc': 'Transaction not found'})
 
+            # Handle auction payment callback
+            if auction_payment:
+                if result_code == 0:
+                    # Payment successful for auction
+                    callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+                    mpesa_receipt = None
+                    for item in callback_metadata:
+                        if item.get('Name') == 'MpesaReceiptNumber':
+                            mpesa_receipt = item.get('Value')
+
+                    with transaction.atomic():
+                        auction_payment.status = 'completed'
+                        auction_payment.transaction_id = mpesa_receipt or checkout_request_id
+                        auction_payment.save()
+
+                        # Update participation
+                        participation = Participation.objects.filter(
+                            user=auction_payment.user,
+                            auction=auction_payment.auction,
+                            payment_status='pending'
+                        ).first()
+
+                        if participation:
+                            participation.payment_status = 'completed'
+                            participation.paid_at = auction_payment.created_at
+                            participation.save()
+
+                        print(f"Auction payment successful: {mpesa_receipt}")
+                else:
+                    auction_payment.status = 'failed'
+                    auction_payment.save()
+                    print(f"Auction payment failed: {result_desc}")
+
+                return Response({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+            # Handle order payment callback (original code)
             # Save raw callback data
             mpesa_transaction.raw_callback_data = callback_data
             mpesa_transaction.result_code = result_code

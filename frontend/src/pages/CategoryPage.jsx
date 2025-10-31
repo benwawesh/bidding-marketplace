@@ -4,7 +4,6 @@ import { auctionsAPI } from '../api/endpoints';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import AuctionCard from '../components/cards/AuctionCard';
 import BothCard from '../components/cards/BothCard';
-import MainLayout from '../components/layout/MainLayout';
 
 export default function CategoryPage() {
   const { categorySlug } = useParams();
@@ -37,8 +36,7 @@ const categoryName = categoryProducts[0]?.category_name || categorySlug;
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -82,6 +80,5 @@ const categoryName = categoryProducts[0]?.category_name || categorySlug;
 
       </div>
     </div>
-    </MainLayout>
   );
 }

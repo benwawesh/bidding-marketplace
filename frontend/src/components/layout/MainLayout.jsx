@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import Navbar from "./Navbar";
+import PromoBar from "./PromoBar";
 
 export default function MainLayout({ children }) {
   const location = useLocation();
@@ -8,12 +9,18 @@ export default function MainLayout({ children }) {
   const isManagementPage = location.pathname.startsWith('/management') ||
                            location.pathname.startsWith('/admin-panel');
 
+  // Check if we're on the home page
+  const isHomePage = location.pathname === '/';
+
   if (isManagementPage) {
     return <>{children}</>;
   }
 
   return (
     <div className="bg-orange-50 min-h-screen flex flex-col">
+      {/* PromoBar - Only on HomePage, above Navbar */}
+      {isHomePage && <PromoBar />}
+
       {/* Navbar */}
       <Navbar />
 

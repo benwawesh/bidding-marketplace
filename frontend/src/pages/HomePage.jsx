@@ -8,7 +8,6 @@ import HeroAuctionSection from '../components/sections/HeroAuctionSection';
 import CategoriesGrid from '../components/sections/CategoriesGrid';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import BothCard from '../components/cards/BothCard';
-import PromoBar from '../components/layout/PromoBar';
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
@@ -98,9 +97,6 @@ export default function HomePage() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* PromoBar - Only on HomePage */}
-      <PromoBar />
-
       {/* Search Bar - Mobile Responsive */}
       <div className="bg-white shadow-sm w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">

@@ -20,13 +20,13 @@ export default function HomePage() {
   // Fetch data with auto-refresh every 30 seconds
   const { data: auctions = [], isLoading: auctionsLoading } = useQuery({
     queryKey: ['auctions'],
-    queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    queryFn: () => auctionsAPI.getAll().then(res => res.data?.results || res.data || []),
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Add to cart mutation

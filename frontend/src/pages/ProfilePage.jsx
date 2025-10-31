@@ -19,14 +19,14 @@ export default function ProfilePage() {
   // Fetch orders
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => ordersAPI.getAll().then(res => res.data),
+    queryFn: () => ordersAPI.getAll().then(res => res.data?.results || res.data || []),
     enabled: activeTab === 'orders',
   });
 
   // Fetch bids
   const { data: bids = [], isLoading: loadingBids } = useQuery({
     queryKey: ['bids'],
-    queryFn: () => bidsAPI.getMyBids().then(res => res.data),
+    queryFn: () => bidsAPI.getMyBids().then(res => res.data?.results || res.data || []),
     enabled: activeTab === 'bids',
   });
 

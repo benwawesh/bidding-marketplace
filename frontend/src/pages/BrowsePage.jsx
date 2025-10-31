@@ -14,12 +14,12 @@ export default function BrowsePage() {
   // Fetch data
   const { data: auctions = [], isLoading: auctionsLoading } = useQuery({
     queryKey: ['auctions'],
-    queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    queryFn: () => auctionsAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Filter products

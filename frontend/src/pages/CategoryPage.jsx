@@ -10,7 +10,7 @@ export default function CategoryPage() {
 
   const { data: auctions = [], isLoading } = useQuery({
     queryKey: ['auctions'],
-    queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    queryFn: () => auctionsAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Filter by category (case-insensitive match)

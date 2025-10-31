@@ -175,11 +175,11 @@ class MpesaOrderCallbackView(APIView):
                         auction_payment.transaction_id = mpesa_receipt or checkout_request_id
                         auction_payment.save()
 
-                        # Update participation
+                        # Update participation (check both pending and failed status)
                         participation = Participation.objects.filter(
                             user=auction_payment.user,
                             auction=auction_payment.auction,
-                            payment_status='pending'
+                            payment_status__in=['pending', 'failed']
                         ).first()
 
                         if participation:

@@ -156,7 +156,7 @@ export default function HomePage() {
             {/* Buy Now Section - Enhanced Design */}
             {buyNowProducts.length > 0 && (
               <section id="buy-now" className="my-6 sm:my-8 md:my-10">
-                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-gradient-to-r from-orange-200 to-rose-200">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-orange-200">
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg shadow-lg">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +198,7 @@ export default function HomePage() {
             {/* Both Options Section - Enhanced Design */}
             {bothProducts.length > 0 && (
               <section className="my-6 sm:my-8 md:my-10">
-                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-gradient-to-r from-rose-200 to-orange-200">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-rose-200">
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-2 rounded-lg shadow-lg">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

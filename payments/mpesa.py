@@ -80,10 +80,10 @@ class MpesaAPI:
             'BusinessShortCode': self.business_shortcode,
             'Password': password,
             'Timestamp': timestamp,
-            'TransactionType': 'CustomerPayBillOnline',
+            'TransactionType': 'CustomerBuyGoodsOnline',
             'Amount': int(amount),
             'PartyA': phone_number,
-            'PartyB': self.business_shortcode,
+            'PartyB': '5962723',  # Till number as per Safaricom support
             'PhoneNumber': phone_number,
             'CallBackURL': self.callback_url,
             'AccountReference': account_reference,

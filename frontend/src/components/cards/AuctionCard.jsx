@@ -8,7 +8,7 @@ export default function AuctionCard({ product }) {
     <div className="product-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
       {/* Image Container */}
       <Link to={`/auction/${product.id}`} className="block relative overflow-hidden">
-        <div className="product-image aspect-square w-full">
+        <div className="product-image aspect-[4/3] w-full">
           {product.main_image ? (
             <img 
               src={product.main_image.startsWith('http') 

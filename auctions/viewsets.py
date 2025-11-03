@@ -1126,42 +1126,6 @@ class CartViewSet(viewsets.ViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for orders
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def get_serializer_class(self):
-        """Use different serializers for create vs list/retrieve"""
-        if self.action == 'create':
-            from .serializers import CreateOrderSerializer
-            return CreateOrderSerializer
-        from .serializers import OrderSerializer
-        return OrderSerializer
-    
-    def get_queryset(self):
-        """Users can only see their own orders"""
-        if self.request.user.is_authenticated:
-            from .models import Order
-            return Order.objects.filter(user=self.request.user).order_by('-created_at')
-        from .models import Order
-        return Order.objects.none()
-    
-    def create(self, request, *args, **kwargs):
-        """Create order from cart"""
-        from .serializers import CreateOrderSerializer, OrderSerializer
-        
-        serializer = CreateOrderSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            order = serializer.save()
-            order_serializer = OrderSerializer(order)
-            return Response(order_serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    
-
-
-class OrderViewSet(viewsets.ModelViewSet):
-    """
     ViewSet for order management (Admin + User)
     """
     permission_classes = [IsAuthenticated]
@@ -1176,12 +1140,26 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
     def get_serializer_class(self):
-        """Use admin serializer for admins"""
+        """Use different serializers for create vs list/retrieve"""
+        if self.action == 'create':
+            from .serializers import CreateOrderSerializer
+            return CreateOrderSerializer
         if self.request.user.is_superuser:
             from .serializers import OrderAdminSerializer
             return OrderAdminSerializer
         from .serializers import OrderSerializer
         return OrderSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create order from cart"""
+        from .serializers import CreateOrderSerializer, OrderSerializer
+
+        serializer = CreateOrderSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            order = serializer.save()
+            order_serializer = OrderSerializer(order)
+            return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
     def update_status(self, request, id=None):

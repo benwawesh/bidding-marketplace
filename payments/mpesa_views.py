@@ -73,7 +73,7 @@ class InitiateOrderPaymentView(APIView):
             # Prepare transaction details
             account_ref = f"ORDER-{order.order_number}"
             transaction_desc = f"Payment for order {order.order_number}"
-            amount = int(order.total_price)  # M-Pesa requires integer amount
+            amount = int(order.total_amount)  # M-Pesa requires integer amount
 
             # Initiate STK Push
             result = mpesa.initiate_stk_push(
@@ -89,7 +89,7 @@ class InitiateOrderPaymentView(APIView):
                     user=request.user,
                     order=order,
                     phone_number=formatted_phone,
-                    amount=order.total_price,
+                    amount=order.total_amount,
                     account_reference=account_ref,
                     transaction_desc=transaction_desc,
                     merchant_request_id=result.get('merchant_request_id'),
@@ -314,14 +314,14 @@ class CheckOrderPaymentStatusView(APIView):
                 return Response({
                     'payment_status': 'unpaid',
                     'order_status': order.status,
-                    'total_price': float(order.total_price),
+                    'total_amount': float(order.total_amount),
                     'message': 'No payment initiated'
                 })
 
             return Response({
                 'payment_status': latest_transaction.status,
                 'order_status': order.status,
-                'total_price': float(order.total_price),
+                'total_amount': float(order.total_amount),
                 'mpesa_receipt': latest_transaction.mpesa_receipt_number,
                 'transaction_date': latest_transaction.transaction_date,
                 'result_desc': latest_transaction.result_desc,

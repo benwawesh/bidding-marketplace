@@ -63,7 +63,7 @@ export default function Navbar() {
                   to={user?.is_superuser || user?.is_staff ? "/management" : "/dashboard"}
                   className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                 >
-                  📊 Dashboard
+                  {user?.is_superuser || user?.is_staff ? "👑 Admin Panel" : "📊 Dashboard"}
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -134,7 +134,7 @@ export default function Navbar() {
                       className="block text-gray-700 hover:text-orange-600 font-medium mb-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      📊 Dashboard
+                      {user?.is_superuser || user?.is_staff ? "👑 Admin Panel" : "📊 Dashboard"}
                     </Link>
                     <button
                       onClick={handleLogout}

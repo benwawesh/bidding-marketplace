@@ -92,6 +92,17 @@ export default function ManagementLayout({ children }) {
                 >
                   🎨 Promo Bar
                 </Link>
+
+                <Link
+                  to="/management/analytics/financial"
+                  className={`block px-4 py-3 rounded-lg transition ${
+                    isActive('/management/analytics/financial')
+                      ? 'bg-red-600 text-white font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  💰 Financial Analytics
+                </Link>
               </nav>
 
               {/* Quick Links */}

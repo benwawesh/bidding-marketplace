@@ -99,34 +99,43 @@ class AuctionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def activate(self, request, id=None):
-        """Activate a draft auction (Admin only) - Admin sets min/max pledge range"""
+        """Activate a draft product (Admin only) - Admin sets min/max pledge range for auctions"""
         auction = self.get_object()
-        
+
         # Check if user is admin
         if not request.user.is_superuser:
             return Response(
-                {'error': 'Only admins can activate auctions'},
+                {'error': 'Only admins can activate products'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Check if already active
         if auction.status == 'active':
             return Response(
-                {'error': 'Auction is already active'},
+                {'error': 'Product is already active'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Get min_pledge and max_pledge from request (admin sets these)
+
+        # For buy_now products, simply activate without pledge requirements
+        if auction.product_type == 'buy_now':
+            auction.status = 'active'
+            auction.save()
+            return Response({
+                'message': 'Buy Now product activated successfully!',
+                'auction': AuctionDetailSerializer(auction).data
+            })
+
+        # For auction and both types, require min_pledge and max_pledge
         min_pledge = request.data.get('min_pledge')
         max_pledge = request.data.get('max_pledge')
-        
+
         # Validate
         if not min_pledge or not max_pledge:
             return Response(
-                {'error': 'min_pledge and max_pledge are required'},
+                {'error': 'min_pledge and max_pledge are required for auction products'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             min_pledge = float(min_pledge)
             max_pledge = float(max_pledge)
@@ -135,28 +144,28 @@ class AuctionViewSet(viewsets.ModelViewSet):
                 {'error': 'min_pledge and max_pledge must be valid numbers'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         if min_pledge < auction.base_price:
             return Response(
                 {'error': f'min_pledge cannot be less than base price ({auction.base_price})'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         if max_pledge <= min_pledge:
             return Response(
                 {'error': 'max_pledge must be greater than min_pledge'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Activate the auction
         auction.status = 'active'
         auction.save()
-        
+
         # Auto-create Round 1 if no rounds exist
         if not auction.rounds.exists():
             now = timezone.now()
             one_year = timezone.timedelta(days=365)
-            
+
             Round.objects.create(
                 auction=auction,
                 round_number=1,
@@ -168,7 +177,7 @@ class AuctionViewSet(viewsets.ModelViewSet):
                 end_time=now + one_year,
                 is_active=True
             )
-        
+
         return Response({
             'message': f'Auction activated! Buyers can bid between {min_pledge} - {max_pledge}',
             'auction': AuctionDetailSerializer(auction).data
@@ -615,7 +624,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     @action(detail=True, methods=['get'])
-    def products(self, request, id=None):
+    def products(self, request, slug=None):
         """Return all products under a specific category"""
         category = self.get_object()
         products = Auction.objects.filter(category=category, is_active=True)
@@ -633,18 +642,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
         instance.save()
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def toggle_active(self, request, id=None):
+    def toggle_active(self, request, slug=None):
         """Toggle category active status (Admin only)"""
         if not request.user.is_superuser:
             return Response(
                 {'error': 'Only admins can toggle category status'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         category = self.get_object()
         category.is_active = not category.is_active
         category.save()
-        
+
         return Response({
             'message': f'Category {"activated" if category.is_active else "deactivated"}',
             'category': CategorySerializer(category).data

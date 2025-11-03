@@ -151,9 +151,9 @@ class Auction(models.Model):
     # Images
     main_image = models.ImageField(upload_to='auctions/', blank=True, null=True)
 
-    # Timing
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    # Timing (nullable for buy_now products)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
 
     # Status and ownership
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
@@ -195,6 +195,14 @@ class Auction(models.Model):
     @property
     def is_active(self):
         """Check if auction is currently active"""
+        # For buy_now products, only check status
+        if self.product_type == 'buy_now':
+            return self.status == 'active'
+
+        # For auction products, check status and timing
+        if not self.start_time or not self.end_time:
+            return self.status == 'active'
+
         now = timezone.now()
         return (
                 self.status == 'active' and
@@ -204,7 +212,7 @@ class Auction(models.Model):
     @property
     def time_remaining(self):
         """Get time remaining in seconds"""
-        if not self.is_active:
+        if not self.is_active or not self.end_time:
             return 0
         return max(0, (self.end_time - timezone.now()).total_seconds())
 
@@ -267,9 +275,9 @@ class Round(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))]
     )
 
-    # Timing
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    # Timing (nullable for buy_now products)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     # Metadata

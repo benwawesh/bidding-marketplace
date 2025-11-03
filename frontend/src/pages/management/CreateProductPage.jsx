@@ -10,7 +10,7 @@ export default function CreateProductPage() {
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   const [formData, setFormData] = useState({
@@ -95,13 +95,12 @@ export default function CreateProductPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const payload = {
       title: formData.title,
       description: formData.description,
       category: formData.category,
       product_type: formData.product_type,
-      base_price: parseFloat(formData.base_price) || 0,
       stock_quantity: parseInt(formData.stock_quantity) || 0,
       main_image: formData.main_image,
       is_featured: formData.is_featured,
@@ -114,11 +113,22 @@ export default function CreateProductPage() {
       payload.market_price = parseFloat(formData.market_price);
     }
 
-    if (formData.product_type === 'buy_now' || formData.product_type === 'both') {
+    // For Buy Now ONLY - use buy_now_price as base_price
+    if (formData.product_type === 'buy_now') {
       payload.buy_now_price = parseFloat(formData.buy_now_price) || 0;
+      payload.base_price = parseFloat(formData.buy_now_price) || 0; // Set base_price same as buy_now_price
     }
 
-    if (formData.product_type === 'auction' || formData.product_type === 'both') {
+    // For Auction ONLY - use base_price and participation fee
+    if (formData.product_type === 'auction') {
+      payload.base_price = parseFloat(formData.base_price) || 0;
+      payload.participation_fee = parseFloat(formData.participation_fee) || 0;
+    }
+
+    // For BOTH - use both base_price and buy_now_price
+    if (formData.product_type === 'both') {
+      payload.base_price = parseFloat(formData.base_price) || 0;
+      payload.buy_now_price = parseFloat(formData.buy_now_price) || 0;
       payload.participation_fee = parseFloat(formData.participation_fee) || 0;
     }
 
@@ -245,57 +255,154 @@ export default function CreateProductPage() {
           {/* Pricing */}
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">Pricing</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              {/* Market Price - NEW FIELD (Jumia Style) */}
+              {/* Market Price - Optional (Jumia Style) */}
               <div className="col-span-2 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
                 <label className="block text-sm font-bold text-gray-900 mb-2">
                   🏷️ Market/Retail Price (KES) - <span className="text-yellow-700">Shown Crossed Out Like Jumia</span>
                 </label>
-                <input 
-                  type="number" 
-                  name="market_price" 
-                  value={formData.market_price} 
+                <input
+                  type="number"
+                  name="market_price"
+                  value={formData.market_price}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border-2 border-yellow-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.market_price ? 'border-red-500' : ''}`}
-                  placeholder="e.g., 100000 (will show as KSh 100,000 ❌)" 
-                  min="0" 
-                  step="0.01" 
+                  placeholder="e.g., 100000 (will show as KSh 100,000 ❌)"
+                  min="0"
+                  step="0.01"
                 />
                 <p className="text-xs text-gray-600 mt-2">
-                  💡 This is the original retail price shown with a strikethrough. Leave empty if not needed.
+                  💡 Optional: Original retail price shown with strikethrough. Leave empty if not needed.
                 </p>
                 {errors.market_price && <p className="text-red-600 text-sm mt-1">{errors.market_price[0]}</p>}
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {showAuctionFields ? 'Starting Bid (KES) *' : 'Base Price (KES) *'}
-                </label>
-                <input type="number" name="base_price" value={formData.base_price} onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.base_price ? 'border-red-500' : 'border-gray-300'}`}
-                  placeholder="50000" min="0" step="0.01" required />
-                {errors.base_price && <p className="text-red-600 text-sm mt-1">{errors.base_price[0]}</p>}
-              </div>
-
-              {showBuyNowFields && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Buy Now Price (KES) *</label>
-                  <input type="number" name="buy_now_price" value={formData.buy_now_price} onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.buy_now_price ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="75000" min="0" step="0.01" required={showBuyNowFields} />
+              {/* Buy Now ONLY - Single Price Field */}
+              {formData.product_type === 'buy_now' && (
+                <div className="col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Product Price (KES) *
+                  </label>
+                  <input
+                    type="number"
+                    name="buy_now_price"
+                    value={formData.buy_now_price}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.buy_now_price ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="75000"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">The selling price for this product</p>
                   {errors.buy_now_price && <p className="text-red-600 text-sm mt-1">{errors.buy_now_price[0]}</p>}
                 </div>
               )}
 
-              {showAuctionFields && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Participation Fee (KES) *</label>
-                  <input type="number" name="participation_fee" value={formData.participation_fee} onChange={handleChange}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.participation_fee ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="500" min="0" step="0.01" required={showAuctionFields} />
-                  {errors.participation_fee && <p className="text-red-600 text-sm mt-1">{errors.participation_fee[0]}</p>}
-                </div>
+              {/* Auction ONLY - Starting Bid & Participation Fee */}
+              {formData.product_type === 'auction' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Starting Bid (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="base_price"
+                      value={formData.base_price}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.base_price ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="50000"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum starting bid amount</p>
+                    {errors.base_price && <p className="text-red-600 text-sm mt-1">{errors.base_price[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Participation Fee (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="participation_fee"
+                      value={formData.participation_fee}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.participation_fee ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="500"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Fee to join the auction</p>
+                    {errors.participation_fee && <p className="text-red-600 text-sm mt-1">{errors.participation_fee[0]}</p>}
+                  </div>
+                </>
+              )}
+
+              {/* BOTH - All Price Fields */}
+              {formData.product_type === 'both' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Starting Bid (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="base_price"
+                      value={formData.base_price}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.base_price ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="50000"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">For auction bidding</p>
+                    {errors.base_price && <p className="text-red-600 text-sm mt-1">{errors.base_price[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Buy Now Price (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="buy_now_price"
+                      value={formData.buy_now_price}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.buy_now_price ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="75000"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">For instant purchase</p>
+                    {errors.buy_now_price && <p className="text-red-600 text-sm mt-1">{errors.buy_now_price[0]}</p>}
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Participation Fee (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="participation_fee"
+                      value={formData.participation_fee}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.participation_fee ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="500"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Fee to join the auction (not required for buy now)</p>
+                    {errors.participation_fee && <p className="text-red-600 text-sm mt-1">{errors.participation_fee[0]}</p>}
+                  </div>
+                </>
               )}
 
               <div>

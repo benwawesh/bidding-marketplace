@@ -7,12 +7,12 @@ import { formatCurrency } from '../../utils/helpers';
 export default function ManagementDashboard() {
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    queryFn: () => auctionsAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Calculate stats

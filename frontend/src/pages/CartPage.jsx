@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { cartAPI } from '../api/endpoints';
 import { formatCurrency } from '../utils/helpers';
 
 export default function CartPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch cart data from backend
@@ -103,20 +104,6 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-orange-600">BidSoko</Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/" className="text-gray-700 hover:text-orange-600">Home</Link>
-            <Link to="/browse" className="text-gray-700 hover:text-orange-600">Browse</Link>
-            <Link to="/cart" className="text-orange-600 font-semibold">
-              Cart ({totalItems})
-            </Link>
-          </nav>
-        </div>
-      </header>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -250,9 +237,9 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   className="w-full bg-orange-500 text-white py-4 rounded-lg font-bold hover:bg-orange-600 transition mb-3"
-                  onClick={() => toast('Checkout coming soon!', { icon: '🚀' })}
+                  onClick={() => navigate('/checkout')}
                 >
                   Proceed to Checkout
                 </button>

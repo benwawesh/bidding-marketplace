@@ -16,13 +16,13 @@ export default function AllProductsPage() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: () => auctionsAPI.getAll().then(res => res.data),
+    queryFn: () => auctionsAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Activate mutation
   const activateMutation = useMutation({
-    mutationFn: (productId) => 
-      axios.post(`/api/auctions/${productId}/activate/`),
+    mutationFn: (productId) =>
+      axios.post(`/auctions/${productId}/activate/`),
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-products']);
       toast.success('✅ Product activated successfully!');

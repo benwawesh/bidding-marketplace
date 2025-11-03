@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import financial_views
 
 urlpatterns = [
     # Public pages
@@ -15,6 +16,11 @@ urlpatterns = [
     path('checkout/', views.CheckoutView.as_view(), name='checkout'),
     path('orders/<uuid:order_id>/confirmation/', views.OrderConfirmationView.as_view(), name='order_confirmation'),
     path('orders/history/', views.OrderHistoryView.as_view(), name='order_history'),
+
+    # Financial Analytics (Admin only)
+    path('analytics/financial/', financial_views.FinancialAnalyticsView.as_view(), name='financial-analytics'),
+    path('analytics/transactions/', financial_views.TransactionListView.as_view(), name='transaction-list'),
+    path('analytics/transactions/export/', financial_views.ExportTransactionsView.as_view(), name='export-transactions'),
 ]
 # Delete endpoints
 from .delete_views import delete_product, bulk_delete_products

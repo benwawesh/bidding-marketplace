@@ -17,7 +17,7 @@ export default function CategoriesPage() {
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['admin-categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Create mutation
@@ -235,7 +235,7 @@ export default function CategoriesPage() {
                     </td>
                     <td className="py-4 px-6">
                       <button
-                        onClick={() => toggleActiveMutation.mutate(category.id)}
+                        onClick={() => toggleActiveMutation.mutate(category.slug)}
                         disabled={toggleActiveMutation.isPending}
                         className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
                           category.is_active

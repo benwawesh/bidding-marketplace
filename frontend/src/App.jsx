@@ -12,6 +12,7 @@ import AuctionDetailPage from './pages/AuctionDetailPage';
 import BrowsePage from './pages/BrowsePage';
 import CategoryPage from './pages/CategoryPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 // Management Pages
@@ -38,6 +39,7 @@ import RoundDetailPage from './pages/management/RoundDetailPage';
 import WinnerCalculationPage from './pages/management/WinnerCalculationPage';
 import UserDashboard from './pages/UserDashboard';
 import PromoBarManagement from './pages/management/PromoBarManagement';
+import FinancialAnalyticsPage from './pages/management/FinancialAnalyticsPage';
 
 
 
@@ -69,6 +71,7 @@ function App() {
               <Route path="/browse" element={<BrowsePage />} />
               <Route path="/category/:categorySlug" element={<CategoryPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route
                 path="/dashboard"
@@ -205,6 +208,16 @@ function App() {
               element={
                 <ProtectedRoute requireSuperuser={true}>
                   <PromoBarManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Financial Analytics */}
+            <Route
+              path="/management/analytics/financial"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <FinancialAnalyticsPage />
                 </ProtectedRoute>
               }
             />

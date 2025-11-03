@@ -17,6 +17,8 @@ export default function HomePage() {
   
   
   
+  
+  
   = useQueryClient();
 
   // Fetch data with auto-refresh every 30 seconds

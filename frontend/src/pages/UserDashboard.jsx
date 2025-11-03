@@ -561,7 +561,7 @@ export default function UserDashboard() {
                                 <p className="font-semibold text-gray-900">
                                   {order.items?.length > 1
                                     ? `${order.items.length} items`
-                                    : order.items?.[0]?.product_name || 'Product'}
+                                    : order.items?.[0]?.product_title || 'Product'}
                                 </p>
                               </td>
                               <td className="py-4 px-4 text-center">
@@ -602,13 +602,13 @@ export default function UserDashboard() {
                                       {order.items?.map((item, idx) => (
                                         <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                           <div className="flex-1">
-                                            <p className="font-medium text-gray-900">{item.product_name}</p>
+                                            <p className="font-medium text-gray-900">{item.product_title}</p>
                                             <p className="text-sm text-gray-600">
-                                              {formatCurrency(item.unit_price)} × {item.quantity}
+                                              {formatCurrency(item.product_price)} × {item.quantity}
                                             </p>
                                           </div>
                                           <p className="font-semibold text-gray-900">
-                                            {formatCurrency(item.subtotal)}
+                                            {formatCurrency(item.total_price)}
                                           </p>
                                         </div>
                                       ))}

@@ -40,6 +40,7 @@ import WinnerCalculationPage from './pages/management/WinnerCalculationPage';
 import UserDashboard from './pages/UserDashboard';
 import PromoBarManagement from './pages/management/PromoBarManagement';
 import FinancialAnalyticsPage from './pages/management/FinancialAnalyticsPage';
+import PaymentStatusPage from './pages/PaymentStatusPage';
 
 
 
@@ -72,6 +73,7 @@ function App() {
               <Route path="/category/:categorySlug" element={<CategoryPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/payment-status" element={<PaymentStatusPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route
                 path="/dashboard"

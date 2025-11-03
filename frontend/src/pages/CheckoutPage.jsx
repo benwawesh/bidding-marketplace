@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { cartAPI, ordersAPI, mpesaAPI } from '../api/endpoints';
 import { formatCurrency } from '../utils/helpers';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [step, setStep] = useState(1); // 1: Details, 2: Payment
   const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -51,13 +50,10 @@ export default function CheckoutPage() {
     mutationFn: ({ orderId, phone }) =>
       mpesaAPI.initiateOrderPayment(orderId, phone),
     onSuccess: () => {
+      const orderId = window.sessionStorage.getItem('pending_order_id');
       toast.success('Payment request sent! Check your phone for M-Pesa prompt');
-      // Clear cart after successful payment initiation
-      queryClient.invalidateQueries(['cart']);
-      // Redirect to profile page to see orders after a delay
-      setTimeout(() => {
-        navigate('/profile');
-      }, 3000);
+      // Redirect to payment status page
+      navigate(`/payment-status?order_id=${orderId}`);
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || 'Payment failed');

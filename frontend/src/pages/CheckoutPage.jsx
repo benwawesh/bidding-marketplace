@@ -12,10 +12,11 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const [deliveryInfo, setDeliveryInfo] = useState({
-    delivery_address: '',
-    delivery_city: '',
-    delivery_phone: '',
-    notes: ''
+    shipping_name: '',
+    shipping_address: '',
+    shipping_city: '',
+    shipping_phone: '',
+    customer_notes: ''
   });
 
   // Fetch cart data
@@ -67,16 +68,13 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     // Validate delivery info
-    if (!deliveryInfo.delivery_address || !deliveryInfo.delivery_city || !deliveryInfo.delivery_phone) {
+    if (!deliveryInfo.shipping_name || !deliveryInfo.shipping_address || !deliveryInfo.shipping_city || !deliveryInfo.shipping_phone) {
       toast.error('Please fill in all delivery details');
       return;
     }
 
     // Create order with delivery info
-    createOrderMutation.mutate({
-      ...deliveryInfo,
-      total_amount: total
-    });
+    createOrderMutation.mutate(deliveryInfo);
   };
 
   const handleSubmitPayment = (e) => {
@@ -163,13 +161,27 @@ export default function CheckoutPage() {
                 <form onSubmit={handleSubmitDetails} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deliveryInfo.shipping_name}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_name: e.target.value })}
+                      placeholder="Enter your full name"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Delivery Address *
                     </label>
                     <input
                       type="text"
                       required
-                      value={deliveryInfo.delivery_address}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, delivery_address: e.target.value })}
+                      value={deliveryInfo.shipping_address}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_address: e.target.value })}
                       placeholder="Enter your delivery address"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
@@ -182,8 +194,8 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       required
-                      value={deliveryInfo.delivery_city}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, delivery_city: e.target.value })}
+                      value={deliveryInfo.shipping_city}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_city: e.target.value })}
                       placeholder="Enter your city"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
@@ -196,8 +208,8 @@ export default function CheckoutPage() {
                     <input
                       type="tel"
                       required
-                      value={deliveryInfo.delivery_phone}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, delivery_phone: e.target.value })}
+                      value={deliveryInfo.shipping_phone}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_phone: e.target.value })}
                       placeholder="0712345678"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
@@ -208,8 +220,8 @@ export default function CheckoutPage() {
                       Delivery Notes (Optional)
                     </label>
                     <textarea
-                      value={deliveryInfo.notes}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })}
+                      value={deliveryInfo.customer_notes}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, customer_notes: e.target.value })}
                       placeholder="Any special instructions for delivery"
                       rows="3"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"

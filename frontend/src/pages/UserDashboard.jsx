@@ -151,7 +151,7 @@ export default function UserDashboard() {
   // Calculate overall stats
   const totalBids = bids.length;
   const totalPurchases = purchases.length;
-  const totalSpent = purchases.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0);
+  const totalSpent = purchases.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
   if (biddingLoading || participationsLoading || purchasesLoading) {
     return (
@@ -361,7 +361,7 @@ export default function UserDashboard() {
                           <p className="text-sm text-gray-500">Order #{order.order_number}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-lg text-blue-600">{formatCurrency(order.total_price)}</p>
+                          <p className="font-bold text-lg text-blue-600">{formatCurrency(order.total_amount)}</p>
                           <span className={`text-xs px-2 py-1 rounded-full ${
                             order.order_status === 'delivered' ? 'bg-green-100 text-green-700' :
                             order.order_status === 'shipped' ? 'bg-blue-100 text-blue-700' :
@@ -550,7 +550,7 @@ export default function UserDashboard() {
                           </td>
                           <td className="py-4 px-4 text-right">
                             <span className="font-bold text-lg text-blue-600">
-                              {formatCurrency(order.total_price)}
+                              {formatCurrency(order.total_amount)}
                             </span>
                           </td>
                           <td className="py-4 px-4 text-center">

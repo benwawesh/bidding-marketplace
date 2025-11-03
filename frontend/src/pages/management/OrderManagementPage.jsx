@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
 import { formatCurrency } from '../../utils/helpers';
+import ManagementLayout from '../../components/layout/ManagementLayout';
 
 export default function OrderManagementPage() {
   const queryClient = useQueryClient();
@@ -64,18 +65,20 @@ export default function OrderManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading orders...</p>
+      <ManagementLayout>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading orders...</p>
+          </div>
         </div>
-      </div>
+      </ManagementLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <ManagementLayout>
+      <div>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -440,6 +443,6 @@ export default function OrderManagementPage() {
           Showing {filteredOrders.length} of {stats.total} orders
         </div>
       </div>
-    </div>
+    </ManagementLayout>
   );
 }

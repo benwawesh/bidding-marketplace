@@ -72,6 +72,17 @@ export default function ManagementLayout({ children }) {
                 </Link>
 
                 <Link
+                  to="/management/orders"
+                  className={`block px-4 py-3 rounded-lg transition ${
+                    isActive('/management/orders')
+                      ? 'bg-red-600 text-white font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  📋 Order Management
+                </Link>
+
+                <Link
                   to="/management/users"
                   className={`block px-4 py-3 rounded-lg transition ${
                     isActive('/management/users')

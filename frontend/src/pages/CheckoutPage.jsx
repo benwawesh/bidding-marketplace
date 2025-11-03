@@ -50,13 +50,13 @@ export default function CheckoutPage() {
   const paymentMutation = useMutation({
     mutationFn: ({ orderId, phone }) =>
       mpesaAPI.initiateOrderPayment(orderId, phone),
-    onSuccess: (response) => {
+    onSuccess: () => {
       toast.success('Payment request sent! Check your phone for M-Pesa prompt');
       // Clear cart after successful payment initiation
       queryClient.invalidateQueries(['cart']);
-      // Redirect to orders page after a delay
+      // Redirect to profile page to see orders after a delay
       setTimeout(() => {
-        navigate('/orders');
+        navigate('/profile');
       }, 3000);
     },
     onError: (error) => {

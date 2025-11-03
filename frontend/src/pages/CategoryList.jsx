@@ -5,7 +5,7 @@ import axios from "../api/axios";
 export default function CategoryList() {
   const { data: categories = [], isLoading, isError } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => axios.get("/api/categories/").then(res => res.data),
+    queryFn: () => axios.get("/api/categories/").then(res => res.data?.results || res.data || []),
   });
 
   if (isLoading) return <p className="text-center mt-10">Loading categories...</p>;

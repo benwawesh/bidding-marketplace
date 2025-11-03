@@ -11,7 +11,7 @@ export default function OrdersListPage() {
   // Fetch all orders
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['admin-orders'],
-    queryFn: () => ordersAPI.getAll().then(res => res.data),
+    queryFn: () => ordersAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Fetch stats

@@ -19,7 +19,7 @@ export default function EditProductPage() {
   // Fetch categories
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAll().then(res => res.data),
+    queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
   // Form state

@@ -7,7 +7,7 @@ import MainLayout from "../components/layout/MainLayout";
 export default function BuyNowPage() {
   const { data: auctions = [], isLoading } = useQuery({
     queryKey: ["buyNowAll"],
-    queryFn: () => auctionsAPI.getAll().then((res) => res.data),
+    queryFn: () => auctionsAPI.getAll().then((res) => res.data?.results || res.data || []),
   });
 
   // Filter active Buy Now products

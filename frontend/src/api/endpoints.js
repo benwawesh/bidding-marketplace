@@ -87,11 +87,11 @@ export const usersAPI = {
 
 export const mpesaAPI = {
   initiateOrderPayment: (orderId, phoneNumber) =>
-    authAxios.post('/payments/mpesa/initiate-order/', { order_id: orderId, phone_number: phoneNumber }),
+    axios.post(`/payments/mpesa/initiate-order/`, { order_id: orderId, phone_number: phoneNumber }),
   checkOrderPaymentStatus: (orderId) =>
     axios.get(`/payments/mpesa/order-status/${orderId}/`),
   getMyTransactions: () =>
-    authAxios.get('/payments/mpesa/my-transactions/'),
+    axios.get(`/payments/mpesa/my-transactions/`),
   mockOrderPayment: (orderId) =>
-    authAxios.post('/payments/mock-order/', { order_id: orderId }),
+    axios.post(`/payments/mock-order/`, { order_id: orderId }),
 };

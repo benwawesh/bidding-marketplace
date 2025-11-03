@@ -7,6 +7,7 @@ from .viewsets import (
 )
 from .delete_views import delete_product, bulk_delete_products
 from .promo_views import get_active_promo_banners
+from . import financial_views
 
 router = DefaultRouter()
 router.register(r'auctions', AuctionViewSet, basename='auction')
@@ -27,6 +28,11 @@ urlpatterns = [
 
     # Promo banners
     path('promo-banners/', get_active_promo_banners, name='promo-banners'),
+
+    # Financial Analytics (Admin only)
+    path('auctions/analytics/financial/', financial_views.FinancialAnalyticsView.as_view(), name='api-financial-analytics'),
+    path('auctions/analytics/transactions/', financial_views.TransactionListView.as_view(), name='api-transaction-list'),
+    path('auctions/analytics/transactions/export/', financial_views.ExportTransactionsView.as_view(), name='api-export-transactions'),
 ]
 
 # Add router URLs

@@ -59,7 +59,7 @@ export default function UserDashboard() {
     queryKey: ['user-participations'],
     queryFn: async () => {
       const res = await axios.get('/participations/my_participations/');
-      return res.data;
+      return res.data?.results || res.data || [];
     },
   });
 
@@ -69,7 +69,7 @@ export default function UserDashboard() {
     queryFn: async () => {
       try {
         const res = await axios.get('/orders/');
-        return res.data;
+        return res.data?.results || res.data || [];
       } catch (error) {
         // Return empty array if orders endpoint doesn't exist (404)
         if (error.response?.status === 404) {

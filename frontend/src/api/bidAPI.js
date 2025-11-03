@@ -59,7 +59,7 @@ export const getMyBids = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return response.data?.results || response.data || [];
   } catch (error) {
     console.error('Error fetching my bids:', error);
     throw error;
@@ -77,8 +77,11 @@ export const getMyLatestBidForRound = async (auctionId, roundId) => {
       },
     });
 
+    // Handle paginated response
+    const bids = response.data?.results || response.data || [];
+
     // Filter bids for this auction and round, get the most recent
-    const bidsForRound = response.data.filter(
+    const bidsForRound = bids.filter(
       (bid) => bid.auction?.id === auctionId && bid.round_info?.id === roundId && bid.is_valid
     );
 
@@ -113,12 +116,15 @@ export const checkParticipation = async (auctionId, roundId) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    
+
+    // Handle paginated response
+    const participations = response.data?.results || response.data || [];
+
     // Find participation for this auction and round
-    const participation = response.data.find(
+    const participation = participations.find(
       (p) => p.auction === auctionId && p.round === roundId && p.payment_status === 'completed'
     );
-    
+
     return !!participation;
   } catch (error) {
     console.error('Error checking participation:', error);

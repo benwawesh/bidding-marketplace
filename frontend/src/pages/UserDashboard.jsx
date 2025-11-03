@@ -10,6 +10,7 @@ import { formatCurrency } from '../utils/helpers';
 export default function UserDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
   // Fetch user's bidding history
   const { data: biddingData, isLoading: biddingLoading, error: biddingError } = useQuery({
@@ -535,41 +536,150 @@ export default function UserDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {purchases.map((order) => (
-                        <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-4 px-4">
-                            <span className="font-mono font-semibold text-gray-900">
-                              {order.order_number}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <p className="font-semibold text-gray-900">{order.product_title || 'Product'}</p>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className="font-semibold text-gray-900">{order.quantity}</span>
-                          </td>
-                          <td className="py-4 px-4 text-right">
-                            <span className="font-bold text-lg text-blue-600">
-                              {formatCurrency(order.total_amount)}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              order.order_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                              order.order_status === 'paid' ? 'bg-green-100 text-green-700' :
-                              order.order_status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                              order.order_status === 'shipped' ? 'bg-purple-100 text-purple-700' :
-                              order.order_status === 'delivered' ? 'bg-teal-100 text-teal-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {order.order_status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-gray-600">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
+                      {purchases.map((order) => {
+                        const isExpanded = expandedOrder === order.id;
+                        const totalItems = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+                        return (
+                          <>
+                            <tr
+                              key={order.id}
+                              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                              onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                            >
+                              <td className="py-4 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-500">
+                                    {isExpanded ? '▼' : '▶'}
+                                  </span>
+                                  <span className="font-mono font-semibold text-gray-900">
+                                    {order.order_number}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <p className="font-semibold text-gray-900">
+                                  {order.items?.length > 1
+                                    ? `${order.items.length} items`
+                                    : order.items?.[0]?.product_name || 'Product'}
+                                </p>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span className="font-semibold text-gray-900">{totalItems}</span>
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <span className="font-bold text-lg text-blue-600">
+                                  {formatCurrency(order.total_amount)}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                  order.status === 'paid' ? 'bg-green-100 text-green-700' :
+                                  order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                                  order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
+                                  order.status === 'delivered' ? 'bg-teal-100 text-teal-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {order.status}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-gray-600">
+                                {new Date(order.created_at).toLocaleDateString()}
+                              </td>
+                            </tr>
+
+                            {/* Expanded Order Details */}
+                            {isExpanded && (
+                              <tr key={`${order.id}-details`} className="bg-gray-50">
+                                <td colSpan="6" className="py-4 px-8">
+                                  <div className="space-y-4">
+                                    <h4 className="font-bold text-gray-900 mb-3">Order Details</h4>
+
+                                    {/* Order Items */}
+                                    <div className="bg-white rounded-lg p-4 space-y-3">
+                                      <p className="font-semibold text-gray-700 mb-2">Items:</p>
+                                      {order.items?.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                          <div className="flex-1">
+                                            <p className="font-medium text-gray-900">{item.product_name}</p>
+                                            <p className="text-sm text-gray-600">
+                                              {formatCurrency(item.unit_price)} × {item.quantity}
+                                            </p>
+                                          </div>
+                                          <p className="font-semibold text-gray-900">
+                                            {formatCurrency(item.subtotal)}
+                                          </p>
+                                        </div>
+                                      ))}
+
+                                      {/* Order Summary */}
+                                      <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                          <span className="text-gray-600">Subtotal:</span>
+                                          <span className="font-medium">{formatCurrency(order.subtotal)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                          <span className="text-gray-600">Shipping:</span>
+                                          <span className="font-medium">{formatCurrency(order.shipping_fee)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-lg font-bold border-t pt-2">
+                                          <span>Total:</span>
+                                          <span className="text-blue-600">{formatCurrency(order.total_amount)}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Shipping Information */}
+                                    <div className="bg-white rounded-lg p-4">
+                                      <p className="font-semibold text-gray-700 mb-2">Shipping Information:</p>
+                                      <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                          <p className="text-gray-600">Name:</p>
+                                          <p className="font-medium">{order.shipping_name}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-600">Phone:</p>
+                                          <p className="font-medium">{order.shipping_phone}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                          <p className="text-gray-600">Address:</p>
+                                          <p className="font-medium">{order.shipping_address}, {order.shipping_city}</p>
+                                        </div>
+                                        {order.customer_notes && (
+                                          <div className="col-span-2">
+                                            <p className="text-gray-600">Notes:</p>
+                                            <p className="font-medium">{order.customer_notes}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Payment Info */}
+                                    {order.paid_at && (
+                                      <div className="bg-white rounded-lg p-4">
+                                        <p className="font-semibold text-gray-700 mb-2">Payment:</p>
+                                        <p className="text-sm">
+                                          <span className="text-gray-600">Paid on: </span>
+                                          <span className="font-medium">
+                                            {new Date(order.paid_at).toLocaleString()}
+                                          </span>
+                                        </p>
+                                        <p className="text-sm">
+                                          <span className="text-gray-600">Status: </span>
+                                          <span className={`font-medium ${order.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                            {order.payment_status}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

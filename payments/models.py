@@ -66,6 +66,15 @@ class MpesaTransaction(models.Model):
             self.order.mpesa_code = mpesa_receipt_number
             self.order.save()
 
+            # Clear the user's cart after successful payment
+            from auctions.models import Cart
+            try:
+                cart = Cart.objects.get(user=self.order.user)
+                cart.clear()
+                print(f"Cart cleared for user {self.order.user.email} after successful payment")
+            except Cart.DoesNotExist:
+                pass  # Cart doesn't exist, nothing to clear
+
     def mark_as_failed(self, result_code, result_desc):
         """Mark transaction as failed"""
         self.status = 'failed'

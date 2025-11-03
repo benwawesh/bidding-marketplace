@@ -562,8 +562,9 @@ class CreateOrderSerializer(serializers.Serializer):
                 quantity=cart_item.quantity
             )
 
-        # Clear cart after creating order
-        cart.clear()
+        # Don't clear cart yet - clear it after successful payment
+        # This allows users to retry payment if it fails
+        # Cart will be cleared by the payment callback after successful payment
 
         return order
 

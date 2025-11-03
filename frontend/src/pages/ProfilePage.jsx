@@ -240,7 +240,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map(order => (
+                    {orders.filter(order => order.payment_status !== 'pending').map(order => (
                       <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                         <div className="flex items-center justify-between mb-3">
                           <div>

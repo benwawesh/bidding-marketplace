@@ -82,7 +82,8 @@ export default function UserDashboard() {
 
   const bids = biddingData || [];
   const participations = participationsData || [];
-  const purchases = purchasesData || [];
+  // Only show orders that have been paid (exclude pending payment orders)
+  const purchases = (purchasesData || []).filter(order => order.payment_status !== 'pending');
 
   // DEBUG: Check what data we're receiving
   if (bids.length > 0) {

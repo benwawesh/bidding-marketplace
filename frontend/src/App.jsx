@@ -41,6 +41,7 @@ import UserDashboard from './pages/UserDashboard';
 import PromoBarManagement from './pages/management/PromoBarManagement';
 import FinancialAnalyticsPage from './pages/management/FinancialAnalyticsPage';
 import PaymentStatusPage from './pages/PaymentStatusPage';
+import OrderManagementPage from './pages/management/OrderManagementPage';
 
 
 
@@ -158,13 +159,13 @@ function App() {
             />
 
             {/* Orders Management */}
-            <Route 
-              path="/management/orders" 
+            <Route
+              path="/management/orders"
               element={
                 <ProtectedRoute requireSuperuser={true}>
-                  <OrdersListPage />
+                  <OrderManagementPage />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route 
               path="/management/orders/:id" 

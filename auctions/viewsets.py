@@ -1161,6 +1161,43 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def update(self, request, *args, **kwargs):
+        """Update order (Admin only - for status updates)"""
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only admins can update orders'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        # Only allow certain fields to be updated
+        allowed_fields = ['status', 'admin_notes']
+        update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+
+        if 'status' in update_data:
+            valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+            if update_data['status'] not in valid_statuses:
+                return Response(
+                    {'error': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        for field, value in update_data.items():
+            setattr(instance, field, value)
+
+        instance.save()
+
+        from .serializers import OrderAdminSerializer
+        serializer = OrderAdminSerializer(instance)
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Partial update of order (Admin only)"""
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
     @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
     def update_status(self, request, id=None):
         """Update order status (Admin only)"""

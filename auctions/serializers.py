@@ -621,21 +621,22 @@ class BidDetailSerializer(serializers.ModelSerializer):
 class OrderAdminSerializer(serializers.ModelSerializer):
     """Complete order details for admin"""
     items = OrderItemSerializer(many=True, read_only=True)
-    customer = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
     total_items = serializers.IntegerField(read_only=True)
+    mpesa_receipt_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
-            'id', 'order_number', 'customer', 'status', 'items', 'total_items',
+            'id', 'order_number', 'user', 'status', 'items', 'total_items',
             'subtotal', 'shipping_fee', 'total_amount',
             'shipping_name', 'shipping_phone', 'shipping_address', 'shipping_city',
-            'payment_method', 'payment_status', 'mpesa_transaction_id',
+            'payment_method', 'payment_status', 'mpesa_transaction_id', 'mpesa_receipt_number',
             'customer_notes', 'admin_notes',
             'created_at', 'updated_at', 'paid_at'
         ]
 
-    def get_customer(self, obj):
+    def get_user(self, obj):
         """Return customer details"""
         user = obj.user
         return {
@@ -644,6 +645,15 @@ class OrderAdminSerializer(serializers.ModelSerializer):
             'email': user.email,
             'phone': user.phone if hasattr(user, 'phone') else None,
         }
+
+    def get_mpesa_receipt_number(self, obj):
+        """Get M-Pesa receipt number from related transaction"""
+        try:
+            from payments.models import MpesaTransaction
+            transaction = MpesaTransaction.objects.filter(order=obj, status='completed').first()
+            return transaction.mpesa_receipt_number if transaction else None
+        except Exception:
+            return None
 
 
 class CustomerSerializer(serializers.ModelSerializer):

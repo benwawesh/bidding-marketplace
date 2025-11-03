@@ -205,13 +205,11 @@ class FinancialAnalyticsView(APIView):
 class TransactionListView(APIView):
     """
     Detailed transaction list with filtering and search
+    Includes both auction payments and order payments
     """
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # Get all payments
-        transactions = Payment.objects.select_related('user', 'auction').all()
-
         # Filters
         status_filter = request.query_params.get('status')
         payment_type = request.query_params.get('payment_type')
@@ -220,67 +218,119 @@ class TransactionListView(APIView):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
+        # Combine auction payments and order payments
+        all_transactions = []
+
+        # Get auction payments
+        auction_payments = Payment.objects.select_related('user', 'auction').all()
+
         if status_filter:
-            transactions = transactions.filter(status=status_filter)
-
-        if payment_type:
-            transactions = transactions.filter(payment_type=payment_type)
-
+            auction_payments = auction_payments.filter(status=status_filter)
+        if payment_type and payment_type in ['participation', 'final_pledge']:
+            auction_payments = auction_payments.filter(payment_type=payment_type)
         if payment_method:
-            transactions = transactions.filter(payment_method=payment_method)
-
+            auction_payments = auction_payments.filter(payment_method=payment_method)
         if search:
-            transactions = transactions.filter(
+            auction_payments = auction_payments.filter(
                 Q(transaction_id__icontains=search) |
                 Q(user__username__icontains=search) |
                 Q(auction__title__icontains=search)
             )
-
         if start_date:
-            transactions = transactions.filter(created_at__gte=start_date)
-
+            auction_payments = auction_payments.filter(created_at__gte=start_date)
         if end_date:
-            transactions = transactions.filter(created_at__lte=end_date)
+            auction_payments = auction_payments.filter(created_at__lte=end_date)
 
-        # Order by most recent
-        transactions = transactions.order_by('-created_at')
+        # Convert auction payments to common format
+        for t in auction_payments:
+            all_transactions.append({
+                'id': str(t.id),
+                'transaction_id': t.transaction_id,
+                'user': {
+                    'id': t.user.id,
+                    'username': t.user.username,
+                    'email': t.user.email
+                },
+                'auction': {
+                    'id': str(t.auction.id),
+                    'title': t.auction.title
+                } if t.auction else None,
+                'amount': float(t.amount),
+                'payment_type': t.payment_type,
+                'payment_method': t.payment_method,
+                'status': t.status,
+                'created_at': t.created_at,
+                'updated_at': t.updated_at
+            })
 
-        # Paginate (limit to 100 per page)
+        # Get M-Pesa order transactions if not filtering by auction payment types
+        if not payment_type or payment_type == 'order':
+            mpesa_txns = MpesaTransaction.objects.select_related('user', 'order').all()
+
+            # Map M-Pesa status to standard status
+            status_map = {'completed': 'completed', 'pending': 'pending', 'failed': 'failed', 'cancelled': 'failed'}
+
+            if status_filter:
+                mpesa_status = [k for k, v in status_map.items() if v == status_filter]
+                if mpesa_status:
+                    mpesa_txns = mpesa_txns.filter(status__in=mpesa_status)
+            if payment_method and payment_method == 'mpesa':
+                pass  # Already M-Pesa transactions
+            elif payment_method and payment_method != 'mpesa':
+                mpesa_txns = mpesa_txns.none()  # Skip if filtering for other methods
+
+            if search:
+                mpesa_txns = mpesa_txns.filter(
+                    Q(checkout_request_id__icontains=search) |
+                    Q(user__username__icontains=search) |
+                    Q(mpesa_receipt_number__icontains=search) |
+                    Q(order__order_number__icontains=search)
+                )
+            if start_date:
+                mpesa_txns = mpesa_txns.filter(created_at__gte=start_date)
+            if end_date:
+                mpesa_txns = mpesa_txns.filter(created_at__lte=end_date)
+
+            # Convert M-Pesa transactions to common format
+            for t in mpesa_txns:
+                all_transactions.append({
+                    'id': str(t.id),
+                    'transaction_id': t.checkout_request_id or str(t.id)[:12],
+                    'user': {
+                        'id': t.user.id,
+                        'username': t.user.username,
+                        'email': t.user.email
+                    },
+                    'auction': {
+                        'id': str(t.order.id) if t.order else None,
+                        'title': f"Order {t.order.order_number}" if t.order else 'Buy Now Order'
+                    } if t.order else None,
+                    'amount': float(t.amount),
+                    'payment_type': 'order',
+                    'payment_method': 'mpesa',
+                    'status': status_map.get(t.status, t.status),
+                    'created_at': t.created_at,
+                    'updated_at': t.updated_at
+                })
+
+        # Sort by created_at descending
+        all_transactions.sort(key=lambda x: x['created_at'], reverse=True)
+
+        # Paginate
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 50))
         start = (page - 1) * page_size
         end = start + page_size
 
-        total_count = transactions.count()
-        transactions_page = transactions[start:end]
-
-        # Serialize
-        data = [{
-            'id': str(t.id),
-            'transaction_id': t.transaction_id,
-            'user': {
-                'id': t.user.id,
-                'username': t.user.username,
-                'email': t.user.email
-            },
-            'auction': {
-                'id': str(t.auction.id),
-                'title': t.auction.title
-            } if t.auction else None,
-            'amount': float(t.amount),
-            'payment_type': t.payment_type,
-            'payment_method': t.payment_method,
-            'status': t.status,
-            'created_at': t.created_at,
-            'updated_at': t.updated_at
-        } for t in transactions_page]
+        total_count = len(all_transactions)
+        transactions_page = all_transactions[start:end]
 
         return Response({
             'count': total_count,
             'page': page,
             'page_size': page_size,
             'total_pages': (total_count + page_size - 1) // page_size,
-            'results': data
+            'results': transactions_page
         })
 
 

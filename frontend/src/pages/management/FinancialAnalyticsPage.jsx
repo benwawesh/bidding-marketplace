@@ -319,6 +319,7 @@ export default function FinancialAnalyticsPage() {
               <option value="">All Types</option>
               <option value="participation">Participation Fee</option>
               <option value="final_pledge">Final Pledge</option>
+              <option value="order">Buy Now Order</option>
             </select>
 
             <select

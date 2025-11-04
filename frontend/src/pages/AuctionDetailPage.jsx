@@ -193,12 +193,13 @@ export default function AuctionDetailPage() {
     );
   }
 
+  // Check if auction is active AND current round is active
   const isActive = isAuctionActive(
     product.start_time,
     product.end_time,
     product.status,
     product.product_type
-  );
+  ) && (currentRound?.is_active ?? false);
 
   return (
     <div className="min-h-screen bg-orange-50">
@@ -289,7 +290,7 @@ export default function AuctionDetailPage() {
             {currentRound && (
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  🎯 Round {currentRound.round_number}
+                  🎯 Round {currentRound.round_number} {!currentRound.is_active && <span className="text-red-600">(CLOSED)</span>}
                 </h2>
 
                 {/* Round Info */}

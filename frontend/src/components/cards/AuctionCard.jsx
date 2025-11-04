@@ -7,7 +7,7 @@ export default function AuctionCard({ product }) {
   return (
     <Link
       to={`/auction/${product.id}`}
-      className="group bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-200 hover:border-red-300 relative"
+      className="group bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col border border-gray-200 hover:border-red-300 relative h-full"
     >
       {/* LIVE Badge */}
       {isActive && (
@@ -24,8 +24,8 @@ export default function AuctionCard({ product }) {
         </div>
       )}
 
-      {/* Image - Consistent 200px height with object-contain */}
-      <div className="w-full bg-white flex items-center justify-center overflow-hidden" style={{ height: '200px' }}>
+      {/* Image - Larger section for better proportions (60% of card) */}
+      <div className="w-full bg-white flex items-center justify-center overflow-hidden" style={{ height: '280px' }}>
         {product.main_image ? (
           <img
             src={product.main_image.startsWith('http') ? product.main_image : `${product.main_image}`}
@@ -34,44 +34,35 @@ export default function AuctionCard({ product }) {
             loading="lazy"
           />
         ) : (
-          <div className="text-gray-300 text-6xl">🎯</div>
+          <div className="text-gray-300 text-7xl">🎯</div>
         )}
       </div>
 
-      {/* Product Info - Clean Jumia Style */}
-      <div className="p-3 flex flex-col flex-grow">
+      {/* Product Info - Compact (40% of card) */}
+      <div className="p-3 flex flex-col">
         {/* Product Title - 2 lines max */}
-        <h3 className="text-sm text-gray-800 line-clamp-2 mb-2 min-h-[2.5rem] group-hover:text-red-600 transition-colors">
+        <h3 className="text-sm text-gray-800 line-clamp-2 mb-2 group-hover:text-red-600 transition-colors" style={{ minHeight: '2.5rem' }}>
           {product.title}
         </h3>
 
-        {/* Category */}
-        {product.category_name && (
-          <div className="text-xs text-gray-500 mb-2">
-            {product.category_name}
+        {/* Price Section - with label */}
+        <div className="mb-2">
+          <div className="text-xs text-gray-500 mb-1">Bidding starts at</div>
+          <div className="text-lg font-bold text-gray-900">
+            KSh {product.base_price?.toLocaleString()}
+          </div>
+        </div>
+
+        {/* Action Button */}
+        {isActive ? (
+          <div className="bg-red-600 text-white py-2 px-3 rounded-lg text-xs font-semibold text-center group-hover:bg-red-700 transition-colors">
+            Join Auction
+          </div>
+        ) : (
+          <div className="bg-gray-500 text-white py-2 px-3 rounded-lg text-xs font-semibold text-center">
+            View Results
           </div>
         )}
-
-        {/* Price Section */}
-        <div className="mt-auto space-y-2">
-          {/* Starting Bid */}
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Starting Bid</div>
-            <div className="text-lg font-bold text-gray-900">
-              KSh {product.base_price?.toLocaleString()}
-            </div>
-          </div>
-
-          {/* Current Highest Bid */}
-          {product.highest_bid && (
-            <div className="border-t pt-2">
-              <div className="text-xs text-gray-500 mb-1">Current Bid</div>
-              <div className="text-base font-bold text-red-600">
-                KSh {product.highest_bid?.toLocaleString()}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </Link>
   );

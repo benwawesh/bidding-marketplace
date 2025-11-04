@@ -1,0 +1,27 @@
+# BidSoko Robots.txt
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /cart
+Disallow: /checkout
+Disallow: /profile
+
+# Allow important pages
+Allow: /
+Allow: /browse
+Allow: /category/*
+Allow: /product/*
+Allow: /auction/*
+
+# Sitemap location
+Sitemap: https://bidsoko.com/sitemap.xml
+
+# Crawl-delay for polite crawling (optional)
+Crawl-delay: 1

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ManagementLayout from '../../components/layout/ManagementLayout';
-import axios from 'axios';
+import api from '../../api/axios';
 import { formatCurrency } from '../../utils/helpers';
 
 export default function FinancialAnalyticsPage() {
@@ -16,7 +16,7 @@ export default function FinancialAnalyticsPage() {
   // Fetch financial analytics
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['financial-analytics', days],
-    queryFn: () => axios.get(`/api/auctions/analytics/financial/?days=${days}`).then(res => res.data),
+    queryFn: () => api.get(`/auctions/analytics/financial/?days=${days}`).then(res => res.data),
   });
 
   // Fetch transaction list
@@ -24,7 +24,7 @@ export default function FinancialAnalyticsPage() {
     queryKey: ['transactions', transactionFilters],
     queryFn: () => {
       const params = new URLSearchParams(transactionFilters).toString();
-      return axios.get(`/api/auctions/analytics/transactions/?${params}`).then(res => res.data);
+      return api.get(`/auctions/analytics/transactions/?${params}`).then(res => res.data);
     },
   });
 

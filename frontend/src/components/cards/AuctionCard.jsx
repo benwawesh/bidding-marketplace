@@ -6,9 +6,9 @@ export default function AuctionCard({ product }) {
 
   return (
     <div className="product-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-2xl hover:border-orange-200 transition-all duration-500 flex flex-col h-full group">
-      {/* Image Container */}
+      {/* Image Container - Fixed height with object-contain */}
       <Link to={`/auction/${product.id}`} className="block relative overflow-hidden">
-        <div className="product-image aspect-[4/3] w-full relative">
+        <div className="product-image w-full bg-white flex items-center justify-center relative" style={{ height: '200px' }}>
           {product.main_image ? (
             <img
               src={product.main_image.startsWith('http')
@@ -16,15 +16,16 @@ export default function AuctionCard({ product }) {
                 : `${product.main_image}`
               }
               alt={product.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-rose-100 via-orange-100 to-red-200 flex items-center justify-center">
-              <span className="text-rose-300 text-5xl">🎯</span>
+              <span className="text-rose-300 text-6xl">🎯</span>
             </div>
           )}
           {/* Overlay gradient on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
 
         {/* Badges */}

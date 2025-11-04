@@ -90,12 +90,12 @@ export default function ProductDetailPage() {
           
           {/* Left: Image Gallery */}
           <div>
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4 flex items-center justify-center" style={{ minHeight: '400px' }}>
               {images[selectedImage] ? (
-                <img 
-                  src={images[selectedImage]} 
+                <img
+                  src={images[selectedImage]}
                   alt={product.title}
-                  className="w-full h-96 object-cover"
+                  className="w-full h-full object-contain max-h-[500px]"
                 />
               ) : (
                 <div className="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">

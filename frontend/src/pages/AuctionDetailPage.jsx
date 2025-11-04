@@ -231,16 +231,16 @@ export default function AuctionDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Main Card */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              {/* Image */}
-              <div className="aspect-video bg-gradient-to-br from-red-100 to-red-200">
+              {/* Image - Better display with object-contain */}
+              <div className="w-full bg-white flex items-center justify-center" style={{ minHeight: '400px' }}>
                 {product.main_image ? (
                   <img
                     src={product.main_image}
                     alt={product.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain max-h-[500px]"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
                     <span className="text-8xl">🎯</span>
                   </div>
                 )}

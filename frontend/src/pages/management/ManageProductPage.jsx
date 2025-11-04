@@ -230,7 +230,12 @@ const closeMutation = useMutation({
 
   const showAuctionTabs = product.product_type === 'auction' || product.product_type === 'both';
   const showBuyNowTabs = product.product_type === 'buy_now' || product.product_type === 'both';
-  const currentRound = product.rounds?.find(r => r.is_active) || product.rounds?.[product.rounds.length - 1];
+
+  // Get current round: prefer active round, otherwise get the latest round by round_number
+  const currentRound = product.rounds?.find(r => r.is_active) ||
+                       product.rounds?.reduce((latest, round) =>
+                         !latest || round.round_number > latest.round_number ? round : latest,
+                       null);
 
   return (
     <ManagementLayout>

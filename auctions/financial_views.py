@@ -109,7 +109,7 @@ class FinancialAnalyticsView(APIView):
         payment_methods = Payment.objects.filter(
             status='completed',
             created_at__gte=start_date
-        ).values('payment_method').annotate(
+        ).values('method').annotate(
             total=Sum('amount'),
             count=Count('id')
         )
@@ -229,7 +229,7 @@ class TransactionListView(APIView):
         if payment_type and payment_type in ['participation', 'final_pledge']:
             auction_payments = auction_payments.filter(payment_type=payment_type)
         if payment_method:
-            auction_payments = auction_payments.filter(payment_method=payment_method)
+            auction_payments = auction_payments.filter(method=payment_method)
         if search:
             auction_payments = auction_payments.filter(
                 Q(transaction_id__icontains=search) |
@@ -257,7 +257,7 @@ class TransactionListView(APIView):
                 } if t.auction else None,
                 'amount': float(t.amount),
                 'payment_type': t.payment_type,
-                'payment_method': t.payment_method,
+                'payment_method': t.method,
                 'status': t.status,
                 'created_at': t.created_at,
                 'updated_at': t.updated_at
@@ -372,7 +372,7 @@ class ExportTransactionsView(APIView):
                 t.auction.title if t.auction else 'N/A',
                 float(t.amount),
                 t.payment_type,
-                t.payment_method,
+                t.method,
                 t.status
             ])
 

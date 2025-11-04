@@ -139,7 +139,7 @@ const closeMutation = useMutation({
     return response.data;
   },
   onSuccess: (data) => {
-    alert(`✅ ${data.message}\nWinner: ${data.winner.username}\nAmount: ${formatCurrency(data.winner.amount)}`);
+    alert(`✅ ${data.message}`);
     queryClient.invalidateQueries(['product', id]);
   },
   onError: (error) => {

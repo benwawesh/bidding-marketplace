@@ -8,18 +8,19 @@ export default function BothCard({ product }) {
 
   return (
     <div className="product-card bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
-      {/* Image Container - Industry standard 4:3 aspect ratio */}
+      {/* Image Container - Better aspect ratio with object-contain */}
       <Link to={`/product/${product.id}`} className="block relative overflow-hidden">
-        <div className="product-image aspect-[4/3] w-full">
+        <div className="product-image w-full bg-white flex items-center justify-center" style={{ height: '200px' }}>
           {product.main_image ? (
             <img
               src={product.main_image}
               alt={product.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
-              <span className="text-purple-300 text-4xl">⚡</span>
+              <span className="text-purple-300 text-6xl">⚡</span>
             </div>
           )}
         </div>

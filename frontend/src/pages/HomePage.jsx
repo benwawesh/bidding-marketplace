@@ -8,6 +8,7 @@ import HeroAuctionSection from '../components/sections/HeroAuctionSection';
 import CategoriesGrid from '../components/sections/CategoriesGrid';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import BothCard from '../components/cards/BothCard';
+import ProductCarousel from '../components/carousel/ProductCarousel';
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
@@ -182,18 +183,14 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                {/* Mobile: Simple Grid, Desktop: Scrollable */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                {/* Jumia-Style Horizontal Carousel */}
+                <ProductCarousel>
                   {buyNowProducts.map((product) => (
-                    <div key={product.id} className="w-full">
-                      <BuyNowCard
-                        product={product}
-                        onAddToCart={handleAddToCart}
-                        isAddingToCart={addToCartMutation.isPending}
-                      />
+                    <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]">
+                      <BuyNowCard product={product} />
                     </div>
                   ))}
-                </div>
+                </ProductCarousel>
               </section>
             )}
 
@@ -215,17 +212,14 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                {/* Jumia-Style Horizontal Carousel */}
+                <ProductCarousel>
                   {bothProducts.map(product => (
-                    <div key={product.id} className="w-full">
-                      <BothCard
-                        product={product}
-                        onAddToCart={handleAddToCart}
-                        isAddingToCart={addToCartMutation.isPending}
-                      />
+                    <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]">
+                      <BothCard product={product} />
                     </div>
                   ))}
-                </div>
+                </ProductCarousel>
               </section>
             )}
 

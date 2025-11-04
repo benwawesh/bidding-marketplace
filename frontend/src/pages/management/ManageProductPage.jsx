@@ -140,7 +140,7 @@ const closeMutation = useMutation({
   },
   onSuccess: (data) => {
     if (data.winner) {
-      alert(`✅ ${data.message}\n\nWinner Details:\n👤 ${data.winner.username}\n📧 ${data.winner.email}\n💰 Average Bid: KSh ${data.winner.average_pledge.toFixed(2)}\n🎯 Total Bids: ${data.winner.total_bids}`);
+      alert(`✅ ${data.message}\n\nWinner Details:\n👤 ${data.winner.username}\n📧 ${data.winner.email}\n💰 Average Bid: KSh ${data.winner.average_pledge.toFixed(2)}\n💵 Total Pledged: KSh ${data.winner.total_pledge.toFixed(2)}\n🔢 Total Rounds: ${data.winner.total_rounds}\n🎯 Participated Bids: ${data.winner.total_bids}`);
     } else {
       alert(`✅ ${data.message}`);
     }

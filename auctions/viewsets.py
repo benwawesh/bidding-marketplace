@@ -913,6 +913,13 @@ class ParticipationViewSet(viewsets.ModelViewSet):
             auction = Auction.objects.get(id=auction_id)
             round_obj = Round.objects.get(id=round_id, auction=auction)
 
+            # CRITICAL: Check if round is active
+            if not round_obj.is_active:
+                return Response(
+                    {'error': 'This round is closed. No new participants allowed.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             # Check if already participated
             existing = Participation.objects.filter(
                 user=request.user,
@@ -1458,15 +1465,37 @@ class RoundViewSet(viewsets.ModelViewSet):
         round_obj.is_active = False
         round_obj.save()
 
-        # Calculate winner based on AVERAGE of all rounds
-        # Get all valid bids from ALL rounds of this auction
-        all_bids = Bid.objects.filter(
+        # Calculate winner based on AVERAGE across ALL rounds
+        # CRITICAL: Average is sum of all bids divided by TOTAL NUMBER OF ROUNDS (not just participated rounds)
+        from django.db.models import Sum
+
+        # Get total number of rounds for this auction
+        total_rounds = auction.rounds.count()
+
+        # Get all users who have placed bids
+        user_bids = Bid.objects.filter(
             auction=auction,
             is_valid=True
         ).values('user').annotate(
-            avg_pledge=Avg('pledge_amount'),
+            total_pledge=Sum('pledge_amount'),
             bid_count=Count('id')
-        ).order_by('-avg_pledge')
+        )
+
+        # Calculate average for each user across ALL rounds (including rounds they didn't bid in)
+        user_averages = []
+        for user_data in user_bids:
+            total_pledge = float(user_data['total_pledge'])
+            # Divide by total number of rounds, not just participated rounds
+            average_pledge = total_pledge / total_rounds
+            user_averages.append({
+                'user_id': user_data['user'],
+                'average_pledge': average_pledge,
+                'total_pledge': total_pledge,
+                'bid_count': user_data['bid_count']
+            })
+
+        # Sort by average pledge (highest first)
+        user_averages.sort(key=lambda x: x['average_pledge'], reverse=True)
 
         response_data = {
             'message': f'Round {round_obj.round_number} closed successfully',
@@ -1478,17 +1507,19 @@ class RoundViewSet(viewsets.ModelViewSet):
         }
 
         # Determine winner if there are bids
-        if all_bids.exists():
-            winner_data = all_bids.first()
-            winner_user = User.objects.get(id=winner_data['user'])
+        if user_averages:
+            winner_data = user_averages[0]
+            winner_user = User.objects.get(id=winner_data['user_id'])
 
             response_data['winner'] = {
                 'username': winner_user.username,
                 'email': winner_user.email,
-                'average_pledge': float(winner_data['avg_pledge']),
-                'total_bids': winner_data['bid_count']
+                'average_pledge': winner_data['average_pledge'],
+                'total_pledge': winner_data['total_pledge'],
+                'total_bids': winner_data['bid_count'],
+                'total_rounds': total_rounds
             }
-            response_data['message'] = f'Round {round_obj.round_number} closed! Current leader: {winner_user.username} with average bid of KSh {winner_data["avg_pledge"]:.2f} across {winner_data["bid_count"]} rounds'
+            response_data['message'] = f'Round {round_obj.round_number} closed! Current leader: {winner_user.username} with average bid of KSh {winner_data["average_pledge"]:.2f} (Total: KSh {winner_data["total_pledge"]:.2f} across {total_rounds} rounds, participated in {winner_data["bid_count"]} bids)'
         else:
             response_data['winner'] = None
             response_data['message'] = f'Round {round_obj.round_number} closed with no bids'

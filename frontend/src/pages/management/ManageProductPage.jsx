@@ -133,13 +133,8 @@ const closeMutation = useMutation({
     if (!currentRound) throw new Error("No active round found");
 
     const response = await axios.post(
-      `/api/rounds/${currentRound.id}/close/`, // ✅ use round ID
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('bidmarket_access_token')}`,
-        },
-      }
+      `/rounds/${currentRound.id}/close/`, // Remove /api prefix - axios instance already has it
+      {}
     );
     return response.data;
   },

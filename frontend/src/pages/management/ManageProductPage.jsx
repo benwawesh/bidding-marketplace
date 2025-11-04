@@ -139,7 +139,11 @@ const closeMutation = useMutation({
     return response.data;
   },
   onSuccess: (data) => {
-    alert(`✅ ${data.message}`);
+    if (data.winner) {
+      alert(`✅ ${data.message}\n\nWinner Details:\n👤 ${data.winner.username}\n📧 ${data.winner.email}\n💰 Average Bid: KSh ${data.winner.average_pledge.toFixed(2)}\n🎯 Total Bids: ${data.winner.total_bids}`);
+    } else {
+      alert(`✅ ${data.message}`);
+    }
     queryClient.invalidateQueries(['product', id]);
   },
   onError: (error) => {

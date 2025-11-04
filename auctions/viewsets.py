@@ -1441,7 +1441,12 @@ class RoundViewSet(viewsets.ModelViewSet):
     # -------------------- Close Round --------------------
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def close(self, request, id=None):
+        from django.db.models import Avg
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
         round_obj = self.get_object()
+        auction = round_obj.auction
 
         if not request.user.is_superuser:
             return Response({'error': 'Only admins can close rounds'}, status=status.HTTP_403_FORBIDDEN)
@@ -1449,13 +1454,46 @@ class RoundViewSet(viewsets.ModelViewSet):
         if not round_obj.is_active:
             return Response({'error': 'Round is already closed'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Close the current round
         round_obj.is_active = False
         round_obj.save()
 
-        return Response({
+        # Calculate winner based on AVERAGE of all rounds
+        # Get all valid bids from ALL rounds of this auction
+        all_bids = Bid.objects.filter(
+            auction=auction,
+            is_valid=True
+        ).values('user').annotate(
+            avg_pledge=Avg('pledge_amount'),
+            bid_count=Count('id')
+        ).order_by('-avg_pledge')
+
+        response_data = {
             'message': f'Round {round_obj.round_number} closed successfully',
-            'auction': str(round_obj.auction.id)
-        })
+            'round_number': round_obj.round_number,
+            'auction': {
+                'id': str(auction.id),
+                'title': auction.title
+            }
+        }
+
+        # Determine winner if there are bids
+        if all_bids.exists():
+            winner_data = all_bids.first()
+            winner_user = User.objects.get(id=winner_data['user'])
+
+            response_data['winner'] = {
+                'username': winner_user.username,
+                'email': winner_user.email,
+                'average_pledge': float(winner_data['avg_pledge']),
+                'total_bids': winner_data['bid_count']
+            }
+            response_data['message'] = f'Round {round_obj.round_number} closed! Current leader: {winner_user.username} with average bid of KSh {winner_data["avg_pledge"]:.2f} across {winner_data["bid_count"]} rounds'
+        else:
+            response_data['winner'] = None
+            response_data['message'] = f'Round {round_obj.round_number} closed with no bids'
+
+        return Response(response_data)
 
     # -------------------- Round Summary --------------------
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])

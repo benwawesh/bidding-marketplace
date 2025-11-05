@@ -70,12 +70,9 @@ def send_verification_email(user, verification_token):
         )
 
         # Disable click tracking to avoid SendGrid redirect URLs
-        message.tracking_settings = {
-            "click_tracking": {
-                "enable": False,
-                "enable_text": False
-            }
-        }
+        from sendgrid.helpers.mail import ClickTracking, TrackingSettings
+        message.tracking_settings = TrackingSettings()
+        message.tracking_settings.click_tracking = ClickTracking(enable=False, enable_text=False)
 
         sg = SendGridAPIClient(settings.EMAIL_HOST_PASSWORD)
         response = sg.send(message)

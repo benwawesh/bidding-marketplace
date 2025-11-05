@@ -76,14 +76,9 @@ export default function LoginPage() {
 
               {/* Password - Mobile Responsive */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-                    Password
-                  </label>
-                  <Link to="/forgot-password" className="text-xs sm:text-sm text-orange-600 hover:text-orange-700 font-medium">
-                    Forgot Password?
-                  </Link>
-                </div>
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Password
+                </label>
                 <input
                   id="password"
                   name="password"
@@ -106,14 +101,37 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Divider */}
-            <div className="mt-6 text-center">
-              <p className="text-gray-600 text-sm">
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-orange-600 font-semibold hover:text-orange-700">
-                  Sign up
+            {/* Links Section - Sign up and Forgot Password */}
+            <div className="mt-6 space-y-3">
+              {/* Sign Up Link */}
+              <div className="text-center">
+                <p className="text-gray-600 text-sm">
+                  Don't have an account?{' '}
+                  <Link to="/signup" className="text-orange-600 font-semibold hover:text-orange-700">
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-white text-gray-500">OR</span>
+                </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-center">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-gray-600 hover:text-orange-600 font-medium transition-colors"
+                >
+                  Forgot your password?
                 </Link>
-              </p>
+              </div>
             </div>
           </div>
 

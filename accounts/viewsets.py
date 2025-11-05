@@ -293,7 +293,7 @@ class UserViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
-    def admin_delete(self, request, pk=None):
+    def admin_delete(self, request, id=None):
         """
         DELETE /api/auth/users/{id}/admin_delete/
         Delete a user account (Admin only)

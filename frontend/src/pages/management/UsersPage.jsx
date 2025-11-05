@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersAPI } from '../../api/endpoints';
 import ManagementLayout from '../../components/layout/ManagementLayout';
 import { formatCurrency } from '../../utils/helpers';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function UsersPage() {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   // Fetch users with filters
   const { data: users = [], isLoading, error } = useQuery({
@@ -52,6 +56,41 @@ export default function UsersPage() {
     setIsModalOpen(false);
   };
 
+  // Delete user mutation
+  const deleteMutation = useMutation({
+    mutationFn: (userId) => usersAPI.adminDelete(userId),
+    onSuccess: (response) => {
+      toast.success(response.data.message || 'User deleted successfully');
+      // Refresh users list
+      queryClient.invalidateQueries(['admin-users']);
+      queryClient.invalidateQueries(['admin-user-stats']);
+      // Close modals
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      const errorMsg = error.response?.data?.error || 'Failed to delete user';
+      toast.error(errorMsg);
+    }
+  });
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteMutation.mutate(userToDelete.id);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  };
+
   if (isLoading) {
     return (
       <ManagementLayout>
@@ -66,6 +105,8 @@ export default function UsersPage() {
   return (
     <ManagementLayout>
       <div>
+        <Toaster position="top-center" />
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Users Management</h1>
@@ -247,12 +288,22 @@ export default function UsersPage() {
                       </p>
                     </td>
                     <td className="py-4 px-6">
-                      <button
-                        onClick={() => openUserModal(user)}
-                        className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-                      >
-                        View Details
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openUserModal(user)}
+                          className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                        >
+                          View Details
+                        </button>
+                        {!user.is_superuser && (
+                          <button
+                            onClick={() => handleDeleteClick(user)}
+                            className="text-red-600 hover:text-red-700 font-medium text-sm"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -270,12 +321,22 @@ export default function UsersPage() {
                   <h2 className="text-2xl font-bold text-gray-900">
                     User Details: {selectedUser.username}
                   </h2>
-                  <button
-                    onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
-                  >
-                    ×
-                  </button>
+                  <div className="flex items-center gap-4">
+                    {!selectedUser.is_superuser && (
+                      <button
+                        onClick={() => handleDeleteClick(selectedUser)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                      >
+                        Delete User
+                      </button>
+                    )}
+                    <button
+                      onClick={closeModal}
+                      className="text-gray-400 hover:text-gray-600 text-2xl"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -381,6 +442,35 @@ export default function UsersPage() {
                   <p className="text-gray-600">Loading user details...</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && userToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Delete User</h3>
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to delete user <strong>{userToDelete.username}</strong>?
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={cancelDelete}
+                  disabled={deleteMutation.isPending}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteMutation.isPending}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50"
+                >
+                  {deleteMutation.isPending ? 'Deleting...' : 'Delete User'}
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -31,9 +31,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Allow public access for registration, require auth for everything else
+        Allow public access for registration and email verification
         """
-        if self.action == 'create':
+        if self.action in ['create', 'verify_email', 'resend_verification', 'forgot_password', 'reset_password']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]

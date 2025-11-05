@@ -137,3 +137,35 @@ class PasswordResetToken(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class PendingRegistration(models.Model):
+    """Store pending user registrations until email is verified"""
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=20)
+    gender = models.CharField(max_length=10)
+    date_of_birth = models.DateField()
+    password_hash = models.CharField(max_length=255)  # Store hashed password
+    user_type = models.CharField(max_length=20, default='buyer')
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            # Token expires in 24 hours
+            self.expires_at = timezone.now() + timedelta(hours=24)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"Pending registration for {self.username}"
+
+    class Meta:
+        ordering = ['-created_at']

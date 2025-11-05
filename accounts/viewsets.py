@@ -8,7 +8,7 @@ from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer
 )
-from .models import EmailVerificationToken, PasswordResetToken
+from .models import EmailVerificationToken, PasswordResetToken, PendingRegistration
 from .utils import (
     generate_verification_token,
     send_verification_email,
@@ -52,31 +52,62 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         POST /api/auth/users/
-        Register a new user and send verification email
+        Store pending registration and send verification email
+        Account will be created only after email verification
         """
+        from django.contrib.auth.hashers import make_password
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+
+        # Extract data from validated serializer
+        validated_data = serializer.validated_data
+        password = validated_data.pop('password')
+        validated_data.pop('password2', None)
 
         # Generate verification token
         token = generate_verification_token()
 
-        # Delete any existing verification token for this user
-        EmailVerificationToken.objects.filter(user=user).delete()
+        # Delete any existing pending registration with same username or email
+        PendingRegistration.objects.filter(
+            username__iexact=validated_data['username']
+        ).delete()
+        PendingRegistration.objects.filter(
+            email__iexact=validated_data['email']
+        ).delete()
 
-        # Create new verification token
-        EmailVerificationToken.objects.create(user=user, token=token)
+        # Create pending registration (NOT creating user yet)
+        pending_registration = PendingRegistration.objects.create(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            phone_number=validated_data['phone_number'],
+            gender=validated_data['gender'],
+            date_of_birth=validated_data['date_of_birth'],
+            password_hash=make_password(password),  # Hash the password
+            user_type=request.data.get('user_type', 'buyer'),
+            token=token
+        )
 
-        # Send verification email
-        email_sent = send_verification_email(user, token)
+        # Send verification email with token
+        email_sent = send_verification_email(
+            type('obj', (object,), {
+                'username': pending_registration.username,
+                'email': pending_registration.email,
+                'first_name': pending_registration.first_name
+            })(),
+            token
+        )
 
-        # Return user data with 201 status
-        user_serializer = UserSerializer(user)
-        response_data = user_serializer.data
-        response_data['email_sent'] = email_sent
-        response_data['message'] = 'Registration successful! Please check your email to verify your account.'
+        # Return response
+        response_data = {
+            'message': 'Verification email sent! Please check your email and click the verification link to complete your registration.',
+            'email_sent': email_sent,
+            'email': pending_registration.email
+        }
 
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -265,7 +296,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def verify_email(self, request):
         """
         POST /api/auth/users/verify_email/
-        Verify user's email with token
+        Verify email and create user account from pending registration
         Body: {"token": "verification_token"}
         """
         token = request.data.get('token')
@@ -277,32 +308,80 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            verification = EmailVerificationToken.objects.get(token=token)
+            # Try to find pending registration first
+            pending = PendingRegistration.objects.get(token=token)
 
-            if verification.is_expired:
+            if pending.is_expired:
+                pending.delete()
                 return Response(
-                    {'error': 'Verification token has expired. Please request a new one.'},
+                    {'error': 'Verification link has expired. Please register again.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Mark user as verified
-            user = verification.user
-            user.is_verified = True
-            user.save()
+            # Check if username or email already exists
+            if User.objects.filter(username__iexact=pending.username).exists():
+                return Response(
+                    {'error': 'Username is already taken. Please register with a different username.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-            # Delete the verification token
-            verification.delete()
+            if User.objects.filter(email__iexact=pending.email).exists():
+                return Response(
+                    {'error': 'Email is already registered. Please login or use a different email.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create the actual user account now
+            user = User.objects.create(
+                username=pending.username,
+                email=pending.email,
+                first_name=pending.first_name,
+                last_name=pending.last_name,
+                phone_number=pending.phone_number,
+                gender=pending.gender,
+                date_of_birth=pending.date_of_birth,
+                user_type=pending.user_type,
+                password=pending.password_hash,  # Already hashed
+                is_verified=True  # Mark as verified immediately
+            )
+
+            # Delete the pending registration
+            pending.delete()
 
             return Response({
-                'message': 'Email verified successfully! You can now log in.',
+                'message': 'Email verified successfully! Your account has been created. You can now log in.',
                 'user': UserSerializer(user).data
             })
 
-        except EmailVerificationToken.DoesNotExist:
-            return Response(
-                {'error': 'Invalid verification token'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        except PendingRegistration.DoesNotExist:
+            # Maybe it's an old email verification token (from existing users)
+            try:
+                verification = EmailVerificationToken.objects.get(token=token)
+
+                if verification.is_expired:
+                    return Response(
+                        {'error': 'Verification token has expired. Please request a new one.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Mark existing user as verified
+                user = verification.user
+                user.is_verified = True
+                user.save()
+
+                # Delete the verification token
+                verification.delete()
+
+                return Response({
+                    'message': 'Email verified successfully! You can now log in.',
+                    'user': UserSerializer(user).data
+                })
+
+            except EmailVerificationToken.DoesNotExist:
+                return Response(
+                    {'error': 'Invalid or expired verification token'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def resend_verification(self, request):

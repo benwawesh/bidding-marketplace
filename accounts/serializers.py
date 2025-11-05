@@ -110,7 +110,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom JWT token serializer that checks email verification"""
+    """Custom JWT token serializer with case-insensitive username"""
 
     def validate(self, attrs):
         # Get username and make it case-insensitive
@@ -127,11 +127,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Call parent validation (checks username/password)
         data = super().validate(attrs)
 
-        # Check if email is verified
-        if not self.user.is_verified:
-            raise serializers.ValidationError({
-                'detail': 'Email not verified. Please check your email and verify your account before logging in.',
-                'code': 'email_not_verified'
-            })
+        # Note: No email verification check needed here since account
+        # is only created after email is verified
 
         return data

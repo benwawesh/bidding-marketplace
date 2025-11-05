@@ -81,7 +81,7 @@ export const usersAPI = {
   updateProfile: (data) => authAxios.patch('/accounts/api/users/update_profile/', data),
   // Admin endpoints
   adminList: (params) => authAxios.get('/accounts/api/users/admin_list/', { params }),
-  adminDetail: (id) => axios.get(`/accounts/api/users/${id}/admin_detail/`),
+  adminDetail: (id) => authAxios.get(`/accounts/api/users/${id}/admin_detail/`),
   adminStats: () => authAxios.get('/accounts/api/users/admin_stats/'),
 };
 

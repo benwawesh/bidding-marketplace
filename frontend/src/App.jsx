@@ -7,6 +7,10 @@ import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ResendVerificationPage from './pages/ResendVerificationPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
 import BrowsePage from './pages/BrowsePage';
@@ -68,6 +72,10 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/resend-verification" element={<ResendVerificationPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/auction/:id" element={<AuctionDetailPage />} />
               <Route path="/browse" element={<BrowsePage />} />

@@ -83,6 +83,7 @@ export const usersAPI = {
   adminList: (params) => authAxios.get('/accounts/api/users/admin_list/', { params }),
   adminDetail: (id) => authAxios.get(`/accounts/api/users/${id}/admin_detail/`),
   adminStats: () => authAxios.get('/accounts/api/users/admin_stats/'),
+  adminDelete: (id) => authAxios.delete(`/accounts/api/users/${id}/admin_delete/`),
 };
 
 export const mpesaAPI = {

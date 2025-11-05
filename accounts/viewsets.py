@@ -292,6 +292,41 @@ class UserViewSet(viewsets.ModelViewSet):
             'new_users_last_30_days': new_users,
         })
 
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def admin_delete(self, request, pk=None):
+        """
+        DELETE /api/auth/users/{id}/admin_delete/
+        Delete a user account (Admin only)
+        """
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only admins can delete users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = self.get_object()
+
+        # Prevent deleting yourself
+        if user.id == request.user.id:
+            return Response(
+                {'error': 'You cannot delete your own account'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Prevent deleting other superusers
+        if user.is_superuser:
+            return Response(
+                {'error': 'Cannot delete superuser accounts'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        username = user.username
+        user.delete()
+
+        return Response({
+            'message': f'User {username} has been successfully deleted'
+        })
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def verify_email(self, request):
         """

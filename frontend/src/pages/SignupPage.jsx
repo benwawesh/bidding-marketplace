@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { usersAPI } from '../api/endpoints';
 import toast, { Toaster } from 'react-hot-toast';
-import Navbar from '../components/layout/Navbar';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -111,8 +110,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
-      <Navbar />
-      
       <div className="flex items-center justify-center py-12 px-4">
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 relative">
           <Toaster

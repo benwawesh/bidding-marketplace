@@ -22,9 +22,21 @@ export default function SignupPage() {
 
   const signupMutation = useMutation({
     mutationFn: (data) => usersAPI.register(data),
-    onSuccess: () => {
-      toast.success('Account created successfully! Please login.');
-      setTimeout(() => navigate('/login'), 1500);
+    onSuccess: (response) => {
+      // Check if email was sent
+      const emailSent = response?.data?.email_sent;
+      const message = response?.data?.message || 'Account created successfully!';
+
+      if (emailSent) {
+        toast.success(message + ' Please check your email to verify your account.', {
+          duration: 5000,
+        });
+      } else {
+        toast.success(message);
+      }
+
+      // Redirect to login after 3 seconds
+      setTimeout(() => navigate('/login'), 3000);
     },
     onError: (error) => {
       const errors = error.response?.data;
@@ -57,8 +69,9 @@ export default function SignupPage() {
         toast.error('Please fill in all fields');
         return;
       }
-      if (!formData.phone_number.startsWith('+')) {
-        toast.error('Phone number must start with country code (e.g., +254)');
+      // Phone number validation - just check length
+      if (formData.phone_number.length < 10) {
+        toast.error('Phone number must be at least 10 digits');
         return;
       }
     }
@@ -246,9 +259,9 @@ export default function SignupPage() {
                     value={formData.phone_number}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="+254712345678"
+                    placeholder="0712345678"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +254)</p>
+                  <p className="text-xs text-gray-500 mt-1">Enter your phone number (at least 10 digits)</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

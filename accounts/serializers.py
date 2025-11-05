@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -70,8 +71,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def validate_phone_number(self, value):
         """Basic phone number validation"""
-        if not value.startswith('+'):
-            raise serializers.ValidationError("Phone number must start with country code (e.g., +254)")
+        # Allow phone numbers with or without country code
+        # Just check it's not empty and has reasonable length
+        if len(value) < 10:
+            raise serializers.ValidationError("Phone number must be at least 10 digits")
         return value
 
     def create(self, validated_data):
@@ -104,3 +107,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value).exclude(id=user.id).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom JWT token serializer that checks email verification"""
+
+    def validate(self, attrs):
+        # Get username and make it case-insensitive
+        username = attrs.get('username', '')
+
+        # Find user case-insensitively
+        try:
+            user = User.objects.get(username__iexact=username)
+            # Replace the username with the actual username from database
+            attrs['username'] = user.username
+        except User.DoesNotExist:
+            pass  # Let the parent validator handle the error
+
+        # Call parent validation (checks username/password)
+        data = super().validate(attrs)
+
+        # Check if email is verified
+        if not self.user.is_verified:
+            raise serializers.ValidationError({
+                'detail': 'Email not verified. Please check your email and verify your account before logging in.',
+                'code': 'email_not_verified'
+            })
+
+        return data

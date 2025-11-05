@@ -2,10 +2,11 @@
 Utility functions for accounts app including email sending and token generation
 """
 import secrets
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 
 def generate_verification_token():
@@ -15,30 +16,13 @@ def generate_verification_token():
 
 def send_verification_email(user, verification_token):
     """
-    Send email verification link to user
+    Send email verification link to user using SendGrid API
     """
     verification_link = f"https://bidsoko.com/verify-email?token={verification_token}"
 
     subject = "Verify Your BidSoko Account"
-    message = f"""
-Hi {user.username},
 
-Welcome to BidSoko! 🎉
-
-Please verify your email address by clicking the link below:
-
-{verification_link}
-
-This link will expire in 24 hours.
-
-If you didn't create an account on BidSoko, please ignore this email.
-
-Best regards,
-The BidSoko Team
-https://bidsoko.com
-    """
-
-    html_message = f"""
+    html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -78,14 +62,17 @@ https://bidsoko.com
     """
 
     try:
-        send_mail(
+        message = Mail(
+            from_email=Email(settings.DEFAULT_FROM_EMAIL),
+            to_emails=To(user.email),
             subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,
-            fail_silently=False,
+            html_content=Content("text/html", html_content)
         )
+
+        sg = SendGridAPIClient(settings.EMAIL_HOST_PASSWORD)
+        response = sg.send(message)
+
+        print(f"SendGrid response status: {response.status_code}")
         return True
     except Exception as e:
         print(f"Error sending verification email: {e}")

@@ -368,3 +368,19 @@ CSRF_TRUSTED_ORIGINS = [
     "https://bidsoko.com",
     "https://www.bidsoko.com",
 ]
+
+# =======================
+# Email Configuration (SendGrid)
+# =======================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'  # This is literally 'apikey' for SendGrid
+EMAIL_HOST_PASSWORD = config('SENDGRID_API_KEY', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@bidsoko.com')
+SERVER_EMAIL = config('SERVER_EMAIL', default='server@bidsoko.com')
+
+# Email verification settings
+EMAIL_VERIFICATION_REQUIRED = True
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds

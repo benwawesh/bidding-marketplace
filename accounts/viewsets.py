@@ -8,6 +8,12 @@ from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer
 )
+from .models import EmailVerificationToken, PasswordResetToken
+from .utils import (
+    generate_verification_token,
+    send_verification_email,
+    send_password_reset_email
+)
 
 User = get_user_model()
 
@@ -46,15 +52,31 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         POST /api/auth/users/
-        Register a new user
+        Register a new user and send verification email
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
+        # Generate verification token
+        token = generate_verification_token()
+
+        # Delete any existing verification token for this user
+        EmailVerificationToken.objects.filter(user=user).delete()
+
+        # Create new verification token
+        EmailVerificationToken.objects.create(user=user, token=token)
+
+        # Send verification email
+        email_sent = send_verification_email(user, token)
+
         # Return user data with 201 status
         user_serializer = UserSerializer(user)
-        return Response(user_serializer.data, status=status.HTTP_201_CREATED)
+        response_data = user_serializer.data
+        response_data['email_sent'] = email_sent
+        response_data['message'] = 'Registration successful! Please check your email to verify your account.'
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -238,3 +260,190 @@ class UserViewSet(viewsets.ModelViewSet):
             'verified': verified,
             'new_users_last_30_days': new_users,
         })
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def verify_email(self, request):
+        """
+        POST /api/auth/users/verify_email/
+        Verify user's email with token
+        Body: {"token": "verification_token"}
+        """
+        token = request.data.get('token')
+
+        if not token:
+            return Response(
+                {'error': 'Verification token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            verification = EmailVerificationToken.objects.get(token=token)
+
+            if verification.is_expired:
+                return Response(
+                    {'error': 'Verification token has expired. Please request a new one.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Mark user as verified
+            user = verification.user
+            user.is_verified = True
+            user.save()
+
+            # Delete the verification token
+            verification.delete()
+
+            return Response({
+                'message': 'Email verified successfully! You can now log in.',
+                'user': UserSerializer(user).data
+            })
+
+        except EmailVerificationToken.DoesNotExist:
+            return Response(
+                {'error': 'Invalid verification token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def resend_verification(self, request):
+        """
+        POST /api/auth/users/resend_verification/
+        Resend verification email
+        Body: {"email": "user@example.com"}
+        """
+        email = request.data.get('email')
+
+        if not email:
+            return Response(
+                {'error': 'Email is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+
+            if user.is_verified:
+                return Response(
+                    {'error': 'Email is already verified'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Generate new verification token
+            token = generate_verification_token()
+
+            # Delete old tokens and create new one
+            EmailVerificationToken.objects.filter(user=user).delete()
+            EmailVerificationToken.objects.create(user=user, token=token)
+
+            # Send verification email
+            email_sent = send_verification_email(user, token)
+
+            if email_sent:
+                return Response({
+                    'message': 'Verification email sent successfully. Please check your inbox.'
+                })
+            else:
+                return Response(
+                    {'error': 'Failed to send verification email. Please try again later.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'No user found with this email'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def forgot_password(self, request):
+        """
+        POST /api/auth/users/forgot_password/
+        Request password reset email
+        Body: {"email": "user@example.com"}
+        """
+        email = request.data.get('email')
+
+        if not email:
+            return Response(
+                {'error': 'Email is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+
+            # Generate password reset token
+            token = generate_verification_token()
+
+            # Create password reset token
+            PasswordResetToken.objects.create(user=user, token=token)
+
+            # Send password reset email
+            email_sent = send_password_reset_email(user, token)
+
+            if email_sent:
+                return Response({
+                    'message': 'Password reset email sent successfully. Please check your inbox.'
+                })
+            else:
+                return Response(
+                    {'error': 'Failed to send password reset email. Please try again later.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not (security best practice)
+            return Response({
+                'message': 'If an account exists with this email, a password reset link has been sent.'
+            })
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def reset_password(self, request):
+        """
+        POST /api/auth/users/reset_password/
+        Reset password with token
+        Body: {"token": "reset_token", "new_password": "newpass123"}
+        """
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+
+        if not token or not new_password:
+            return Response(
+                {'error': 'Token and new password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate password strength
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'Password must be at least 8 characters long'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            reset_token = PasswordResetToken.objects.get(token=token)
+
+            if not reset_token.is_valid:
+                return Response(
+                    {'error': 'Invalid or expired password reset token'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Reset the password
+            user = reset_token.user
+            user.set_password(new_password)
+            user.save()
+
+            # Mark token as used
+            reset_token.used = True
+            reset_token.save()
+
+            return Response({
+                'message': 'Password reset successfully! You can now log in with your new password.'
+            })
+
+        except PasswordResetToken.DoesNotExist:
+            return Response(
+                {'error': 'Invalid password reset token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )

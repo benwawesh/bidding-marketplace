@@ -26,8 +26,7 @@ export default function CheckoutPage() {
 
   const cartItems = cart?.data?.items || [];
   const subtotal = cart?.data?.subtotal || 0;
-  const shipping = cartItems.length > 0 ? 500 : 0;
-  const total = subtotal + shipping;
+  const total = subtotal; // No shipping fee
 
   // Create order mutation
   const createOrderMutation = useMutation({
@@ -327,10 +326,6 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">{formatCurrency(shipping)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2 mt-2">
                   <span>Total</span>

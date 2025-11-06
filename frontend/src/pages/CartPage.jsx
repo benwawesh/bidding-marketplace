@@ -72,8 +72,7 @@ export default function CartPage() {
   const cartItems = cart?.data?.items || [];
   const subtotal = cart?.data?.subtotal || 0;
   const totalItems = cart?.data?.total_items || 0;
-  const shipping = cartItems.length > 0 ? 500 : 0; // KES 500 flat shipping
-  const total = subtotal + shipping;
+  const total = subtotal; // No shipping fee
 
   if (isLoading) {
     return (
@@ -225,10 +224,6 @@ export default function CartPage() {
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
                     <span className="font-medium">{formatCurrency(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
-                    <span className="font-medium">{formatCurrency(shipping)}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-bold text-gray-900">

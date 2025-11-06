@@ -51,6 +51,37 @@ export default function BuyNowCard({ product }) {
               KSh {product.old_price.toLocaleString()}
             </div>
           )}
+
+          {/* Stock and Sales Info */}
+          <div className="mt-2 flex items-center justify-between text-xs">
+            {/* Stock Remaining */}
+            {product.stock_quantity !== undefined && (
+              <div className={`font-medium ${product.stock_quantity < 10 ? 'text-red-600' : 'text-green-600'}`}>
+                {product.stock_quantity > 0 ? (
+                  <span>{product.stock_quantity} left</span>
+                ) : (
+                  <span className="text-red-600">Out of stock</span>
+                )}
+              </div>
+            )}
+
+            {/* Units Sold */}
+            {product.units_sold > 0 && (
+              <div className="text-gray-500">
+                {product.units_sold} sold
+              </div>
+            )}
+          </div>
+
+          {/* Fast Moving Indicator */}
+          {product.units_sold >= 10 && (
+            <div className="mt-1 flex items-center gap-1 text-xs text-orange-600 font-medium">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              <span>Fast moving</span>
+            </div>
+          )}
         </div>
       </div>
     </Link>

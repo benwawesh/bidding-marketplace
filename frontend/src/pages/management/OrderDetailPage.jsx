@@ -158,10 +158,6 @@ export default function OrderDetailPage() {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-semibold">{formatCurrency(order.shipping_fee)}</span>
-                </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-bold text-gray-900">Total</span>
                   <span className="font-bold text-green-600 text-xl">

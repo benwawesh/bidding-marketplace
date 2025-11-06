@@ -342,10 +342,6 @@ export default function OrderManagementPage() {
                                       <span className="text-gray-600">Subtotal:</span>
                                       <span className="font-medium">{formatCurrency(order.subtotal)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                      <span className="text-gray-600">Shipping:</span>
-                                      <span className="font-medium">{formatCurrency(order.shipping_fee)}</span>
-                                    </div>
                                     <div className="flex justify-between font-bold border-t pt-2">
                                       <span>Total:</span>
                                       <span className="text-orange-600">{formatCurrency(order.total_amount)}</span>

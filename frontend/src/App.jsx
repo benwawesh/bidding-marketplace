@@ -45,6 +45,7 @@ import UserDashboard from './pages/UserDashboard';
 import PromoBarManagement from './pages/management/PromoBarManagement';
 import FinancialAnalyticsPage from './pages/management/FinancialAnalyticsPage';
 import PaymentStatusPage from './pages/PaymentStatusPage';
+import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import OrderManagementPage from './pages/management/OrderManagementPage';
 
 
@@ -83,6 +84,7 @@ function App() {
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/payment-status" element={<PaymentStatusPage />} />
+              <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route
                 path="/dashboard"

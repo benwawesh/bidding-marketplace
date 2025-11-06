@@ -31,7 +31,7 @@ export default function PaymentStatusPage() {
       // Redirect after successful payment
       if (status === 'completed') {
         setTimeout(() => {
-          navigate('/profile?tab=orders');
+          navigate(`/order-confirmation?order_id=${orderId}`);
         }, 2000);
       }
     }
@@ -185,10 +185,10 @@ export default function PaymentStatusPage() {
 
             {status === 'completed' && (
               <button
-                onClick={() => navigate('/profile?tab=orders')}
+                onClick={() => navigate(`/order-confirmation?order_id=${orderId}`)}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
               >
-                View My Orders
+                View Order Details
               </button>
             )}
           </div>

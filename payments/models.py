@@ -66,6 +66,16 @@ class MpesaTransaction(models.Model):
             self.order.mpesa_code = mpesa_receipt_number
             self.order.save()
 
+            # Reduce stock and increment units_sold for each item
+            for item in self.order.items.all():
+                product = item.product
+                if product.stock_quantity is not None:
+                    if product.stock_quantity >= item.quantity:
+                        product.stock_quantity -= item.quantity
+                        product.units_sold = (product.units_sold or 0) + item.quantity
+                        product.save()
+                        print(f"Stock updated for {product.title}: {product.stock_quantity} left, {product.units_sold} sold")
+
             # Clear the user's cart after successful payment
             from auctions.models import Cart
             try:

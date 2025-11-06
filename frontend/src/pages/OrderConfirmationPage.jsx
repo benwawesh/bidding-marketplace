@@ -75,12 +75,16 @@ export default function OrderConfirmationPage() {
                 <p className="text-lg font-bold text-gray-900">{order.order_number}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Order Date</p>
+                <p className="text-sm text-gray-600 mb-1">Order Date & Time</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {new Date(order.created_at).toLocaleDateString('en-US', {
+                  {new Date(order.created_at).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
                   })}
                 </p>
               </div>

@@ -206,11 +206,14 @@ export default function ProfilePage() {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="text-sm text-gray-600 mb-1">Member Since</div>
                     <div className="text-lg font-semibold text-gray-900">
-                      {userData?.date_joined 
-                        ? new Date(userData.date_joined).toLocaleDateString('en-US', {
+                      {userData?.date_joined
+                        ? new Date(userData.date_joined).toLocaleString('en-US', {
                             year: 'numeric',
                             month: 'long',
-                            day: 'numeric'
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
                           })
                         : 'Unknown'}
                     </div>
@@ -246,7 +249,15 @@ export default function ProfilePage() {
                           <div>
                             <div className="font-bold text-gray-900">Order #{order.order_number}</div>
                             <div className="text-sm text-gray-600">
-                              {new Date(order.created_at).toLocaleDateString()}
+                              {new Date(order.created_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                              })}
                             </div>
                           </div>
                           <div className="text-right">

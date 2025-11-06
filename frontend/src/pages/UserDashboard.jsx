@@ -585,7 +585,15 @@ export default function UserDashboard() {
                                 </span>
                               </td>
                               <td className="py-4 px-4 text-gray-600">
-                                {new Date(order.created_at).toLocaleDateString()}
+                                {new Date(order.created_at).toLocaleString('en-US', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit',
+                                  hour12: false
+                                })}
                               </td>
                             </tr>
 

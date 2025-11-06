@@ -8,8 +8,8 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer for general use"""
-    # Add datetime field with time included
-    date_joined = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
+    # Add datetime field with time included (DD/MM/YYYY HH:MM:SS format)
+    date_joined = serializers.DateTimeField(format='%d/%m/%Y %H:%M:%S', read_only=True)
 
     class Meta:
         model = User

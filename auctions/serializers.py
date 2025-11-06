@@ -478,10 +478,10 @@ class OrderSerializer(serializers.ModelSerializer):
     """Serializer for orders"""
     items = OrderItemSerializer(many=True, read_only=True)
     total_items = serializers.IntegerField(read_only=True)
-    # Add datetime fields with time included
-    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
-    updated_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
-    paid_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
+    # Add datetime fields with time included (DD/MM/YYYY HH:MM:SS format)
+    created_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M:%S', read_only=True)
+    updated_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M:%S', read_only=True)
+    paid_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M:%S', read_only=True)
 
     class Meta:
         model = Order

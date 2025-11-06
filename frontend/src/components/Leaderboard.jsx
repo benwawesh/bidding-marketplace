@@ -15,11 +15,8 @@ export default function Leaderboard({ leaderboardData, currentUserId }) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h3 className="text-lg font-bold text-gray-900">🏆 Top 10 Leaderboard</h3>
-        <div className="text-sm text-gray-600">
-          {total_participants} {total_participants === 1 ? 'participant' : 'participants'}
-        </div>
       </div>
 
       {/* Tied at top notice */}

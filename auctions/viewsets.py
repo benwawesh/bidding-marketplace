@@ -1139,12 +1139,13 @@ class OrderViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
 
     def get_queryset(self):
-        """Admin sees all orders, users see only their own"""
+        """Admin sees all orders, users see only their paid orders"""
         if self.request.user.is_superuser:
             from .models import Order
             return Order.objects.all().select_related('user').prefetch_related('items').order_by('-created_at')
         from .models import Order
-        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+        # Users only see orders that have been paid for
+        return Order.objects.filter(user=self.request.user, payment_status='paid').order_by('-created_at')
 
     def get_serializer_class(self):
         """Use different serializers for create vs list/retrieve"""

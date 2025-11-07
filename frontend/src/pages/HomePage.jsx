@@ -14,7 +14,6 @@ import { Link } from "react-router-dom";
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
-  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [activeHelpTopic, setActiveHelpTopic] = useState(null);
 
@@ -450,31 +449,6 @@ export default function HomePage() {
           </svg>
         </button>
       </div>
-
-      {/* Categories Modal - Mobile */}
-      {showCategoriesModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setShowCategoriesModal(false)}>
-          <div
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Categories</h3>
-              <button
-                onClick={() => setShowCategoriesModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4">
-              <LeftSidebar categories={categories} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Help Modal - Mobile */}
       {showHelpModal && !activeHelpTopic && (

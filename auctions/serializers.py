@@ -476,11 +476,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     def get_product_image(self, obj):
         """Get product image URL from the related product"""
-        if obj.product and obj.product.image:
+        if obj.product and obj.product.main_image:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.product.image.url)
-            return obj.product.image.url
+                return request.build_absolute_uri(obj.product.main_image.url)
+            return obj.product.main_image.url
         return None
 
 

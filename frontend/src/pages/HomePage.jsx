@@ -155,27 +155,22 @@ export default function HomePage() {
             {buyNowProducts.length > 0 && (
               <section id="buy-now" className="my-6 sm:my-8 md:my-10">
                 {/* Jumia-Style Red Banner Header */}
-                <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-lg shadow-lg mb-4 overflow-hidden">
-                  <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-wide">
-                          FLASH SALE
-                        </h2>
-                        <p className="text-white/90 text-xs sm:text-sm font-medium">Limited time offers - Shop now!</p>
-                      </div>
+                <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-lg shadow-md mb-3 overflow-hidden">
+                  <div className="flex items-center justify-between px-3 sm:px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                      </svg>
+                      <h2 className="text-base sm:text-lg font-bold text-white tracking-wide uppercase">
+                        Flash Sale
+                      </h2>
                     </div>
                     <Link
                       to="/buy-now"
-                      className="group flex items-center gap-2 bg-white text-red-600 px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm hover:bg-red-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                      className="group flex items-center gap-1 text-white hover:text-white/90 font-semibold text-xs sm:text-sm transition-all"
                     >
-                      <span>View All</span>
-                      <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span>SEE ALL</span>
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
                     </Link>

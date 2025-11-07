@@ -220,12 +220,6 @@ export default function ProductDetailPage() {
                     <span className="text-gray-600">Status:</span>
                     <span className="font-medium capitalize">{product.status}</span>
                   </div>
-                  {product.units_sold > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Units Sold:</span>
-                      <span className="font-medium">{product.units_sold}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem
+from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem, ProductImage
 from accounts.models import User
 
 
@@ -249,11 +249,31 @@ class AuctionListSerializer(serializers.ModelSerializer):
         return highest.pledge_amount if highest else None
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    """Serializer for product images"""
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image', 'image_url', 'order', 'is_primary', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def get_image_url(self, obj):
+        """Get full image URL"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
 class AuctionDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single auction view"""
     category_info = CategorySerializer(source='category', read_only=True)
     seller_info = UserMinimalSerializer(source='created_by', read_only=True)
     winner_info = UserMinimalSerializer(source='winner', read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
 
     # Related data
     rounds = RoundSerializer(many=True, read_only=True)
@@ -275,8 +295,8 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'category', 'category_info',
             'base_price', 'participation_fee', 'product_type',
-            'buy_now_price', 'stock_quantity', 'units_sold',
-            'main_image', 'start_time', 'end_time', 'status',
+            'buy_now_price', 'market_price', 'stock_quantity', 'units_sold',
+            'main_image', 'images', 'start_time', 'end_time', 'status',
             'is_active', 'time_remaining', 'created_by', 'seller_info',
             'winner', 'winner_info', 'winning_amount', 'rounds',
             'current_round', 'participant_count', 'total_revenue',

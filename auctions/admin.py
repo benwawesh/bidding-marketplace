@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Category, Auction, Round, Participation, 
-    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner
+    Category, Auction, Round, Participation,
+    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner, ProductImage
 )
 
 @admin.register(Category)
@@ -17,11 +17,20 @@ class PromoBannerAdmin(admin.ModelAdmin):
     list_filter = ['is_active']
     ordering = ['display_order']
 
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ['image', 'order', 'is_primary']
+    readonly_fields = []
+
+
 @admin.register(Auction)
 class AuctionAdmin(admin.ModelAdmin):
     list_display = ['title', 'product_type', 'status', 'created_at']
     list_filter = ['product_type', 'status']
     search_fields = ['title']
+    inlines = [ProductImageInline]
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):

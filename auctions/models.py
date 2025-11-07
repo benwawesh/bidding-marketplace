@@ -23,6 +23,28 @@ class Category(models.Model):
         return self.name
 
 
+class ProductImage(models.Model):
+    """Multiple images for a product"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey(
+        'Auction',
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(upload_to='product_images/')
+    order = models.PositiveIntegerField(default=0, help_text="Display order (0 = first)")
+    is_primary = models.BooleanField(default=False, help_text="Primary image for product card")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = "Product Image"
+        verbose_name_plural = "Product Images"
+
+    def __str__(self):
+        return f"Image {self.order + 1} for {self.product.title}"
+
+
 class Auction(models.Model):
     """Main auction model - represents an item being auctioned"""
 

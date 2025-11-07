@@ -78,23 +78,10 @@ export default function BothCard({ product }) {
             {product.stock_quantity !== undefined && (
               <div className={`text-xs mt-0.5 sm:mt-1 ${product.stock_quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {product.stock_quantity > 0 ? (
-                  <span>✓ {product.stock_quantity} left</span>
+                  <span>✓ {product.stock_quantity} units left</span>
                 ) : (
                   <span>Out of stock</span>
                 )}
-              </div>
-            )}
-            {product.units_sold > 0 && (
-              <div className="text-xs text-gray-500 mt-0.5">
-                {product.units_sold} sold
-              </div>
-            )}
-            {product.units_sold >= 10 && (
-              <div className="text-xs text-orange-600 font-medium mt-0.5 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                </svg>
-                Fast moving
               </div>
             )}
           </div>

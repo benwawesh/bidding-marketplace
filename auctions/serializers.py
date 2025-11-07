@@ -464,14 +464,24 @@ class AddToCartSerializer(serializers.Serializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     """Serializer for order items"""
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
         fields = [
-            'id', 'product', 'product_title', 'product_price',
+            'id', 'product', 'product_title', 'product_price', 'product_image',
             'quantity', 'total_price', 'created_at'
         ]
         read_only_fields = ['id', 'product_title', 'product_price', 'created_at']
+
+    def get_product_image(self, obj):
+        """Get product image URL from the related product"""
+        if obj.product and obj.product.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.product.image.url)
+            return obj.product.image.url
+        return None
 
 
 class OrderSerializer(serializers.ModelSerializer):

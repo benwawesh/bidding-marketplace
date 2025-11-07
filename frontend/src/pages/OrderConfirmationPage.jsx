@@ -152,7 +152,7 @@ export default function OrderConfirmationPage() {
                     {item.product_image ? (
                       <img
                         src={item.product_image}
-                        alt={item.product_name}
+                        alt={item.product_title}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -162,14 +162,14 @@ export default function OrderConfirmationPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate">{item.product_name}</h4>
+                    <h4 className="font-semibold text-gray-900 truncate">{item.product_title}</h4>
                     <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(item.price)} each
+                      {formatCurrency(item.product_price)} each
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatCurrency(item.subtotal)}</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(item.total_price)}</p>
                   </div>
                 </div>
               ))}
@@ -190,10 +190,10 @@ export default function OrderConfirmationPage() {
         {/* Action Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
-            to="/profile?tab=orders"
+            to="/dashboard"
             className="bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 transition text-center"
           >
-            View All Orders
+            View Purchase History
           </Link>
           <Link
             to="/browse"

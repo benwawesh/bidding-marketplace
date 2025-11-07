@@ -1,6 +1,6 @@
 // src/pages/UserDashboard.jsx
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getMyBids } from '../api/bidAPI';
@@ -9,6 +9,7 @@ import { formatCurrency } from '../utils/helpers';
 
 export default function UserDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedOrder, setExpandedOrder] = useState(null);
 
@@ -677,6 +678,19 @@ export default function UserDashboard() {
                                         </p>
                                       </div>
                                     )}
+
+                                    {/* View Full Order Button */}
+                                    <div className="mt-4 flex justify-end">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/order-confirmation?order_id=${order.id}`);
+                                        }}
+                                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                      >
+                                        View Full Order
+                                      </button>
+                                    </div>
                                   </div>
                                 </td>
                               </tr>

@@ -151,29 +151,35 @@ export default function HomePage() {
             {/* Categories Grid */}
             <CategoriesGrid categories={categories} />
 
-            {/* Buy Now Section - Enhanced Design */}
+            {/* Buy Now Section - Jumia-Style Red Banner */}
             {buyNowProducts.length > 0 && (
               <section id="buy-now" className="my-6 sm:my-8 md:my-10">
-                <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-orange-200">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg shadow-lg">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                {/* Jumia-Style Red Banner Header */}
+                <div className="bg-gradient-to-r from-red-600 to-red-500 rounded-lg shadow-lg mb-4 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-wide">
+                          FLASH SALE
+                        </h2>
+                        <p className="text-white/90 text-xs sm:text-sm font-medium">Limited time offers - Shop now!</p>
+                      </div>
                     </div>
-                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-                      Buy Now
-                    </h2>
+                    <Link
+                      to="/buy-now"
+                      className="group flex items-center gap-2 bg-white text-red-600 px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm hover:bg-red-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                    >
+                      <span>View All</span>
+                      <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
                   </div>
-                  <Link
-                    to="/buy-now"
-                    className="group flex items-center gap-2 text-xs sm:text-sm text-orange-600 hover:text-rose-600 font-semibold transition-all duration-300"
-                  >
-                    <span>View All</span>
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
                 </div>
 
                 {/* Jumia-Style Horizontal Carousel */}

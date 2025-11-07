@@ -67,7 +67,18 @@ export default function ProductDetailPage() {
     return null;
   }
 
-  const images = product.main_image ? [product.main_image] : [];
+  // Build images array: main_image first, then additional images
+  const images = [];
+  if (product.main_image) {
+    images.push(product.main_image);
+  }
+  if (product.images && product.images.length > 0) {
+    product.images.forEach(img => {
+      if (img.image_url) {
+        images.push(img.image_url);
+      }
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,18 +115,18 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Thumbnail Gallery */}
+            {/* Thumbnail Gallery - Jumia Style */}
             {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`border-2 rounded overflow-hidden ${
-                      selectedImage === idx ? 'border-orange-500' : 'border-gray-200'
+                    className={`border-2 rounded-lg overflow-hidden transition-all duration-200 hover:border-orange-400 ${
+                      selectedImage === idx ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-300'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-20 object-cover" />
+                    <img src={img} alt={`View ${idx + 1}`} className="w-full h-20 object-contain bg-white p-1" />
                   </button>
                 ))}
               </div>

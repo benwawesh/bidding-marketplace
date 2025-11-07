@@ -8,6 +8,7 @@ from .viewsets import (
 from .delete_views import delete_product, bulk_delete_products
 from .promo_views import get_active_promo_banners
 from . import financial_views
+from .views import ProductImageViewSet
 
 router = DefaultRouter()
 router.register(r'auctions', AuctionViewSet, basename='auction')
@@ -19,6 +20,7 @@ router.register(r'payments', PaymentViewSet, basename='payment')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'customers', CustomerViewSet, basename='customer')
+router.register(r'product-images', ProductImageViewSet, basename='product-image')
 
 # Add custom URLs BEFORE router.urls
 urlpatterns = [

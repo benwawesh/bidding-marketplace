@@ -32,13 +32,36 @@ export default function CreateProductPage() {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [additionalImages, setAdditionalImages] = useState([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
   const [errors, setErrors] = useState({});
 
   const createMutation = useMutation({
-    mutationFn: (data) => auctionsAPI.create(data),
+    mutationFn: async (data) => {
+      // Create the product first
+      const response = await auctionsAPI.create(data);
+      const productId = response.data.id;
+
+      // Upload additional images if any
+      if (additionalImages.length > 0) {
+        for (let i = 0; i < additionalImages.length; i++) {
+          const imageFormData = new FormData();
+          imageFormData.append('product', productId);
+          imageFormData.append('image', additionalImages[i]);
+          imageFormData.append('order', i);
+          imageFormData.append('is_primary', 'false');
+
+          await axios.post('/api/auctions/product-images/', imageFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        }
+      }
+
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-products']);
-      alert('✅ Product created successfully!');
+      alert('✅ Product created successfully with all images!');
       navigate('/management/products');
     },
     onError: (error) => {
@@ -48,14 +71,14 @@ export default function CreateProductPage() {
       console.log('Response data:', error.response?.data);
       console.log('Response status:', error.response?.status);
       console.log('===================');
-      
+
       const errorData = error.response?.data || {};
       setErrors(errorData);
-      
+
       const errorMessages = Object.entries(errorData).map(([field, msgs]) => {
         return `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`;
       }).join('\n');
-      
+
       alert('❌ Error creating product:\n\n' + (errorMessages || 'Unknown error'));
     },
   });
@@ -84,13 +107,48 @@ export default function CreateProductPage() {
       }
 
       setFormData(prev => ({ ...prev, main_image: file }));
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleAdditionalImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = [];
+    const previews = [];
+
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} is not an image file`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} is larger than 5MB`);
+        return;
+      }
+
+      validFiles.push(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        previews.push(reader.result);
+        if (previews.length === validFiles.length) {
+          setAdditionalImagePreviews(prev => [...prev, ...previews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setAdditionalImages(prev => [...prev, ...validFiles]);
+  };
+
+  const removeAdditionalImage = (index) => {
+    setAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
@@ -227,7 +285,7 @@ export default function CreateProductPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Product Image</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Main Product Image *</label>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
                     {imagePreview ? (
@@ -246,6 +304,46 @@ export default function CreateProductPage() {
                     <input type="file" accept="image/*" onChange={handleFileChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" />
                     <p className="text-xs text-gray-500 mt-2">Upload JPG, PNG, or GIF (Max 5MB)</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Images (Optional)</label>
+                <div className="space-y-4">
+                  {/* Image Previews */}
+                  {additionalImagePreviews.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {additionalImagePreviews.map((preview, index) => (
+                        <div key={index} className="relative w-full h-24 border-2 border-gray-300 rounded-lg overflow-hidden">
+                          <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeAdditionalImage(index)}
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 text-sm"
+                          >
+                            ×
+                          </button>
+                          <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload Button */}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleAdditionalImagesChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 You can select multiple images at once. These will be shown in the product gallery. (Max 5MB each)
+                    </p>
                   </div>
                 </div>
               </div>

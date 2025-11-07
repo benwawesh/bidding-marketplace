@@ -1,12 +1,15 @@
 from django.views.generic import TemplateView
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import Auction, Category
+from .models import Auction, Category, ProductImage
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from .models import Cart, Order
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from .serializers import ProductImageSerializer
 
 
 class HomeView(TemplateView):
@@ -300,3 +303,20 @@ class OrderHistoryView(LoginRequiredMixin, TemplateView):
         ).prefetch_related('items').order_by('-created_at')
 
         return context
+
+
+# ✅ ProductImage ViewSet for uploading multiple product images
+class ProductImageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing product images
+    """
+    queryset = ProductImage.objects.all()
+    serializer_class = ProductImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        return queryset.order_by('order', 'created_at')

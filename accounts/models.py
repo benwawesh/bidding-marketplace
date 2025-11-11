@@ -24,7 +24,8 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='buyer')
     phone_number = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)  # Keep for existing users
+    age = models.IntegerField(null=True, blank=True)  # New field for age
 
     is_verified = models.BooleanField(default=False)
     wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -42,9 +43,11 @@ class User(AbstractUser):
 
 
     @property
-    def age(self):
-        """Calculate age from date_of_birth"""
-        if self.date_of_birth:
+    def get_age(self):
+        """Get age - either from age field or calculate from date_of_birth"""
+        if self.age:
+            return self.age
+        elif self.date_of_birth:
             from datetime import date
             today = date.today()
             return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
@@ -147,7 +150,8 @@ class PendingRegistration(models.Model):
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=20)
     gender = models.CharField(max_length=10)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True, blank=True)  # Keep for backward compatibility
+    age = models.IntegerField(null=True, blank=True)  # New field for age
     password_hash = models.CharField(max_length=255)  # Store hashed password
     user_type = models.CharField(max_length=20, default='buyer')
     token = models.CharField(max_length=100, unique=True)

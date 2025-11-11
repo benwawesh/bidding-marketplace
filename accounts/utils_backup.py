@@ -1,6 +1,5 @@
 """
 Utility functions for accounts app including email sending and token generation
-IMPROVED VERSION with spam prevention
 """
 import secrets
 from django.conf import settings
@@ -18,10 +17,8 @@ def generate_verification_token():
 def send_verification_email(user, verification_token):
     """
     Send email verification link to user using SendGrid API
-    with spam prevention best practices
     """
     verification_link = f"https://bidsoko.com/verify-email?token={verification_token}"
-    unsubscribe_link = f"https://bidsoko.com/unsubscribe?email={user.email}"
 
     subject = "Verify Your BidSoko Account"
 
@@ -43,11 +40,6 @@ The BidSoko Team
 https://bidsoko.com
 
 Kenya's Premier Online Shopping and Auction Platform
-
----
-BidSoko, Kenya
-This email was sent to {user.email}
-Unsubscribe: {unsubscribe_link}
     """
 
     # HTML version
@@ -106,12 +98,7 @@ Unsubscribe: {unsubscribe_link}
                             <p style="margin: 10px 0; font-size: 12px; text-align: center; color: #999999;">Kenya's Premier Online Shopping and Auction Platform</p>
                             <p style="margin: 10px 0; font-size: 12px; text-align: center;">
                                 <a href="https://bidsoko.com" style="color: #ea580c; text-decoration: none;">Visit Website</a> |
-                                <a href="https://bidsoko.com/contact" style="color: #ea580c; text-decoration: none;">Contact Us</a> |
-                                <a href="{unsubscribe_link}" style="color: #999999; text-decoration: none;">Unsubscribe</a>
-                            </p>
-                            <p style="margin: 10px 0; font-size: 11px; text-align: center; color: #999999;">
-                                BidSoko, Kenya<br>
-                                This email was sent to {user.email}
+                                <a href="https://bidsoko.com/contact" style="color: #ea580c; text-decoration: none;">Contact Us</a>
                             </p>
                         </td>
                     </tr>
@@ -127,7 +114,7 @@ Unsubscribe: {unsubscribe_link}
         from sendgrid.helpers.mail import ClickTracking, TrackingSettings, OpenTracking
 
         message = Mail(
-            from_email=Email(settings.DEFAULT_FROM_EMAIL, "BidSoko"),
+            from_email=Email(settings.DEFAULT_FROM_EMAIL, "BidSoko"),  # Add sender name
             to_emails=To(user.email),
             subject=subject,
             plain_text_content=Content("text/plain", plain_text),
@@ -137,18 +124,10 @@ Unsubscribe: {unsubscribe_link}
         # Set reply-to address
         message.reply_to = Email("support@bidsoko.com", "BidSoko Support")
 
-        # Add List-Unsubscribe header for better deliverability (RFC 2369)
-        message.add_header("List-Unsubscribe", f"<{unsubscribe_link}>")
-        message.add_header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
-
-        # Add additional spam-prevention headers
-        message.add_header("X-Entity-Ref-ID", f"verification-{user.id}")
-        message.add_header("Precedence", "bulk")
-
         # Disable click tracking to avoid SendGrid redirect URLs
         message.tracking_settings = TrackingSettings()
         message.tracking_settings.click_tracking = ClickTracking(enable=False, enable_text=False)
-        message.tracking_settings.open_tracking = OpenTracking(enable=True)
+        message.tracking_settings.open_tracking = OpenTracking(enable=True)  # Keep open tracking
 
         sg = SendGridAPIClient(settings.EMAIL_HOST_PASSWORD)
         response = sg.send(message)
@@ -163,10 +142,8 @@ Unsubscribe: {unsubscribe_link}
 def send_password_reset_email(user, reset_token):
     """
     Send password reset link to user using SendGrid API
-    with spam prevention best practices
     """
     reset_link = f"https://bidsoko.com/reset-password?token={reset_token}"
-    unsubscribe_link = f"https://bidsoko.com/unsubscribe?email={user.email}"
 
     subject = "Reset Your BidSoko Password"
 
@@ -188,11 +165,6 @@ The BidSoko Team
 https://bidsoko.com
 
 Kenya's Premier Online Shopping and Auction Platform
-
----
-BidSoko, Kenya
-This email was sent to {user.email}
-Unsubscribe: {unsubscribe_link}
     """
 
     # HTML version
@@ -258,12 +230,7 @@ Unsubscribe: {unsubscribe_link}
                             <p style="margin: 10px 0; font-size: 12px; text-align: center; color: #999999;">Kenya's Premier Online Shopping and Auction Platform</p>
                             <p style="margin: 10px 0; font-size: 12px; text-align: center;">
                                 <a href="https://bidsoko.com" style="color: #ea580c; text-decoration: none;">Visit Website</a> |
-                                <a href="https://bidsoko.com/contact" style="color: #ea580c; text-decoration: none;">Contact Us</a> |
-                                <a href="{unsubscribe_link}" style="color: #999999; text-decoration: none;">Unsubscribe</a>
-                            </p>
-                            <p style="margin: 10px 0; font-size: 11px; text-align: center; color: #999999;">
-                                BidSoko, Kenya<br>
-                                This email was sent to {user.email}
+                                <a href="https://bidsoko.com/contact" style="color: #ea580c; text-decoration: none;">Contact Us</a>
                             </p>
                         </td>
                     </tr>
@@ -279,7 +246,7 @@ Unsubscribe: {unsubscribe_link}
         from sendgrid.helpers.mail import ClickTracking, TrackingSettings, OpenTracking
 
         message = Mail(
-            from_email=Email(settings.DEFAULT_FROM_EMAIL, "BidSoko"),
+            from_email=Email(settings.DEFAULT_FROM_EMAIL, "BidSoko"),  # Add sender name
             to_emails=To(user.email),
             subject=subject,
             plain_text_content=Content("text/plain", plain_text),
@@ -289,18 +256,10 @@ Unsubscribe: {unsubscribe_link}
         # Set reply-to address
         message.reply_to = Email("support@bidsoko.com", "BidSoko Support")
 
-        # Add List-Unsubscribe header for better deliverability (RFC 2369)
-        message.add_header("List-Unsubscribe", f"<{unsubscribe_link}>")
-        message.add_header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
-
-        # Add additional spam-prevention headers
-        message.add_header("X-Entity-Ref-ID", f"password-reset-{user.id}")
-        message.add_header("Precedence", "bulk")
-
         # Disable click tracking to avoid SendGrid redirect URLs
         message.tracking_settings = TrackingSettings()
         message.tracking_settings.click_tracking = ClickTracking(enable=False, enable_text=False)
-        message.tracking_settings.open_tracking = OpenTracking(enable=True)
+        message.tracking_settings.open_tracking = OpenTracking(enable=True)  # Keep open tracking
 
         sg = SendGridAPIClient(settings.EMAIL_HOST_PASSWORD)
         response = sg.send(message)
@@ -315,10 +274,7 @@ Unsubscribe: {unsubscribe_link}
 def send_bid_notification_email(user, auction_title, bid_amount, current_status):
     """
     Send notification email when user places a bid or auction status changes
-    (This function still uses Django's send_mail - needs SendGrid API update if critical)
     """
-    from django.core.mail import send_mail
-
     subject = f"Bid Update: {auction_title}"
 
     message = f"""
@@ -378,7 +334,7 @@ The BidSoko Team
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,
-            fail_silently=True,
+            fail_silently=True,  # Don't fail if notification email fails
         )
         return True
     except Exception as e:

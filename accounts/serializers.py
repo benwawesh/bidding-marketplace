@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'user_type', 'phone_number', 'gender', 'date_of_birth',
+            'user_type', 'phone_number', 'gender', 'date_of_birth', 'age',
             'is_verified', 'wallet_balance',
             'auctions_won', 'auctions_participated', 'total_spent',
             'trust_score', 'date_joined', 'is_superuser'
@@ -46,7 +46,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = [
             'username', 'email', 'password', 'password2',
             'first_name', 'last_name', 'phone_number',
-            'gender', 'date_of_birth'
+            'gender', 'date_of_birth', 'age'
         ]
         extra_kwargs = {
             'email': {'required': True},
@@ -54,15 +54,35 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'last_name': {'required': True},
             'phone_number': {'required': True},
             'gender': {'required': True},
-            'date_of_birth': {'required': True},
+            'date_of_birth': {'required': False},  # Make optional, age is now used
+            'age': {'required': False},  # Either age or date_of_birth
         }
 
     def validate(self, attrs):
-        """Validate passwords match"""
+        """Validate passwords match and age/date_of_birth"""
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({
                 "password": "Password fields didn't match."
             })
+
+        # Validate that either age or date_of_birth is provided
+        if not attrs.get('age') and not attrs.get('date_of_birth'):
+            raise serializers.ValidationError({
+                "age": "Either age or date of birth is required."
+            })
+
+        # Validate age range if provided
+        if attrs.get('age'):
+            age = attrs['age']
+            if age < 18:
+                raise serializers.ValidationError({
+                    "age": "You must be at least 18 years old to register."
+                })
+            if age > 120:
+                raise serializers.ValidationError({
+                    "age": "Please enter a valid age."
+                })
+
         return attrs
 
     def validate_email(self, value):

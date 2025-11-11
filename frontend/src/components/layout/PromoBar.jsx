@@ -20,8 +20,6 @@ export default function PromoBar() {
     brand_text = 'BIDSOKO LUXE',
     brand_text_mobile = 'BIDSOKO',
     brand_emoji = '🎯',
-    phone_number = '0711 011 011',
-    phone_emoji = '📞',
     announcement_texts = ['🚚 Free Delivery on Orders Over KES 5,000'],
     cta_text = 'SHOP NOW',
     cta_link = '/browse',
@@ -56,22 +54,21 @@ export default function PromoBar() {
       <div className="max-w-7xl mx-auto px-4 py-2 sm:py-3">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left Side - Brand Only */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl sm:text-3xl">
+              {brand_emoji}
+            </span>
             <span
               className="text-base sm:text-xl font-bold tracking-wide whitespace-nowrap"
               style={{ color: accent_color }}
             >
-              {brand_emoji} <span className="hidden sm:inline">{brand_text}</span>
+              <span className="hidden sm:inline">{brand_text}</span>
               <span className="sm:hidden">{brand_text_mobile}</span>
             </span>
           </div>
 
-          {/* Center - Phone + Announcement (Takes most space) - Desktop */}
-          <div className="flex-1 hidden md:flex items-center justify-center gap-2 overflow-hidden px-4">
-            <span className="text-sm font-semibold whitespace-nowrap">
-              {phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span>
-            </span>
-            <span className="text-gray-400">•</span>
+          {/* Center - Announcement (Takes most space) - Desktop */}
+          <div className="flex-1 hidden md:flex items-center justify-center overflow-hidden px-4">
             <div className="relative h-6 flex-1 max-w-2xl">
               <p
                 className={`absolute inset-0 text-sm font-bold text-center transition-all duration-700 flex items-center justify-center ${
@@ -84,12 +81,8 @@ export default function PromoBar() {
             </div>
           </div>
 
-          {/* Center - Phone + Announcement - Tablet */}
-          <div className="flex-1 hidden sm:flex md:hidden items-center justify-center gap-2 overflow-hidden px-2">
-            <span className="text-xs font-semibold whitespace-nowrap">
-              {phone_emoji} <span style={{ color: accent_color }} className="font-bold">{phone_number}</span>
-            </span>
-            <span className="text-gray-400 text-xs">•</span>
+          {/* Center - Announcement - Tablet */}
+          <div className="flex-1 hidden sm:flex md:hidden items-center justify-center overflow-hidden px-2">
             <div className="relative h-5 flex-1">
               <p
                 className={`absolute inset-0 text-xs font-bold text-center transition-all duration-700 flex items-center justify-center ${

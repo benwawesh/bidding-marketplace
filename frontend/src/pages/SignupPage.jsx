@@ -14,7 +14,7 @@ export default function SignupPage() {
     last_name: '',
     phone_number: '',
     gender: '',
-    date_of_birth: '',
+    age: '',
     password: '',
     password2: ''
   });
@@ -64,13 +64,19 @@ export default function SignupPage() {
         return;
       }
     } else if (currentStep === 2) {
-      if (!formData.first_name || !formData.last_name || !formData.phone_number || !formData.gender || !formData.date_of_birth) {
+      if (!formData.first_name || !formData.last_name || !formData.phone_number || !formData.gender || !formData.age) {
         toast.error('Please fill in all fields');
         return;
       }
       // Phone number validation - just check length
       if (formData.phone_number.length < 10) {
         toast.error('Phone number must be at least 10 digits');
+        return;
+      }
+      // Age validation
+      const ageNum = parseInt(formData.age);
+      if (isNaN(ageNum) || ageNum < 18 || ageNum > 120) {
+        toast.error('Please enter a valid age (18-120)');
         return;
       }
     }
@@ -281,17 +287,20 @@ export default function SignupPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Date of Birth *
+                      Age *
                     </label>
                     <input
-                      type="date"
-                      name="date_of_birth"
+                      type="number"
+                      name="age"
                       required
-                      value={formData.date_of_birth}
+                      value={formData.age}
                       onChange={handleChange}
-                      max={new Date().toISOString().split('T')[0]}
+                      min="18"
+                      max="120"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Enter your age"
                     />
+                    <p className="text-xs text-gray-500 mt-1">You must be at least 18 years old</p>
                   </div>
                 </div>
               </div>
@@ -341,7 +350,7 @@ export default function SignupPage() {
                     <p><strong>Name:</strong> {formData.first_name} {formData.last_name}</p>
                     <p><strong>Phone:</strong> {formData.phone_number}</p>
                     <p><strong>Gender:</strong> {formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1)}</p>
-                    <p><strong>Date of Birth:</strong> {formData.date_of_birth}</p>
+                    <p><strong>Age:</strong> {formData.age} years old</p>
                   </div>
                 </div>
               </div>

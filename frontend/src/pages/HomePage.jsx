@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { auctionsAPI, categoriesAPI, cartAPI } from '../api/endpoints';
+import { getRounds } from '../api/bidAPI';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import LeftSidebar from '../components/layout/LeftSidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import HeroAuctionSection from '../components/sections/HeroAuctionSection';
+import HeroImageCarousel from '../components/carousels/HeroImageCarousel';
 import CategoriesGrid from '../components/sections/CategoriesGrid';
 import BuyNowCard from '../components/cards/BuyNowCard';
 import BothCard from '../components/cards/BothCard';
@@ -29,6 +31,25 @@ export default function HomePage() {
     queryFn: () => categoriesAPI.getAll().then(res => res.data?.results || res.data || []),
   });
 
+  // Filter products by type
+  // Hero: Show FIRST active auction only
+  const liveAuctions = auctions.filter(p =>
+    (p.product_type === 'auction' || p.product_type === 'both') &&
+    p.status === 'active'
+  );
+  const heroAuction = liveAuctions[0] || null; // Get first active auction
+
+  // Fetch rounds for hero auction to check if it has active rounds
+  const { data: heroRounds = [] } = useQuery({
+    queryKey: ['hero-rounds', heroAuction?.id],
+    queryFn: () => getRounds(heroAuction.id),
+    enabled: !!heroAuction,
+  });
+
+  // Check if hero auction has active rounds
+  const hasActiveRound = heroRounds.some(r => r.is_active);
+  const showImageCarousel = !heroAuction || !hasActiveRound;
+
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: ({ product_id, quantity }) => 
@@ -51,14 +72,6 @@ export default function HomePage() {
     },
   });
 
-  // Filter products by type
-  // Hero: Show FIRST active auction only
-  const liveAuctions = auctions.filter(p => 
-    (p.product_type === 'auction' || p.product_type === 'both') && 
-    p.status === 'active'
-  );
-  const heroAuction = liveAuctions[0] || null; // Get first active auction
-  
   // Buy Now: Horizontal carousel
   const buyNowProducts = auctions.filter(p => 
     (p.product_type === 'buy_now' || p.product_type === 'both') && 
@@ -341,9 +354,15 @@ export default function HomePage() {
 
             {/* Main Content */}
             <main className="flex-1 min-w-0 w-full px-3 sm:px-4 py-4">
-            
-            {/* HERO SECTION - SINGLE LIVE AUCTION with FIREWORKS */}
-            <HeroAuctionSection auction={heroAuction} />
+
+            {/* HERO SECTION - Conditional Rendering */}
+            {showImageCarousel ? (
+              /* Show image carousel when no active auctions OR auctions have ended */
+              <HeroImageCarousel />
+            ) : (
+              /* Show auction section when there's an active auction with active rounds */
+              <HeroAuctionSection auction={heroAuction} />
+            )}
 
             {/* Categories Grid */}
             <CategoriesGrid categories={categories} />

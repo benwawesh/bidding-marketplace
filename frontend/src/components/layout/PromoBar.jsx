@@ -69,9 +69,9 @@ export default function PromoBar() {
 
           {/* Center - Announcement (Takes most space) - Desktop */}
           <div className="flex-1 hidden md:flex items-center justify-center overflow-hidden px-4">
-            <div className="relative h-6 flex-1 max-w-2xl">
+            <div className="relative h-8 flex-1 max-w-2xl">
               <p
-                className={`absolute inset-0 text-sm font-bold text-center transition-all duration-700 flex items-center justify-center ${
+                className={`absolute inset-0 text-base sm:text-xl font-bold text-center transition-all duration-700 flex items-center justify-center ${
                   isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
                 }`}
                 style={{ color: accent_color }}
@@ -83,9 +83,9 @@ export default function PromoBar() {
 
           {/* Center - Announcement - Tablet */}
           <div className="flex-1 hidden sm:flex md:hidden items-center justify-center overflow-hidden px-2">
-            <div className="relative h-5 flex-1">
+            <div className="relative h-6 flex-1">
               <p
-                className={`absolute inset-0 text-xs font-bold text-center transition-all duration-700 flex items-center justify-center ${
+                className={`absolute inset-0 text-base font-bold text-center transition-all duration-700 flex items-center justify-center ${
                   isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
                 }`}
                 style={{ color: accent_color }}
@@ -97,9 +97,9 @@ export default function PromoBar() {
 
           {/* Mobile: Announcement only */}
           <div className="flex-1 sm:hidden overflow-hidden px-2">
-            <div className="relative h-5">
+            <div className="relative h-6">
               <p
-                className={`absolute inset-0 text-xs font-bold text-center transition-all duration-700 flex items-center justify-center ${
+                className={`absolute inset-0 text-sm font-bold text-center transition-all duration-700 flex items-center justify-center ${
                   isAnimating ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'
                 }`}
                 style={{ color: accent_color }}

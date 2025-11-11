@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagementLayout from '../../components/layout/ManagementLayout';
 import { auctionsAPI, categoriesAPI } from '../../api/endpoints';
+import axios from '../../api/axios';
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
@@ -48,12 +49,16 @@ export default function CreateProductPage() {
           const imageFormData = new FormData();
           imageFormData.append('product', productId);
           imageFormData.append('image', additionalImages[i]);
-          imageFormData.append('order', i);
+          imageFormData.append('order', i + 1); // Start from 1 since main image is 0
           imageFormData.append('is_primary', 'false');
 
-          await axios.post('/api/auctions/product-images/', imageFormData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
+          try {
+            await axios.post('/product-images/', imageFormData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+          } catch (error) {
+            console.error(`Failed to upload image ${i + 1}:`, error);
+          }
         }
       }
 

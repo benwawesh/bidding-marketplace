@@ -572,7 +572,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    lookup_field = 'slug'
+    lookup_field = 'id'
     
     def get_queryset(self):
         """Admin sees all categories, public sees only active"""
@@ -642,7 +642,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         instance.save()
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def toggle_active(self, request, slug=None):
+    def toggle_active(self, request, id=None):
         """Toggle category active status (Admin only)"""
         if not request.user.is_superuser:
             return Response(

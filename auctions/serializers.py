@@ -255,7 +255,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'image_url', 'order', 'is_primary', 'created_at']
+        fields = ['id', 'product', 'image', 'image_url', 'order', 'is_primary', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def get_image_url(self, obj):

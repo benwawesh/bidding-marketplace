@@ -55,7 +55,7 @@ export default function PromoBar() {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left Side - Brand Only */}
           <div className="flex items-center gap-2">
-            <span className="text-2xl sm:text-3xl">
+            <span className="text-3xl sm:text-4xl">
               {brand_emoji}
             </span>
             <span

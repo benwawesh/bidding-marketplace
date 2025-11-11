@@ -30,6 +30,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
+            <img src="/bidsoko.svg" alt="BidSoko Logo" className="h-8 w-8 sm:h-10 sm:w-10" />
             <span className="text-xl sm:text-2xl font-bold text-orange-600">BidSoko</span>
           </Link>
 

@@ -49,6 +49,7 @@ export default function EditProductPage() {
   const [errors, setErrors] = useState({});
   const [keepExistingImage, setKeepExistingImage] = useState(true);
   const [keepExistingMusic, setKeepExistingMusic] = useState(true);
+  const [removeMusic, setRemoveMusic] = useState(false);
 
   // Populate form when product loads
   useEffect(() => {
@@ -205,8 +206,10 @@ export default function EditProductPage() {
       payload.main_image = formData.main_image;
     }
 
-    // Only include new music if user uploaded one
-    if (formData.background_music instanceof File) {
+    // Handle music: remove it, upload new one, or keep existing
+    if (removeMusic) {
+      payload.remove_music = 'true';  // Special flag to signal music removal
+    } else if (formData.background_music instanceof File) {
       payload.background_music = formData.background_music;
     }
 
@@ -446,7 +449,7 @@ export default function EditProductPage() {
 
                 <div className="space-y-3">
                   {/* Music Preview Player */}
-                  {musicPreviewUrl && (
+                  {musicPreviewUrl && !removeMusic && (
                     <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-2xl">🎵</span>
@@ -482,6 +485,52 @@ export default function EditProductPage() {
                       >
                         Your browser does not support the audio element.
                       </audio>
+
+                      {/* Remove Music Button - Only show for existing music */}
+                      {product?.background_music && !formData.background_music && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to permanently remove this background music?')) {
+                              setRemoveMusic(true);
+                              setMusicPreviewUrl(null);
+                              setMusicFileName('');
+                            }
+                          }}
+                          className="mt-3 w-full bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2"
+                        >
+                          🗑️ Remove Music Permanently
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Music Removed Message */}
+                  {removeMusic && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🔇</span>
+                        <div className="flex-1">
+                          <p className="font-medium text-red-900">Music will be removed</p>
+                          <p className="text-xs text-red-700">Background music will be deleted when you save changes</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRemoveMusic(false);
+                            if (product?.background_music) {
+                              setMusicFileName(product.background_music.split('/').pop());
+                              const musicUrl = product.background_music.startsWith('http')
+                                ? product.background_music
+                                : `${product.background_music}`;
+                              setMusicPreviewUrl(musicUrl);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium underline"
+                        >
+                          Undo
+                        </button>
+                      </div>
                     </div>
                   )}
 

@@ -62,6 +62,21 @@ class AuctionViewSet(viewsets.ModelViewSet):
         
         return queryset.order_by('-created_at')
 
+    def perform_update(self, serializer):
+        """Handle music removal when remove_music flag is set"""
+        # Check if remove_music flag is set (indicates admin wants to remove music)
+        if self.request.data.get('remove_music') == 'true':
+            instance = self.get_object()
+            # Delete the existing file if it exists
+            if instance.background_music:
+                instance.background_music.delete(save=False)
+            # Set to None/null and save
+            instance.background_music = None
+            instance.save()
+        else:
+            # Normal update - let serializer handle it
+            serializer.save()
+
     @action(detail=True, methods=['get'])
     def leaderboard(self, request, id=None):
         """Get top bids for an auction"""

@@ -45,6 +45,28 @@ class ProductImage(models.Model):
         return f"Image {self.order + 1} for {self.product.title}"
 
 
+class HeroBanner(models.Model):
+    """Hero carousel banners for homepage"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=200, help_text="Main banner title")
+    subtitle = models.CharField(max_length=300, blank=True, help_text="Secondary text")
+    image = models.ImageField(upload_to='hero_banners/', help_text="Banner image (recommended: 1200x500px)")
+    cta_text = models.CharField(max_length=50, default="Shop Now", help_text="Call to action button text")
+    cta_link = models.CharField(max_length=200, default="/browse", help_text="Link URL (e.g., /browse, /category/electronics)")
+    order = models.PositiveIntegerField(default=0, help_text="Display order (0 = first)")
+    is_active = models.BooleanField(default=True, help_text="Show this banner in the carousel")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = "Hero Banner"
+        verbose_name_plural = "Hero Banners"
+
+    def __str__(self):
+        return f"{self.title} (Order: {self.order})"
+
+
 class Auction(models.Model):
     """Main auction model - represents an item being auctioned"""
 
@@ -172,6 +194,14 @@ class Auction(models.Model):
 
     # Images
     main_image = models.ImageField(upload_to='auctions/', blank=True, null=True)
+
+    # Background Music (for auction atmosphere)
+    background_music = models.FileField(
+        upload_to='auction_music/',
+        blank=True,
+        null=True,
+        help_text='Background music to play during the auction (MP3, WAV, etc.)'
+    )
 
     # Timing (nullable for buy_now products)
     start_time = models.DateTimeField(null=True, blank=True)

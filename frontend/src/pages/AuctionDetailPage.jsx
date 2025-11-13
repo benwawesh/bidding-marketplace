@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAudio } from '../hooks/useAudio';
 import { auctionsAPI } from '../api/endpoints';
 import { getRounds, checkParticipation, placeBid } from '../api/bidAPI';
 import { formatCurrency, isAuctionActive } from '../utils/helpers';
@@ -26,6 +27,20 @@ export default function AuctionDetailPage() {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: () => auctionsAPI.getById(id).then(res => res.data),
+  });
+
+  // Initialize audio for background music (if auction has music)
+  const {
+    isPlaying,
+    toggle: toggleMusic,
+    setVolume,
+    currentVolume,
+    isMuted,
+    toggleMute,
+  } = useAudio(product?.background_music || null, {
+    autoPlay: true,
+    loop: true,
+    volume: 0.3,
   });
 
   // Redirect to regular product page if it's buy_now only
@@ -225,6 +240,75 @@ export default function AuctionDetailPage() {
             </span>
           )}
         </div>
+
+        {/* Floating Music Player Controls - Only show if music exists */}
+        {product?.background_music && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <div className="bg-white rounded-full shadow-2xl border-2 border-orange-500 p-3 flex items-center gap-3">
+              {/* Play/Pause Button */}
+              <button
+                onClick={toggleMusic}
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white flex items-center justify-center hover:from-orange-600 hover:to-red-600 transition-all shadow-lg"
+                aria-label={isPlaying ? 'Pause music' : 'Play music'}
+              >
+                {isPlaying ? (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Volume Control */}
+              <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-2">
+                <button
+                  onClick={toggleMute}
+                  className="text-gray-600 hover:text-orange-600 transition"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                >
+                  {isMuted ? (
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                    </svg>
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={isMuted ? 0 : currentVolume * 100}
+                  onChange={(e) => {
+                    const newVolume = parseInt(e.target.value) / 100;
+                    setVolume(newVolume);
+                    if (isMuted && newVolume > 0) {
+                      toggleMute(); // Unmute if user adjusts volume
+                    }
+                  }}
+                  className="w-20 h-2 bg-gray-300 rounded-full appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${isMuted ? 0 : currentVolume * 100}%, #d1d5db ${isMuted ? 0 : currentVolume * 100}%, #d1d5db 100%)`
+                  }}
+                />
+              </div>
+
+              {/* Music Icon Animation */}
+              {isPlaying && (
+                <div className="flex items-center gap-1">
+                  <div className="w-1 bg-orange-500 rounded-full animate-bounce" style={{ height: '12px', animationDelay: '0ms', animationDuration: '600ms' }}></div>
+                  <div className="w-1 bg-orange-500 rounded-full animate-bounce" style={{ height: '16px', animationDelay: '150ms', animationDuration: '600ms' }}></div>
+                  <div className="w-1 bg-orange-500 rounded-full animate-bounce" style={{ height: '10px', animationDelay: '300ms', animationDuration: '600ms' }}></div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Auction Details */}

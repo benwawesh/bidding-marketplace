@@ -47,6 +47,7 @@ import FinancialAnalyticsPage from './pages/management/FinancialAnalyticsPage';
 import PaymentStatusPage from './pages/PaymentStatusPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import OrderManagementPage from './pages/management/OrderManagementPage';
+import HeroBannersPage from './pages/management/HeroBannersPage';
 
 
 
@@ -221,6 +222,16 @@ function App() {
               element={
                 <ProtectedRoute requireSuperuser={true}>
                   <PromoBarManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Hero Banners Management */}
+            <Route
+              path="/management/hero-banners"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <HeroBannersPage />
                 </ProtectedRoute>
               }
             />

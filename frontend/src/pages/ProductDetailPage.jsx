@@ -4,6 +4,7 @@ import { auctionsAPI, cartAPI } from '../api/endpoints';
 import { formatCurrency } from '../utils/helpers';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
+import { useAudio } from '../hooks/useAudio';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -15,6 +16,20 @@ export default function ProductDetailPage() {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: () => auctionsAPI.getById(id).then(res => res.data),
+  });
+
+  // Initialize audio for background music (if product has music)
+  const {
+    isPlaying,
+    toggle: toggleMusic,
+    setVolume,
+    currentVolume,
+    isMuted,
+    toggleMute,
+  } = useAudio(product?.background_music_url || product?.background_music || null, {
+    autoPlay: true,
+    loop: true,
+    volume: 0.3,
   });
 
   // Add to cart mutation
@@ -245,6 +260,74 @@ export default function ProductDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Floating Music Player */}
+      {product?.background_music && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="bg-white rounded-full shadow-2xl border-2 border-orange-500 p-3 flex items-center gap-3">
+
+            {/* Play/Pause Button */}
+            <button
+              onClick={toggleMusic}
+              className="bg-gradient-to-r from-orange-500 to-rose-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              {isPlaying ? (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Music Icon with Animation */}
+            <div className="flex items-center gap-2">
+              {isPlaying ? (
+                <div className="flex gap-1 items-end h-6">
+                  <div className="w-1 bg-gradient-to-t from-orange-500 to-rose-500 rounded-full animate-music-bar-1" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-1 bg-gradient-to-t from-orange-500 to-rose-500 rounded-full animate-music-bar-2" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-1 bg-gradient-to-t from-orange-500 to-rose-500 rounded-full animate-music-bar-3" style={{ animationDelay: '0.4s' }}></div>
+                  <div className="w-1 bg-gradient-to-t from-orange-500 to-rose-500 rounded-full animate-music-bar-4" style={{ animationDelay: '0.6s' }}></div>
+                </div>
+              ) : (
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+              )}
+              <span className="text-sm font-semibold text-gray-700 hidden sm:block">Background Music</span>
+            </div>
+
+            {/* Volume Control */}
+            <div className="hidden md:flex items-center gap-2 ml-2">
+              <button
+                onClick={toggleMute}
+                className="text-gray-600 hover:text-orange-600 transition-colors"
+              >
+                {isMuted ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  </svg>
+                )}
+              </button>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={isMuted ? 0 : currentVolume * 100}
+                onChange={(e) => setVolume(parseInt(e.target.value) / 100)}
+                className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

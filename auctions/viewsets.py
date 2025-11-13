@@ -1,17 +1,18 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from django.db.models import Q, Max, Count, Sum, Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .models import Auction, Category, Bid, Round, Participation
+from .models import Auction, Category, Bid, Round, Participation, HeroBanner
 from accounts.models import User
 from .serializers import (
     AuctionListSerializer, AuctionDetailSerializer, AuctionCreateSerializer,
     CategorySerializer, BidSerializer, RoundSerializer, ParticipationSerializer,
+    HeroBannerSerializer,
 )
 from decimal import Decimal, InvalidOperation
 
@@ -1639,3 +1640,27 @@ class RoundViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HeroBannerViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for hero carousel banners
+    - List/Retrieve: Public access (returns active banners)
+    - Create/Update/Delete: Superuser only
+    """
+    serializer_class = HeroBannerSerializer
+
+    def get_permissions(self):
+        """Public can read, but only superusers can create/update/delete"""
+        if self.action in ['list', 'retrieve']:
+            return []  # Public access for read operations
+        return [IsAdminUser()]  # Superuser required for write operations
+
+    def get_queryset(self):
+        """
+        Return all banners for superusers (for management),
+        only active banners for public (for display)
+        """
+        if self.request.user and self.request.user.is_superuser:
+            return HeroBanner.objects.all().order_by('order', 'created_at')
+        return HeroBanner.objects.filter(is_active=True).order_by('order', 'created_at')

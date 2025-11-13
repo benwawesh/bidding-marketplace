@@ -1,11 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from '../../api/axios';
 
 export default function HeroImageCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Default promotional slides
-  const slides = [
+  // Fetch hero banners from API
+  const { data } = useQuery({
+    queryKey: ['hero-banners'],
+    queryFn: async () => {
+      const res = await axios.get('/hero-banners/');
+      // Handle paginated response
+      if (res.data.results && Array.isArray(res.data.results)) {
+        return res.data.results;
+      }
+      // Handle direct array response
+      if (Array.isArray(res.data)) {
+        return res.data;
+      }
+      // Fallback to empty array
+      return [];
+    },
+  });
+
+  const banners = Array.isArray(data) ? data : [];
+
+  // Use banners from API, or default if none exist
+  const slides = banners.length > 0 ? banners.map(banner => ({
+    id: banner.id,
+    image: banner.image_url || banner.image,
+    title: banner.title,
+    subtitle: banner.subtitle,
+    cta: banner.cta_text,
+    link: banner.cta_link,
+  })) : [
     {
       id: 1,
       image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=500&fit=crop',
@@ -13,7 +42,6 @@ export default function HeroImageCarousel() {
       subtitle: 'Your Ultimate Bidding Marketplace',
       cta: 'Browse Products',
       link: '/browse',
-      bgColor: 'from-orange-500 to-red-500'
     },
     {
       id: 2,
@@ -22,7 +50,6 @@ export default function HeroImageCarousel() {
       subtitle: 'Compete with others and win amazing products at unbeatable prices',
       cta: 'Learn How to Bid',
       link: '/browse',
-      bgColor: 'from-blue-500 to-purple-500'
     },
     {
       id: 3,
@@ -31,7 +58,6 @@ export default function HeroImageCarousel() {
       subtitle: 'Secure payments with M-Pesa • Fast delivery • 7-day returns',
       cta: 'Shop Now',
       link: '/browse',
-      bgColor: 'from-green-500 to-teal-500'
     }
   ];
 
@@ -66,28 +92,27 @@ export default function HeroImageCarousel() {
               index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
-            {/* Background Image with Overlay */}
+            {/* Background Image - No Overlay */}
             <div className="relative w-full h-full">
               <img
                 src={slide.image}
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80`}></div>
             </div>
 
-            {/* Content Overlay */}
+            {/* Content Overlay - Semi-transparent background for text readability */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center px-4 sm:px-8 max-w-4xl">
-                <h2 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white mb-3 sm:mb-4 drop-shadow-lg">
+              <div className="text-center px-4 sm:px-8 max-w-4xl bg-black/40 rounded-xl p-6 sm:p-8">
+                <h2 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white mb-3 sm:mb-4">
                   {slide.title}
                 </h2>
-                <p className="text-lg sm:text-xl lg:text-2xl text-white mb-6 sm:mb-8 drop-shadow-md font-medium">
+                <p className="text-lg sm:text-xl lg:text-2xl text-white mb-6 sm:mb-8 font-medium">
                   {slide.subtitle}
                 </p>
                 <Link
                   to={slide.link}
-                  className="inline-block bg-white text-gray-900 px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold hover:bg-gray-100 transition-all shadow-2xl hover:shadow-xl transform hover:scale-105"
+                  className="inline-block bg-white text-gray-900 px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold hover:bg-gray-100 transition-all transform hover:scale-105"
                 >
                   {slide.cta}
                 </Link>

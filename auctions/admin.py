@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Auction, Round, Participation,
-    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner, ProductImage
+    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner, ProductImage, HeroBanner
 )
 
 @admin.register(Category)
@@ -16,6 +16,15 @@ class PromoBannerAdmin(admin.ModelAdmin):
     list_display = ['text', 'is_active', 'display_order']
     list_filter = ['is_active']
     ordering = ['display_order']
+
+
+@admin.register(HeroBanner)
+class HeroBannerAdmin(admin.ModelAdmin):
+    list_display = ['title', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'subtitle']
+    ordering = ['order', 'created_at']
+    list_editable = ['order', 'is_active']
 
 
 class ProductImageInline(admin.TabularInline):

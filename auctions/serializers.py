@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem, ProductImage
+from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem, ProductImage, HeroBanner
 from accounts.models import User
 
 
@@ -228,6 +228,7 @@ class AuctionListSerializer(serializers.ModelSerializer):
     time_remaining = serializers.ReadOnlyField()
     participant_count = serializers.SerializerMethodField()
     highest_bid = serializers.SerializerMethodField()
+    background_music_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
@@ -235,7 +236,7 @@ class AuctionListSerializer(serializers.ModelSerializer):
             'id', 'title', 'category', 'category_name',
             'base_price', 'participation_fee', 'product_type',
             'buy_now_price', 'market_price', 'stock_quantity', 'units_sold',
-            'main_image', 'start_time', 'end_time', 'status',
+            'main_image', 'background_music', 'background_music_url', 'start_time', 'end_time', 'status',
             'is_active', 'time_remaining', 'seller_username',
             'participant_count', 'highest_bid', 'created_at'
         ]
@@ -247,6 +248,23 @@ class AuctionListSerializer(serializers.ModelSerializer):
     def get_highest_bid(self, obj):
         highest = obj.get_highest_bid()
         return highest.pledge_amount if highest else None
+
+    def get_background_music_url(self, obj):
+        """Get full URL for background music file"""
+        if obj.background_music:
+            from django.conf import settings
+            request = self.context.get('request')
+
+            # In production, use the production domain
+            if not settings.DEBUG and hasattr(settings, 'SITE_URL'):
+                return f"{settings.SITE_URL}{obj.background_music.url}"
+
+            # In development or if request is available, use request.build_absolute_uri
+            if request is not None:
+                return request.build_absolute_uri(obj.background_music.url)
+
+            return obj.background_music.url
+        return None
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -285,6 +303,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     participant_count = serializers.SerializerMethodField()
     total_revenue = serializers.SerializerMethodField()
     highest_bid = serializers.SerializerMethodField()
+    background_music_url = serializers.SerializerMethodField()
 
     # User-specific fields (requires authenticated user)
     user_has_participated = serializers.SerializerMethodField()
@@ -296,7 +315,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'category', 'category_info',
             'base_price', 'participation_fee', 'product_type',
             'buy_now_price', 'market_price', 'stock_quantity', 'units_sold',
-            'main_image', 'images', 'start_time', 'end_time', 'status',
+            'main_image', 'background_music', 'background_music_url', 'images', 'start_time', 'end_time', 'status',
             'is_active', 'time_remaining', 'created_by', 'seller_info',
             'winner', 'winner_info', 'winning_amount', 'rounds',
             'current_round', 'participant_count', 'total_revenue',
@@ -325,6 +344,23 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
                 'user': highest.user.username,
                 'submitted_at': highest.submitted_at
             }
+        return None
+
+    def get_background_music_url(self, obj):
+        """Get full URL for background music file"""
+        if obj.background_music:
+            from django.conf import settings
+            request = self.context.get('request')
+
+            # In production, use the production domain
+            if not settings.DEBUG and hasattr(settings, 'SITE_URL'):
+                return f"{settings.SITE_URL}{obj.background_music.url}"
+
+            # In development or if request is available, use request.build_absolute_uri
+            if request is not None:
+                return request.build_absolute_uri(obj.background_music.url)
+
+            return obj.background_music.url
         return None
 
     def get_user_has_participated(self, obj):
@@ -370,7 +406,7 @@ class AuctionCreateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'category', 'base_price',
             'participation_fee', 'product_type', 'buy_now_price', 'market_price',
-            'stock_quantity', 'main_image', 'start_time', 'end_time',
+            'stock_quantity', 'main_image', 'background_music', 'start_time', 'end_time',
             # NEW FIELDS - Flash Sales & Homepage Curation
             'is_flash_sale', 'discount_percentage', 'flash_sale_ends_at',
             'is_featured', 'display_order'
@@ -719,3 +755,33 @@ class CustomerSerializer(serializers.ModelSerializer):
     def get_total_bids(self, obj):
         """Count total bids placed"""
         return obj.bids.count()
+
+class HeroBannerSerializer(serializers.ModelSerializer):
+    """Serializer for hero carousel banners"""
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = HeroBanner
+        fields = [
+            'id', 'title', 'subtitle', 'image', 'image_url',
+            'cta_text', 'cta_link', 'order', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_image_url(self, obj):
+        """Get full URL for the banner image"""
+        if obj.image:
+            from django.conf import settings
+            request = self.context.get('request')
+
+            # In production, use the production domain
+            if not settings.DEBUG and hasattr(settings, 'SITE_URL'):
+                return f"{settings.SITE_URL}{obj.image.url}"
+
+            # In development or if request is available, use request.build_absolute_uri
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+
+            return obj.image.url
+        return None

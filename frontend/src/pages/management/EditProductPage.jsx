@@ -33,6 +33,7 @@ export default function EditProductPage() {
     participation_fee: '',
     stock_quantity: '',
     main_image: null,
+    background_music: null,
     start_time: '',
     end_time: '',
     is_featured: false,
@@ -43,8 +44,11 @@ export default function EditProductPage() {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [musicFileName, setMusicFileName] = useState('');
+  const [musicPreviewUrl, setMusicPreviewUrl] = useState(null);
   const [errors, setErrors] = useState({});
   const [keepExistingImage, setKeepExistingImage] = useState(true);
+  const [keepExistingMusic, setKeepExistingMusic] = useState(true);
 
   // Populate form when product loads
   useEffect(() => {
@@ -59,6 +63,7 @@ export default function EditProductPage() {
         participation_fee: product.participation_fee || '',
         stock_quantity: product.stock_quantity || '',
         main_image: null,
+        background_music: null,
         start_time: product.start_time ? new Date(product.start_time).toISOString().slice(0, 16) : '',
         end_time: product.end_time ? new Date(product.end_time).toISOString().slice(0, 16) : '',
         is_featured: product.is_featured || false,
@@ -70,10 +75,20 @@ export default function EditProductPage() {
 
       // Set existing image preview
       if (product.main_image) {
-        const imageUrl = product.main_image.startsWith('http') 
-          ? product.main_image 
+        const imageUrl = product.main_image.startsWith('http')
+          ? product.main_image
           : `${product.main_image}`;
         setImagePreview(imageUrl);
+      }
+
+      // Set existing music file name and URL
+      if (product.background_music) {
+        const fileName = product.background_music.split('/').pop();
+        setMusicFileName(fileName);
+        const musicUrl = product.background_music.startsWith('http')
+          ? product.background_music
+          : `${product.background_music}`;
+        setMusicPreviewUrl(musicUrl);
       }
     }
   }, [product]);
@@ -81,20 +96,20 @@ export default function EditProductPage() {
   // Update product mutation
   const updateMutation = useMutation({
     mutationFn: (data) => {
-      // If there's a file, use FormData
-      if (data.main_image instanceof File) {
+      // If there's a file (image or music), use FormData
+      if (data.main_image instanceof File || data.background_music instanceof File) {
         const formData = new FormData();
         Object.keys(data).forEach(key => {
           if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
             formData.append(key, data[key]);
           }
         });
-        return axios.put(`/api/auctions/${id}/`, formData, {
+        return axios.put(`/auctions/${id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
       // Otherwise send JSON
-      return axios.put(`/api/auctions/${id}/`, data);
+      return axios.put(`/auctions/${id}/`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['product', id]);
@@ -137,12 +152,35 @@ export default function EditProductPage() {
 
       setFormData(prev => ({ ...prev, main_image: file }));
       setKeepExistingImage(false);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle music file input
+  const handleMusicFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        alert('Please select an audio file (MP3, WAV, OGG, etc.)');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Audio file must be less than 10MB');
+        return;
+      }
+
+      setFormData(prev => ({ ...prev, background_music: file }));
+      setKeepExistingMusic(false);
+      setMusicFileName(file.name);
+
+      // Create preview URL for the audio file
+      const previewUrl = URL.createObjectURL(file);
+      setMusicPreviewUrl(previewUrl);
     }
   };
 
@@ -165,6 +203,11 @@ export default function EditProductPage() {
     // Only include new image if user uploaded one
     if (formData.main_image instanceof File) {
       payload.main_image = formData.main_image;
+    }
+
+    // Only include new music if user uploaded one
+    if (formData.background_music instanceof File) {
+      payload.background_music = formData.background_music;
     }
 
     if (formData.product_type === 'buy_now' || formData.product_type === 'both') {
@@ -346,7 +389,7 @@ export default function EditProductPage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Product Image
                 </label>
-                
+
                 <div className="flex items-start gap-4">
                   {/* Image Preview */}
                   <div className="flex-shrink-0">
@@ -361,8 +404,8 @@ export default function EditProductPage() {
                               setKeepExistingImage(true);
                               // Restore original image
                               if (product.main_image) {
-                                const imageUrl = product.main_image.startsWith('http') 
-                                  ? product.main_image 
+                                const imageUrl = product.main_image.startsWith('http')
+                                  ? product.main_image
                                   : `${product.main_image}`;
                                 setImagePreview(imageUrl);
                               }
@@ -392,6 +435,88 @@ export default function EditProductPage() {
                       Upload new image (JPG, PNG, or GIF - Max 5MB) or keep existing
                     </p>
                   </div>
+                </div>
+              </div>
+
+              {/* Background Music Upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Background Music (Optional) 🎵
+                </label>
+
+                <div className="space-y-3">
+                  {/* Music Preview Player */}
+                  {musicPreviewUrl && (
+                    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🎵</span>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {formData.background_music instanceof File ? 'New: ' : 'Current: '}
+                            {musicFileName}
+                          </p>
+                          <p className="text-xs text-gray-600">Preview your music below</p>
+                        </div>
+                        {formData.background_music instanceof File && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, background_music: null }));
+                              setKeepExistingMusic(true);
+                              setMusicFileName(product?.background_music ? product.background_music.split('/').pop() : '');
+                              setMusicPreviewUrl(product?.background_music ? (product.background_music.startsWith('http') ? product.background_music : `${product.background_music}`) : null);
+                            }}
+                            className="bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Audio Player */}
+                      <audio
+                        controls
+                        src={musicPreviewUrl}
+                        className="w-full"
+                        style={{ height: '40px' }}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
+
+                  {/* Current Music Display (when no preview URL yet) */}
+                  {musicFileName && keepExistingMusic && !musicPreviewUrl && (
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <span className="text-2xl">🎵</span>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Current: {musicFileName}</p>
+                        <p className="text-xs text-gray-600">Playing on auction page</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, background_music: null }));
+                          setKeepExistingMusic(true);
+                          setMusicFileName(product?.background_music ? product.background_music.split('/').pop() : '');
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        Keep
+                      </button>
+                    </div>
+                  )}
+
+                  {/* File Input */}
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleMusicFileChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Upload background music (MP3, WAV, OGG - Max 10MB). Music will auto-play on auction detail page.
+                  </p>
                 </div>
               </div>
             </div>

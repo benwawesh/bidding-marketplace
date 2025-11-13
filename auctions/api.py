@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .viewsets import (
     AuctionViewSet, CategoryViewSet, BidViewSet,
     ParticipationViewSet, PaymentViewSet, CartViewSet,
-    OrderViewSet, CustomerViewSet, RoundViewSet
+    OrderViewSet, CustomerViewSet, RoundViewSet, HeroBannerViewSet
 )
 from .delete_views import delete_product, bulk_delete_products
 from .promo_views import get_active_promo_banners
@@ -21,6 +21,7 @@ router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'customers', CustomerViewSet, basename='customer')
 router.register(r'product-images', ProductImageViewSet, basename='product-image')
+router.register(r'hero-banners', HeroBannerViewSet, basename='hero-banner')
 
 # Add custom URLs BEFORE router.urls
 urlpatterns = [

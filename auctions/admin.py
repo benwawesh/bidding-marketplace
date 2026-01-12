@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Auction, Round, Participation,
-    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner, ProductImage, HeroBanner
+    Bid, Payment, Cart, CartItem, Order, OrderItem, PromoBanner, ProductImage, HeroBanner, SpecialOfferBanner
 )
 
 @admin.register(Category)
@@ -23,6 +23,14 @@ class HeroBannerAdmin(admin.ModelAdmin):
     list_display = ['title', 'order', 'is_active', 'created_at']
     list_filter = ['is_active', 'created_at']
     search_fields = ['title', 'subtitle']
+    ordering = ['order', 'created_at']
+    list_editable = ['order', 'is_active']
+
+
+@admin.register(SpecialOfferBanner)
+class SpecialOfferBannerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
     ordering = ['order', 'created_at']
     list_editable = ['order', 'is_active']
 

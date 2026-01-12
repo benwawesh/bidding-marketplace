@@ -23,6 +23,8 @@ export default function CreateProductPage() {
     buy_now_price: '',
     market_price: '',  // NEW FIELD
     participation_fee: '',
+    min_pledge: '',
+    max_pledge: '',
     stock_quantity: '',
     main_image: null,
     is_featured: false,
@@ -186,6 +188,10 @@ export default function CreateProductPage() {
     if (formData.product_type === 'auction') {
       payload.base_price = parseFloat(formData.base_price) || 0;
       payload.participation_fee = parseFloat(formData.participation_fee) || 0;
+      payload.min_pledge = parseFloat(formData.min_pledge) || 0;
+      if (formData.max_pledge) {
+        payload.max_pledge = parseFloat(formData.max_pledge);
+      }
     }
 
     // For BOTH - use both base_price and buy_now_price
@@ -193,6 +199,10 @@ export default function CreateProductPage() {
       payload.base_price = parseFloat(formData.base_price) || 0;
       payload.buy_now_price = parseFloat(formData.buy_now_price) || 0;
       payload.participation_fee = parseFloat(formData.participation_fee) || 0;
+      payload.min_pledge = parseFloat(formData.min_pledge) || 0;
+      if (formData.max_pledge) {
+        payload.max_pledge = parseFloat(formData.max_pledge);
+      }
     }
 
     if (formData.is_flash_sale) {
@@ -443,6 +453,43 @@ export default function CreateProductPage() {
                     <p className="text-xs text-gray-500 mt-1">Fee to join the auction</p>
                     {errors.participation_fee && <p className="text-red-600 text-sm mt-1">{errors.participation_fee[0]}</p>}
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Minimum Pledge (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="min_pledge"
+                      value={formData.min_pledge}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.min_pledge ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="1000"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum pledge buyers must commit</p>
+                    {errors.min_pledge && <p className="text-red-600 text-sm mt-1">{errors.min_pledge[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Maximum Pledge (KES)
+                    </label>
+                    <input
+                      type="number"
+                      name="max_pledge"
+                      value={formData.max_pledge}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${errors.max_pledge ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="10000"
+                      min="0"
+                      step="0.01"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Maximum pledge allowed (optional)</p>
+                    {errors.max_pledge && <p className="text-red-600 text-sm mt-1">{errors.max_pledge[0]}</p>}
+                  </div>
                 </>
               )}
 
@@ -487,7 +534,7 @@ export default function CreateProductPage() {
                     {errors.buy_now_price && <p className="text-red-600 text-sm mt-1">{errors.buy_now_price[0]}</p>}
                   </div>
 
-                  <div className="col-span-2">
+                  <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Participation Fee (KES) *
                     </label>
@@ -504,6 +551,43 @@ export default function CreateProductPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Fee to join the auction (not required for buy now)</p>
                     {errors.participation_fee && <p className="text-red-600 text-sm mt-1">{errors.participation_fee[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Minimum Pledge (KES) *
+                    </label>
+                    <input
+                      type="number"
+                      name="min_pledge"
+                      value={formData.min_pledge}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.min_pledge ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="1000"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum pledge buyers must commit</p>
+                    {errors.min_pledge && <p className="text-red-600 text-sm mt-1">{errors.min_pledge[0]}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Maximum Pledge (KES)
+                    </label>
+                    <input
+                      type="number"
+                      name="max_pledge"
+                      value={formData.max_pledge}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${errors.max_pledge ? 'border-red-500' : 'border-gray-300'}`}
+                      placeholder="10000"
+                      min="0"
+                      step="0.01"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Maximum pledge allowed (optional)</p>
+                    {errors.max_pledge && <p className="text-red-600 text-sm mt-1">{errors.max_pledge[0]}</p>}
                   </div>
                 </>
               )}

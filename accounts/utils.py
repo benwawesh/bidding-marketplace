@@ -20,8 +20,10 @@ def send_verification_email(user, verification_token):
     Send email verification link to user using SendGrid API
     with spam prevention best practices
     """
-    verification_link = f"https://bidsoko.com/verify-email?token={verification_token}"
-    unsubscribe_link = f"https://bidsoko.com/unsubscribe?email={user.email}"
+    # Use localhost for development, production domain otherwise
+    base_url = "http://localhost:5173" if settings.DEBUG else "https://bidsoko.com"
+    verification_link = f"{base_url}/verify-email?token={verification_token}"
+    unsubscribe_link = f"{base_url}/unsubscribe?email={user.email}"
 
     subject = "Verify Your BidSoko Account"
 
@@ -124,6 +126,16 @@ Unsubscribe: {unsubscribe_link}
     """
 
     try:
+        # In development, print the verification link to console
+        if settings.DEBUG:
+            print("\n" + "="*80)
+            print("EMAIL VERIFICATION LINK (Development Mode)")
+            print("="*80)
+            print(f"To: {user.email}")
+            print(f"Username: {user.username}")
+            print(f"Verification Link: {verification_link}")
+            print("="*80 + "\n")
+
         from sendgrid.helpers.mail import ClickTracking, TrackingSettings, OpenTracking
 
         message = Mail(
@@ -138,12 +150,14 @@ Unsubscribe: {unsubscribe_link}
         message.reply_to = Email("support@bidsoko.com", "BidSoko Support")
 
         # Add List-Unsubscribe header for better deliverability (RFC 2369)
-        message.add_header("List-Unsubscribe", f"<{unsubscribe_link}>")
-        message.add_header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+        from sendgrid.helpers.mail import Header
+        message.add_header(Header("List-Unsubscribe", f"<{unsubscribe_link}>"))
+        message.add_header(Header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click"))
 
         # Add additional spam-prevention headers
-        message.add_header("X-Entity-Ref-ID", f"verification-{user.id}")
-        message.add_header("Precedence", "bulk")
+        user_id = getattr(user, 'id', 'pending')
+        message.add_header(Header("X-Entity-Ref-ID", f"verification-{user_id}"))
+        message.add_header(Header("Precedence", "bulk"))
 
         # Disable click tracking to avoid SendGrid redirect URLs
         message.tracking_settings = TrackingSettings()
@@ -165,8 +179,10 @@ def send_password_reset_email(user, reset_token):
     Send password reset link to user using SendGrid API
     with spam prevention best practices
     """
-    reset_link = f"https://bidsoko.com/reset-password?token={reset_token}"
-    unsubscribe_link = f"https://bidsoko.com/unsubscribe?email={user.email}"
+    # Use localhost for development, production domain otherwise
+    base_url = "http://localhost:5173" if settings.DEBUG else "https://bidsoko.com"
+    reset_link = f"{base_url}/reset-password?token={reset_token}"
+    unsubscribe_link = f"{base_url}/unsubscribe?email={user.email}"
 
     subject = "Reset Your BidSoko Password"
 
@@ -290,12 +306,14 @@ Unsubscribe: {unsubscribe_link}
         message.reply_to = Email("support@bidsoko.com", "BidSoko Support")
 
         # Add List-Unsubscribe header for better deliverability (RFC 2369)
-        message.add_header("List-Unsubscribe", f"<{unsubscribe_link}>")
-        message.add_header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+        from sendgrid.helpers.mail import Header
+        message.add_header(Header("List-Unsubscribe", f"<{unsubscribe_link}>"))
+        message.add_header(Header("List-Unsubscribe-Post", "List-Unsubscribe=One-Click"))
 
         # Add additional spam-prevention headers
-        message.add_header("X-Entity-Ref-ID", f"password-reset-{user.id}")
-        message.add_header("Precedence", "bulk")
+        user_id = getattr(user, 'id', 'unknown')
+        message.add_header(Header("X-Entity-Ref-ID", f"password-reset-{user_id}"))
+        message.add_header(Header("Precedence", "bulk"))
 
         # Disable click tracking to avoid SendGrid redirect URLs
         message.tracking_settings = TrackingSettings()

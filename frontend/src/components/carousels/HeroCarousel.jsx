@@ -39,7 +39,7 @@ export default function HeroCarousel({ products = [] }) {
   return (
     <div className="hero-carousel relative rounded-lg overflow-hidden shadow-xl bg-white">
       {/* Slides */}
-      <div className="relative h-[500px]">
+      <div className="relative h-[300px] sm:h-[400px] lg:h-[500px]">
         {products.map((product, index) => (
           <div
             key={product.id}

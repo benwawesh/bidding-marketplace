@@ -11,7 +11,10 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const [deliveryInfo, setDeliveryInfo] = useState({
+    shipping_name: '',
     shipping_phone: '',
+    shipping_address: '',
+    shipping_city: '',
     customer_notes: ''
   });
 
@@ -160,6 +163,20 @@ export default function CheckoutPage() {
                 <form onSubmit={handleSubmitDetails} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deliveryInfo.shipping_name}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_name: e.target.value })}
+                      placeholder="John Doe"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Phone Number *
                     </label>
                     <input
@@ -175,13 +192,41 @@ export default function CheckoutPage() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Delivery Address *
+                    </label>
+                    <textarea
+                      required
+                      value={deliveryInfo.shipping_address}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_address: e.target.value })}
+                      placeholder="Street address, building, apartment number"
+                      rows="3"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deliveryInfo.shipping_city}
+                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, shipping_city: e.target.value })}
+                      placeholder="Nairobi"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Delivery Notes (Optional)
                     </label>
                     <textarea
                       value={deliveryInfo.customer_notes}
                       onChange={(e) => setDeliveryInfo({ ...deliveryInfo, customer_notes: e.target.value })}
-                      placeholder="Any special instructions for delivery (e.g., your location, landmarks, preferred delivery time)"
-                      rows="4"
+                      placeholder="Any special instructions for delivery (e.g., landmarks, preferred delivery time)"
+                      rows="3"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     ></textarea>
                   </div>
@@ -269,16 +314,16 @@ export default function CheckoutPage() {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-3 pb-3 border-b border-gray-200">
                     <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                      {item.product_image ? (
-                        <img src={item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                      {item.product?.main_image ? (
+                        <img src={item.product.main_image} alt={item.product.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">📦</div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm text-gray-900 truncate">{item.product_name}</h4>
+                      <h4 className="font-medium text-sm text-gray-900 truncate">{item.product?.title}</h4>
                       <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
-                      <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.subtotal)}</p>
+                      <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.total_price)}</p>
                     </div>
                   </div>
                 ))}

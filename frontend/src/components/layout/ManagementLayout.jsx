@@ -116,6 +116,17 @@ export default function ManagementLayout({ children }) {
                 </Link>
 
                 <Link
+                  to="/management/special-offer-banners"
+                  className={`block px-4 py-3 rounded-lg transition ${
+                    isActive('/management/special-offer-banners')
+                      ? 'bg-red-600 text-white font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  🎉 Special Offers
+                </Link>
+
+                <Link
                   to="/management/analytics/financial"
                   className={`block px-4 py-3 rounded-lg transition ${
                     isActive('/management/analytics/financial')

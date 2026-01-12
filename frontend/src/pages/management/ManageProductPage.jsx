@@ -109,7 +109,7 @@ export default function ManageProductPage() {
   const handleActivateWithRange = async (rangeData) => {
     try {
       await axios.post(
-        `/api/auctions/${id}/activate/`,
+        `/auctions/${id}/activate/`,
         rangeData,
         {
           headers: {

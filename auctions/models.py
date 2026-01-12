@@ -759,7 +759,7 @@ class PromoBanner(models.Model):
     text = models.CharField(max_length=500, help_text='Promotional text to display')
     is_active = models.BooleanField(default=True, help_text='Show this banner')
     background_color = models.CharField(
-        max_length=20, 
+        max_length=20,
         default='#FF6B00',
         help_text='Background color (hex code like #FF6B00)'
     )
@@ -782,3 +782,22 @@ class PromoBanner(models.Model):
 
     def __str__(self):
         return f"{self.text[:50]}... {'(Active)' if self.is_active else '(Inactive)'}"
+
+
+class SpecialOfferBanner(models.Model):
+    """Special offer image banners for sidebar"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    image = models.ImageField(upload_to='special_offers/', help_text="Banner image (recommended: 400x200px)")
+    link = models.CharField(max_length=200, default="/browse", help_text="Link URL when banner is clicked (e.g., /browse, /category/electronics)")
+    order = models.PositiveIntegerField(default=0, help_text="Display order (0 = first)")
+    is_active = models.BooleanField(default=True, help_text="Show this banner in rotation")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = "Special Offer Banner"
+        verbose_name_plural = "Special Offer Banners"
+
+    def __str__(self):
+        return f"Special Offer Banner (Order: {self.order})"

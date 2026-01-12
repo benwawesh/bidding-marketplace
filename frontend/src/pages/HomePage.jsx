@@ -112,12 +112,11 @@ export default function HomePage() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* Search Bar */}
-      <div className="bg-rose-50 w-full">
+      {/* Search Bar - HIDDEN */}
+      {/* <div className="bg-rose-50 w-full">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <form className="relative max-w-3xl mx-auto">
             <div className="relative flex items-center">
-              {/* Search Icon */}
               <div className="absolute left-4 text-gray-400 pointer-events-none">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -144,17 +143,17 @@ export default function HomePage() {
             </div>
           </form>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Content - Mobile First */}
       <div className="w-full">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex flex-col lg:flex-row gap-0 lg:gap-4">
 
-            {/* Left Sidebar - Hidden on mobile */}
-            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+            {/* Left Sidebar - HIDDEN */}
+            {/* <aside className="hidden lg:block lg:w-64 flex-shrink-0">
               <LeftSidebar categories={categories} />
-            </aside>
+            </aside> */}
 
             {/* Main Content */}
             <main className="flex-1 min-w-0 w-full px-3 sm:px-4 py-4">
@@ -168,11 +167,11 @@ export default function HomePage() {
               <HeroAuctionSection auction={heroAuction} />
             )}
 
-            {/* Categories Grid */}
-            <CategoriesGrid categories={categories} />
+            {/* Categories Grid - HIDDEN */}
+            {/* <CategoriesGrid categories={categories} /> */}
 
-            {/* Buy Now Section - Enhanced Design */}
-            {buyNowProducts.length > 0 && (
+            {/* Buy Now Section - HIDDEN */}
+            {/* {buyNowProducts.length > 0 && (
               <section id="buy-now" className="my-6 sm:my-8 md:my-10">
                 <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-orange-200">
                   <div className="flex items-center gap-3">
@@ -196,7 +195,6 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                {/* Jumia-Style Horizontal Carousel */}
                 <ProductCarousel>
                   {buyNowProducts.map((product) => (
                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]">
@@ -205,12 +203,12 @@ export default function HomePage() {
                   ))}
                 </ProductCarousel>
               </section>
-            )}
+            )} */}
 
 
 
-            {/* Both Options Section - Enhanced Design */}
-            {bothProducts.length > 0 && (
+            {/* Both Options Section - HIDDEN */}
+            {/* {bothProducts.length > 0 && (
               <section className="my-6 sm:my-8 md:my-10">
                 <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b-2 border-rose-200">
                   <div className="flex items-center gap-3">
@@ -225,7 +223,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Jumia-Style Horizontal Carousel */}
                 <ProductCarousel>
                   {bothProducts.map(product => (
                     <div key={product.id} className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]">
@@ -234,7 +231,7 @@ export default function HomePage() {
                   ))}
                 </ProductCarousel>
               </section>
-            )}
+            )} */}
 
             {/* Empty State - No Products at All */}
             {auctions.length === 0 && (
@@ -249,10 +246,10 @@ export default function HomePage() {
 
           </main>
 
-            {/* Right Sidebar - Hidden on mobile */}
-            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+            {/* Right Sidebar - HIDDEN */}
+            {/* <aside className="hidden lg:block lg:w-64 flex-shrink-0">
               <RightSidebar stats={stats} />
-            </aside>
+            </aside> */}
 
           </div>
         </div>

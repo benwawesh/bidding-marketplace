@@ -18,14 +18,14 @@ export default function MainLayout({ children }) {
 
   return (
     <div className="bg-rose-50 min-h-screen flex flex-col">
-      {/* PromoBar - Only on HomePage, above Navbar */}
-      {isHomePage && <PromoBar />}
+      {/* PromoBar - HIDDEN */}
+      {/* {isHomePage && <PromoBar />} */}
 
       {/* Navbar */}
       <Navbar />
 
-      {/* Promo Banner Section - Only on HomePage, Mobile Responsive */}
-      {isHomePage && (
+      {/* Promo Banner Section - HIDDEN */}
+      {/* {isHomePage && (
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2">
           <div className="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm">
             🎯 <strong>HYBRID MARKETPLACE:</strong>
@@ -34,7 +34,7 @@ export default function MainLayout({ children }) {
             <a href="#browse" className="underline font-bold ml-1">EXPLORE NOW</a>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Page Content */}
       <main className="flex-1">

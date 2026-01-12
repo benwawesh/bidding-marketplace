@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem, ProductImage, HeroBanner
+from .models import Category, Auction, Round, Participation, Bid, Payment, Cart, CartItem, Order, OrderItem, ProductImage, HeroBanner, SpecialOfferBanner
 from accounts.models import User
 
 
@@ -316,6 +316,8 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
             'base_price', 'participation_fee', 'product_type',
             'buy_now_price', 'market_price', 'stock_quantity', 'units_sold',
             'main_image', 'background_music', 'background_music_url', 'images', 'start_time', 'end_time', 'status',
+            # Pledge range fields
+            'min_pledge', 'max_pledge',
             'is_active', 'time_remaining', 'created_by', 'seller_info',
             'winner', 'winner_info', 'winning_amount', 'rounds',
             'current_round', 'participant_count', 'total_revenue',
@@ -407,6 +409,8 @@ class AuctionCreateSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'category', 'base_price',
             'participation_fee', 'product_type', 'buy_now_price', 'market_price',
             'stock_quantity', 'main_image', 'background_music', 'start_time', 'end_time',
+            # Pledge range fields for auctions
+            'min_pledge', 'max_pledge',
             # NEW FIELDS - Flash Sales & Homepage Curation
             'is_flash_sale', 'discount_percentage', 'flash_sale_ends_at',
             'is_featured', 'display_order'
@@ -769,6 +773,36 @@ class HeroBannerSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def get_image_url(self, obj):
+        """Get full URL for the banner image"""
+        if obj.image:
+            from django.conf import settings
+            request = self.context.get('request')
+
+            # In production, use the production domain
+            if not settings.DEBUG and hasattr(settings, 'SITE_URL'):
+                return f"{settings.SITE_URL}{obj.image.url}"
+
+            # In development or if request is available, use request.build_absolute_uri
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+
+            return obj.image.url
+        return None
+
+
+class SpecialOfferBannerSerializer(serializers.ModelSerializer):
+    """Serializer for special offer banners"""
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SpecialOfferBanner
+        fields = [
+            'id', 'image', 'image_url', 'link', 'order',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
     def get_image_url(self, obj):
         """Get full URL for the banner image"""
         if obj.image:

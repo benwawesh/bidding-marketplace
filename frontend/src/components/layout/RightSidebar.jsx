@@ -1,48 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import axios from '../../api/axios';
 import './RightSidebar.css';
 
 export default function RightSidebar() {
   const [activeModal, setActiveModal] = useState(null);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  const offers = [
-    {
-      id: 1,
-      emoji: '🎯',
-      text: 'Join the bid TODAY and get CRAZY OFFERS!',
-      bgColor: 'bg-gradient-to-r from-purple-500 to-pink-500'
+  // Fetch special offer banners from API
+  const { data } = useQuery({
+    queryKey: ['special-offer-banners'],
+    queryFn: async () => {
+      const res = await axios.get('/special-offer-banners/');
+      // Handle paginated response
+      if (res.data.results && Array.isArray(res.data.results)) {
+        return res.data.results;
+      }
+      // Handle direct array response
+      if (Array.isArray(res.data)) {
+        return res.data;
+      }
+      // Fallback to empty array
+      return [];
     },
-    {
-      id: 2,
-      emoji: '🔥',
-      text: 'Bid now and SAVE UP TO 100%!',
-      bgColor: 'bg-gradient-to-r from-red-500 to-orange-500'
-    },
-    {
-      id: 3,
-      emoji: '⚡',
-      text: 'LIMITED TIME: Extra 10% off on bids!',
-      bgColor: 'bg-gradient-to-r from-yellow-400 to-orange-400'
-    },
-    {
-      id: 4,
-      emoji: '🎁',
-      text: 'First bid? Get KSH 500 OFF!',
-      bgColor: 'bg-gradient-to-r from-green-500 to-teal-500'
-    },
-    {
-      id: 5,
-      emoji: '💰',
-      text: 'Daily deals - Bid and WIN BIG!',
-      bgColor: 'bg-gradient-to-r from-blue-500 to-indigo-500'
-    },
-    {
-      id: 6,
-      emoji: '🎊',
-      text: 'Beat the price - Bid smarter, save more!',
-      bgColor: 'bg-gradient-to-r from-pink-500 to-rose-500'
-    },
-  ];
+  });
+
+  const banners = Array.isArray(data) ? data : [];
+
+  // Auto-rotate banners every 5 seconds
+  useEffect(() => {
+    if (banners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
 
   const helpModals = {
     'help-center': {
@@ -242,37 +238,50 @@ export default function RightSidebar() {
     <>
       <aside className="w-80 space-y-4">
 
-        {/* ANIMATED OFFERS SECTION */}
-        <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-lg shadow-lg p-6 overflow-hidden relative">
-          <h3 className="text-lg font-bold text-white mb-4 text-center drop-shadow-md">
-            🎉 Special Offers
-          </h3>
+        {/* SPECIAL OFFERS BANNER SECTION */}
+        {banners.length > 0 && (
+          <div className="bg-orange-500 rounded-lg shadow-lg p-4 overflow-hidden relative">
+            <h3 className="text-lg font-bold text-white mb-3 text-center">
+              🎉 Special Offers
+            </h3>
 
-          <div className="offers-flash-container h-32 relative rounded-lg overflow-hidden">
-            {offers.map((offer, index) => (
-              <div
-                key={offer.id}
-                className={`offer-flash-slide ${offer.bgColor}`}
-                style={{
-                  animationDelay: `${index * 2}s`
-                }}
-              >
-                <div className="text-center">
-                  <span className="text-4xl mb-2 block drop-shadow-lg">{offer.emoji}</span>
-                  <p className="text-sm font-bold text-white px-3 drop-shadow-md">
-                    {offer.text}
-                  </p>
+            <div className="relative h-48 rounded-lg overflow-hidden">
+              {banners.map((banner, index) => (
+                <Link
+                  key={banner.id}
+                  to={banner.link}
+                  className={`absolute inset-0 transition-opacity duration-700 ${
+                    index === currentBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                  }`}
+                >
+                  <img
+                    src={banner.image_url || banner.image}
+                    alt={`Special offer ${index + 1}`}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </Link>
+              ))}
+
+              {/* Navigation Dots */}
+              {banners.length > 1 && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+                  {banners.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentBannerIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentBannerIndex
+                          ? 'bg-white w-6'
+                          : 'bg-white/60 hover:bg-white/80'
+                      }`}
+                      aria-label={`Go to banner ${index + 1}`}
+                    />
+                  ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-
-          <div className="mt-4 text-center">
-            <button className="bg-white text-orange-600 px-6 py-2 rounded-full font-semibold text-sm hover:bg-gray-100 transition shadow-lg">
-              Explore Offers →
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* WHATSAPP SUPPORT */}
         <div className="bg-green-500 text-white rounded-lg shadow-sm p-6">

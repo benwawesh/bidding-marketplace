@@ -48,6 +48,7 @@ import PaymentStatusPage from './pages/PaymentStatusPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import OrderManagementPage from './pages/management/OrderManagementPage';
 import HeroBannersPage from './pages/management/HeroBannersPage';
+import SpecialOfferBannersPage from './pages/management/SpecialOfferBannersPage';
 
 
 
@@ -232,6 +233,16 @@ function App() {
               element={
                 <ProtectedRoute requireSuperuser={true}>
                   <HeroBannersPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Special Offer Banners Management */}
+            <Route
+              path="/management/special-offer-banners"
+              element={
+                <ProtectedRoute requireSuperuser={true}>
+                  <SpecialOfferBannersPage />
                 </ProtectedRoute>
               }
             />

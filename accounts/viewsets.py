@@ -84,7 +84,8 @@ class UserViewSet(viewsets.ModelViewSet):
             last_name=validated_data['last_name'],
             phone_number=validated_data['phone_number'],
             gender=validated_data['gender'],
-            date_of_birth=validated_data['date_of_birth'],
+            date_of_birth=validated_data.get('date_of_birth'),
+            age=validated_data.get('age'),
             password_hash=make_password(password),  # Hash the password
             user_type=request.data.get('user_type', 'buyer'),
             token=token
@@ -374,7 +375,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 last_name=pending.last_name,
                 phone_number=pending.phone_number,
                 gender=pending.gender,
-                date_of_birth=pending.date_of_birth,
+                date_of_birth=pending.date_of_birth if pending.date_of_birth else None,
+                age=pending.age if hasattr(pending, 'age') and pending.age else None,
                 user_type=pending.user_type,
                 password=pending.password_hash,  # Already hashed
                 is_verified=True  # Mark as verified immediately

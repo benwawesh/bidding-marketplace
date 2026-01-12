@@ -7,12 +7,12 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .models import Auction, Category, Bid, Round, Participation, HeroBanner
+from .models import Auction, Category, Bid, Round, Participation, HeroBanner, SpecialOfferBanner
 from accounts.models import User
 from .serializers import (
     AuctionListSerializer, AuctionDetailSerializer, AuctionCreateSerializer,
     CategorySerializer, BidSerializer, RoundSerializer, ParticipationSerializer,
-    HeroBannerSerializer,
+    HeroBannerSerializer, SpecialOfferBannerSerializer,
 )
 from decimal import Decimal, InvalidOperation
 
@@ -141,27 +141,19 @@ class AuctionViewSet(viewsets.ModelViewSet):
                 'auction': AuctionDetailSerializer(auction).data
             })
 
-        # For auction and both types, require min_pledge and max_pledge
-        min_pledge = request.data.get('min_pledge')
-        max_pledge = request.data.get('max_pledge')
+        # For auction and both types, use min_pledge and max_pledge from the product
+        # Check if they are set on the product
+        if not auction.min_pledge or not auction.max_pledge:
+            return Response(
+                {'error': 'min_pledge and max_pledge must be set on the product before activation'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        min_pledge = float(auction.min_pledge)
+        max_pledge = float(auction.max_pledge)
 
         # Validate
-        if not min_pledge or not max_pledge:
-            return Response(
-                {'error': 'min_pledge and max_pledge are required for auction products'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            min_pledge = float(min_pledge)
-            max_pledge = float(max_pledge)
-        except (TypeError, ValueError):
-            return Response(
-                {'error': 'min_pledge and max_pledge must be valid numbers'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if min_pledge < auction.base_price:
+        if min_pledge < float(auction.base_price):
             return Response(
                 {'error': f'min_pledge cannot be less than base price ({auction.base_price})'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -582,16 +574,12 @@ class AuctionViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for category management (Full CRUD for admin)
-    Public can view, Admin can create/update/delete
-    """
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = 'id'
     
     def get_queryset(self):
-        """Admin sees all categories, public sees only active"""
+
         if self.request.user.is_authenticated and self.request.user.is_superuser:
             return Category.objects.all().order_by('name')
         return Category.objects.filter(is_active=True).order_by('name')
@@ -599,7 +587,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
         # ✅ Add this method here
 
     def create(self, request, *args, **kwargs):
-        """Custom create to debug validation errors"""
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             print("❌ Serializer Errors:", serializer.errors)  # Will show cause of 400
@@ -608,7 +595,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def perform_create(self, serializer):
-        """Only superusers can create categories"""
         import logging
         logger = logging.getLogger(__name__)
         
@@ -1679,3 +1665,27 @@ class HeroBannerViewSet(viewsets.ModelViewSet):
         if self.request.user and self.request.user.is_superuser:
             return HeroBanner.objects.all().order_by('order', 'created_at')
         return HeroBanner.objects.filter(is_active=True).order_by('order', 'created_at')
+
+
+class SpecialOfferBannerViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for special offer banners
+    - List/Retrieve: Public access (returns active banners)
+    - Create/Update/Delete: Superuser only
+    """
+    serializer_class = SpecialOfferBannerSerializer
+
+    def get_permissions(self):
+        """Public can read, but only superusers can create/update/delete"""
+        if self.action in ['list', 'retrieve']:
+            return []  # Public access for read operations
+        return [IsAdminUser()]  # Superuser required for write operations
+
+    def get_queryset(self):
+        """
+        Return all banners for superusers (for management),
+        only active banners for public (for display)
+        """
+        if self.request.user and self.request.user.is_superuser:
+            return SpecialOfferBanner.objects.all().order_by('order', 'created_at')
+        return SpecialOfferBanner.objects.filter(is_active=True).order_by('order', 'created_at')
